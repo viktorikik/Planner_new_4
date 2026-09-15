@@ -37,7 +37,7 @@ export function renderRecipesList() {
     grouped[cat].push(recipe);
   });
 
-  const categoryOrder = [CATEGORIES.SOUP, CATEGORIES.SALAD, CATEGORIES.MAIN, CATEGORIES.OTHER];
+  const categoryOrder = [CATEGORIES.SOUP, CATEGORIES.SALAD, CATEGORIES.MAIN, CATEGORIES.BAKERY, CATEGORIES.OTHER];
   const sortedCategories = Object.keys(grouped).sort((a, b) => {
     return categoryOrder.indexOf(a) - categoryOrder.indexOf(b);
   });
