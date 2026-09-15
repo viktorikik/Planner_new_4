@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+  <title>Планировщик меню · Календарь</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="app">
+  <!-- ШАПКА -->
+  <header class="app-header">
+    <div class="logo">
+      <h1>🍽️ Планировщик меню</h1>
+    </div>
+    <div class="controls">
+      <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему">🌓</button>
+      <div class="view-toggle" id="viewToggle" role="group" aria-label="Переключение вида календаря">
+        <button class="active" data-view="month" aria-pressed="true">Месяц</button>
+        <button data-view="week" aria-pressed="false">Неделя</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- КНОПКИ ДЕЙСТВИЙ (НОВЫЙ ПОРЯДОК) -->
+  <section class="actions">
+    <!-- Первая строка: Что приготовить? + Добавить блюдо -->
+    <div class="btn-row">
+      <button class="btn btn-primary" id="suggestBtn">🤔 Что приготовить?</button>
+      <button class="btn btn-done" id="addDishBtn">➕ Добавить блюдо</button>
+    </div>
+    <!-- Вторая строка: Мои рецепты + Список покупок -->
+    <div class="btn-row">
+      <button class="btn btn-secondary" id="recipesBtn">📖 Мои рецепты</button>
+      <button class="btn btn-secondary" id="shoppingListBtn">🛒 Список покупок</button>
+    </div>
+    <!-- Третья строка: Любимые (по центру) -->
+    <div class="btn-row center-row">
+      <button class="btn btn-secondary" id="favoritesBtn"><span class="heart">❤️</span> Любимые</button>
+    </div>
+  </section>
+
+  <!-- КАЛЕНДАРЬ -->
+  <section class="calendar-wrap" id="calendarWrap">
+    <div class="calendar-header">
+      <div class="month-nav-wrapper">
+        <div class="month-nav">
+          <button id="prevMonth" aria-label="Предыдущий месяц">‹</button>
+          <button id="nextMonth" aria-label="Следующий месяц">›</button>
+        </div>
+        <h2 id="monthTitle">Август 2026</h2>
+      </div>
+      <button class="today-btn" id="todayBtn">Сегодня</button>
+    </div>
+    <div class="weekdays" role="row">
+      <span role="columnheader">Пн</span>
+      <span role="columnheader">Вт</span>
+      <span role="columnheader">Ср</span>
+      <span role="columnheader">Чт</span>
+      <span role="columnheader">Пт</span>
+      <span role="columnheader">Сб</span>
+      <span role="columnheader">Вс</span>
+    </div>
+    <div id="calendarContent" role="grid"></div>
+  </section>
+
+  <!-- ПОИСК И ФИЛЬТРЫ -->
+  <section class="search-filter-wrap">
+    <input type="text" id="searchInput" placeholder="🔍 Поиск блюда..." aria-label="Поиск по названию блюда">
+    <select id="statusFilter" aria-label="Фильтр по статусу">
+      <option value="all">Все статусы</option>
+      <option value="done">✅ Готовила</option>
+      <option value="planned">📅 Планирую</option>
+    </select>
+    <select id="categoryFilter" aria-label="Фильтр по категории">
+      <option value="all">Все категории</option>
+      <option value="soup">Супы</option>
+      <option value="salad">Салаты</option>
+      <option value="main">Основные</option>
+      <option value="other">Другое</option>
+    </select>
+  </section>
+
+  <!-- СПИСОК МЕНЮ -->
+  <section class="menu-list" id="menuList">
+    <h3>📋 Меню на <span id="menuPeriod">месяц</span></h3>
+    <div id="menuContent"></div>
+  </section>
+
+  <!-- ЭКСПОРТ / ИМПОРТ (ПЕРЕНЕСЕНЫ ВНИЗ) -->
+  <section class="backup-section">
+    <div class="backup-row">
+      <button class="btn btn-export" id="exportBtn">📤 Экспорт</button>
+      <button class="btn btn-import" id="importBtn">📥 Импорт</button>
+    </div>
+    <div class="backup-hint">
+      📌 Не забывайте делать резервную копию, выберите для этого формат <strong>JSON</strong>.
+      Если сохраняете «для себя» — лучше выбрать формат <strong>CSV</strong> или <strong>TXT</strong>.
+    </div>
+    <input type="file" id="importFileInput" class="import-hidden" accept=".json" aria-label="Загрузить файл резервной копии">
+  </section>
+</div>
+
+<!-- ===== МОДАЛЬНЫЕ ОКНА ===== -->
+
+<!-- Модалка дня -->
+<div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">26 августа 2026</h3>
+      <button class="modal-close" id="modalClose" aria-label="Закрыть">✕</button>
+    </div>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<!-- Модалка рекомендаций -->
+<div class="modal-overlay rec-modal" id="recOverlay" role="dialog" aria-modal="true" aria-labelledby="recTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="recTitle">Рекомендации</h3>
+      <button class="modal-close" id="recClose" aria-label="Закрыть">✕</button>
+    </div>
+    <div id="recContent"></div>
+  </div>
+</div>
+
+<!-- Модалка добавления блюда (глобальная) -->
+<div class="modal-overlay add-modal" id="addModalOverlay" role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="addModalTitle">➕ Новое блюдо</h3>
+      <button class="modal-close" id="addModalClose" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="form-group">
+      <label for="newDishName">Название блюда</label>
+      <input type="text" id="newDishName" placeholder="Например, Плов">
+    </div>
+    <div class="form-group">
+      <label for="newDishNote">Заметка (рецепт, продукты…)</label>
+      <input type="text" id="newDishNote" placeholder="Необязательно">
+    </div>
+    <div class="form-group">
+      <label for="newDishDate">Дата</label>
+      <input type="date" id="newDishDate">
+    </div>
+    <div class="form-group">
+      <label for="newDishStatus">Статус</label>
+      <select id="newDishStatus">
+        <option value="done">✅ Уже готовила</option>
+        <option value="planned">📅 Планирую</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="newDishCategory">Категория</label>
+      <select id="newDishCategory">
+        <option value="soup">🍲 Суп</option>
+        <option value="salad">🥗 Салат</option>
+        <option value="main">🍖 Основное</option>
+        <option value="other">🍽️ Другое</option>
+      </select>
+    </div>
+    <div class="form-actions">
+      <button class="btn-secondary" id="addModalCancel">Отмена</button>
+      <button class="btn-primary" id="addModalSave">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Модалка экспорта (добавлен TXT) -->
+<div class="modal-overlay export-modal" id="exportModalOverlay" role="dialog" aria-modal="true" aria-labelledby="exportModalTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="exportModalTitle">📤 Экспорт данных</h3>
+      <button class="modal-close" id="exportModalClose" aria-label="Закрыть">✕</button>
+    </div>
+    <p class="modal-desc">Выберите формат для экспорта:</p>
+    <button class="export-option" data-format="json">
+      <span class="export-label">JSON (резервная копия)</span>
+      <span class="export-desc">Полный экспорт всех данных для восстановления</span>
+    </button>
+    <button class="export-option" data-format="csv">
+      <span class="export-label">CSV (для Excel)</span>
+      <span class="export-desc">Таблица с колонками: Название, Статус, Дата, Категория, Заметка, Любимое</span>
+    </button>
+    <button class="export-option" data-format="txt">
+      <span class="export-label">TXT (текстовый файл)</span>
+      <span class="export-desc">Структурированный список по дням и категориям</span>
+    </button>
+  </div>
+</div>
+
+<!-- Модалка выбора "Что приготовить?" -->
+<div class="choice-overlay" id="choiceOverlay" role="dialog" aria-modal="true" aria-labelledby="choiceTitle">
+  <div class="choice-modal">
+    <h2 id="choiceTitle">🤔 Что приготовить?</h2>
+    <button class="choice-btn" id="choiceFromMenu">🍳 Из моего меню</button>
+    <button class="choice-btn secondary" id="choiceFromTaste">✨ На твой вкус</button>
+    <button class="choice-btn secondary" id="choiceFromRecipes">📖 Из моих рецептов</button>
+    <button class="choice-close" id="choiceClose">Закрыть</button>
+  </div>
+</div>
+
+<!-- Приветственная модалка (сокращённая) -->
+<div class="welcome-overlay" id="welcomeOverlay" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+  <div class="welcome-modal">
+    <span class="welcome-icon">🍽️</span>
+    <h2 id="welcomeTitle">Планировщик меню</h2>
+    <div class="welcome-text">
+      <p><strong>Привет!</strong> Это ваш личный помощник для планирования питания. Храните рецепты, составляйте меню на неделю и создавайте списки покупок – всё в одном месте.</p>
+      <p style="margin-top: 8px;"><strong>Что вы можете делать:</strong></p>
+      <ul style="list-style: none; padding-left: 0; margin: 6px 0;">
+        <li>📅 Планировать блюда на месяц или неделю</li>
+        <li>📖 Хранить рецепты с ингредиентами и инструкцией</li>
+        <li>🛒 Генерировать список покупок из выбранных рецептов</li>
+        <li>❤️ Отмечать любимые блюда и получать рекомендации</li>
+        <li>💾 Экспортировать данные в JSON, CSV или TXT</li>
+      </ul>
+      <p style="margin-top: 8px;">Всё работает в вашем браузере, данные хранятся локально. <strong>Начните прямо сейчас!</strong></p>
+    </div>
+    <button class="welcome-btn" id="welcomeStartBtn">🚀 Начать!</button>
+  </div>
+</div>
+
+<!-- ===== МОДАЛКИ ДЛЯ РЕЦЕПТОВ И СПИСКА ПОКУПОК ===== -->
+
+<!-- Модалка "Мои рецепты" -->
+<div class="modal-overlay rec-modal" id="recipesOverlay" role="dialog" aria-modal="true" aria-labelledby="recipesTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="recipesTitle">📖 Мои рецепты</h3>
+      <button class="modal-close" id="recipesClose" aria-label="Закрыть">✕</button>
+    </div>
+    <div id="recipesContent">
+      <button class="btn-done" id="addRecipeBtn" style="margin-bottom:12px;">➕ Добавить рецепт</button>
+      <div id="recipesList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Модалка добавления/редактирования рецепта (с категорией) -->
+<div class="modal-overlay add-modal" id="recipeFormOverlay" role="dialog" aria-modal="true" aria-labelledby="recipeFormTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="recipeFormTitle">📝 Рецепт</h3>
+      <button class="modal-close" id="recipeFormClose" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="form-group">
+      <label for="recipeName">Название</label>
+      <input type="text" id="recipeName" placeholder="Название блюда">
+    </div>
+    <div class="form-group">
+      <label for="recipeCategory">Категория</label>
+      <select id="recipeCategory">
+        <option value="soup">🍲 Суп</option>
+        <option value="salad">🥗 Салат</option>
+        <option value="main">🍖 Основное</option>
+        <option value="other">🍽️ Другое</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="recipeIngredients">Ингредиенты (каждый с новой строки)</label>
+      <textarea id="recipeIngredients" rows="5" placeholder="Курица – 500 г&#10;Лук – 1 шт."></textarea>
+    </div>
+    <div class="form-group">
+      <label for="recipeInstructions">Инструкция (необязательно)</label>
+      <textarea id="recipeInstructions" rows="3" placeholder="Пошаговое приготовление..."></textarea>
+    </div>
+    <div class="form-group" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+      <button class="btn-secondary" id="recipeParseBtn">🔍 Парсить из текста</button>
+      <span style="font-size:12px; color:var(--text-muted);">Вставьте текст рецепта в поле "Ингредиенты" и нажмите кнопку</span>
+    </div>
+    <div class="form-actions">
+      <button class="btn-secondary" id="recipeFormCancel">Отмена</button>
+      <button class="btn-primary" id="recipeFormSave">Сохранить</button>
+    </div>
+    <input type="hidden" id="recipeFormId" value="">
+  </div>
+</div>
+
+<!-- Модалка "Список покупок" -->
+<div class="modal-overlay rec-modal" id="shoppingListOverlay" role="dialog" aria-modal="true" aria-labelledby="shoppingListTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="shoppingListTitle">🛒 Список покупок</h3>
+      <button class="modal-close" id="shoppingListClose" aria-label="Закрыть">✕</button>
+    </div>
+    <div>
+      <div class="form-group" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <label for="shoppingDateFrom" style="font-weight:500;">От:</label>
+        <input type="date" id="shoppingDateFrom">
+        <label for="shoppingDateTo" style="font-weight:500;">До:</label>
+        <input type="date" id="shoppingDateTo">
+        <button class="btn-primary" id="generateShoppingListBtn">Собрать список</button>
+      </div>
+
+      <div id="savedListsContainer">
+        <h4 style="margin:12px 0 8px;">Сохранённые списки</h4>
+        <div id="savedListsList"></div>
+      </div>
+
+      <div id="shoppingListDisplay" style="display:none;">
+        <button id="backToSavedListsBtn" class="btn-secondary" style="margin-bottom:8px;">← Назад к спискам</button>
+        <textarea id="shoppingListResult" placeholder="Сгенерированный список появится здесь. Вы можете редактировать его вручную."></textarea>
+        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;">
+          <button id="saveCurrentListBtn" class="btn-done">💾 Сохранить изменения</button>
+          <button id="deleteCurrentListBtn" class="btn-secondary">🗑️ Удалить этот список</button>
+          <button id="exportShoppingListTxtBtn" class="btn-secondary">📄 Сохранить как .txt</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Live region для объявления динамических сообщений -->
+<div id="liveRegion" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
