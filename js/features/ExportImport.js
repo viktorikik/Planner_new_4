@@ -73,7 +73,7 @@ export function exportData(format) {
     URL.revokeObjectURL(url);
   } else if (format === 'txt') {
     const weekdays = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
-    const categoryOrder = [CATEGORIES.SOUP, CATEGORIES.SALAD, CATEGORIES.MAIN, CATEGORIES.OTHER];
+    const categoryOrder = [CATEGORIES.SOUP, CATEGORIES.SALAD, CATEGORIES.MAIN, CATEGORIES.BAKERY, CATEGORIES.OTHER];
 
     const groupedByDate = {};
     data.forEach(dish => {
