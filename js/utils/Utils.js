@@ -35,6 +35,20 @@ export const Utils = {
 
   guessCategory(name) {
     const lower = name.toLowerCase();
+    // Выпечка — проверяем раньше остальных категорий,
+    // чтобы «пирог», «торт», «кекс» и т.п. не улетали в «Другое».
+    // Важно: используется 'печенье' (полное слово), чтобы не путать с «печенью» (органом).
+    if (lower.includes('пирог') || lower.includes('пирож') || lower.includes('торт') ||
+        lower.includes('кекс') || lower.includes('печенье') || lower.includes('булочк') ||
+        lower.includes('хлеб') || lower.includes('блин') || lower.includes('олад') ||
+        lower.includes('маффин') || lower.includes('брауни') || lower.includes('чизкейк') ||
+        lower.includes('круассан') || lower.includes('кулич') || lower.includes('сдоб') ||
+        lower.includes('вафл') || lower.includes('пончик') || lower.includes('эклер') ||
+        lower.includes('профитрол') || lower.includes('тарт') || lower.includes('пирожн') ||
+        lower.includes('пряник') || lower.includes('бисквит') || lower.includes('капкейк') ||
+        lower.includes('корж') || lower.includes('багет') || lower.includes('лаваш')) {
+      return CATEGORIES.BAKERY;
+    }
     if (lower.includes('суп') || lower.includes('борщ') || lower.includes('пюре') || lower.includes('бульон')) return CATEGORIES.SOUP;
     if (lower.includes('салат') || lower.includes('винегрет') || lower.includes('овощ') || lower.includes('зелень')) return CATEGORIES.SALAD;
     if (lower.includes('котлет') || lower.includes('запекан') || lower.includes('тушен') ||
