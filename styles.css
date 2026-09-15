@@ -1496,9 +1496,7 @@ body.dark-theme #recipesList li button:hover {
 .recipe-view-modal ul,
 .recipe-view-modal li,
 .recipe-view-modal pre,
-.recipe-view-modal strong,
-.recipe-view-modal .btn-primary,
-.recipe-view-modal .btn-secondary {
+.recipe-view-modal strong {
   color: var(--text-primary);
 }
 .recipe-view-modal li {
@@ -1510,6 +1508,50 @@ body.dark-theme #recipesList li button:hover {
   border-radius: var(--radius-sm);
   border: 1px solid var(--cell-border);
   color: var(--text-primary);
+}
+
+/* ===== КНОПКИ В КАРТОЧКЕ РЕЦЕПТА (контраст в обеих темах) ===== */
+.recipe-view-modal .recipe-card-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.recipe-view-modal .recipe-card-buttons .btn-primary,
+.recipe-view-modal .recipe-card-buttons .btn-secondary {
+  flex: 1;
+  justify-content: center;
+  text-align: center;
+  padding: var(--btn-padding);
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  appearance: none;
+}
+.recipe-view-modal .btn-primary {
+  background: var(--accent-color);
+  color: var(--accent-text);
+  border: none;
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.25);
+}
+.recipe-view-modal .btn-primary:hover {
+  filter: brightness(1.05);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(255, 107, 53, 0.3);
+}
+.recipe-view-modal .btn-primary:active {
+  transform: translateY(0);
+}
+.recipe-view-modal .btn-secondary {
+  background: transparent;
+  border: 1.5px solid var(--text-muted);
+  color: var(--text-primary);
+}
+.recipe-view-modal .btn-secondary:hover {
+  background: var(--cell-bg);
+  border-color: var(--text-primary);
+  transform: translateY(-2px);
 }
 
 /* ===== СПИСОК ПОКУПОК ===== */
@@ -1778,6 +1820,17 @@ body.dark-theme #savedListsContainer h4 {
   }
   .month-nav-wrapper {
     flex: 1 1 auto;
+  }
+
+  /* Кнопки в карточке рецепта на мобильных */
+  .recipe-view-modal .recipe-card-buttons {
+    flex-direction: column;
+  }
+  .recipe-view-modal .recipe-card-buttons .btn-primary,
+  .recipe-view-modal .recipe-card-buttons .btn-secondary {
+    width: 100%;
+    font-size: 13px;
+    padding: 8px 16px;
   }
 }
 
