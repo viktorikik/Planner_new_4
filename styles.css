@@ -2150,3 +2150,22 @@ body.dark-theme #savedListsContainer h4 {
     flex-direction: column !important;
   }
 }
+
+
+
+/* ============================================================
+   КАТЕГОРИЯ «ВЫПЕЧКА» — цветовая метка
+   ============================================================ */
+.menu-item.category-bakery {
+  border-left-color: var(--color-bakery);
+}
+
+/* Переменная в :root (светлая тема) */
+:root {
+  --color-bakery: #d97706;
+}
+
+/* Переменная в тёмной теме */
+body.dark-theme {
+  --color-bakery: #fbbf24;
+}
