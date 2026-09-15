@@ -30,6 +30,15 @@ export const Renderer = (function() {
   const recTitle = els.recTitle;
   const recContent = els.recContent;
 
+  // Единый массив категорий — чтобы не дублировать в трёх местах
+  const CATEGORY_OPTIONS = [
+    { val: CATEGORIES.SOUP,   label: '🍲 Суп' },
+    { val: CATEGORIES.SALAD,  label: '🥗 Салат' },
+    { val: CATEGORIES.MAIN,   label: '🍖 Основное' },
+    { val: CATEGORIES.BAKERY, label: '🥐 Выпечка' },
+    { val: CATEGORIES.OTHER,  label: '🍽️ Другое' }
+  ];
+
   function buildDishElement(dish, dateStr) {
     const dishDiv = document.createElement('div');
     dishDiv.className = `modal-dish ${dish.status}`;
@@ -210,12 +219,7 @@ export const Renderer = (function() {
     const categorySelect = document.createElement('select');
     categorySelect.id = 'modalNewDishCategory';
     categorySelect.className = 'modal-field-select field-half';
-    [
-      { val: CATEGORIES.SOUP, label: '🍲 Суп' },
-      { val: CATEGORIES.SALAD, label: '🥗 Салат' },
-      { val: CATEGORIES.MAIN, label: '🍖 Основное' },
-      { val: CATEGORIES.OTHER, label: '🍽️ Другое' }
-    ].forEach(cat => {
+    CATEGORY_OPTIONS.forEach(cat => {
       const opt = document.createElement('option');
       opt.value = cat.val;
       opt.textContent = cat.label;
@@ -262,12 +266,7 @@ export const Renderer = (function() {
     allOpt.value = 'all';
     allOpt.textContent = 'Все категории';
     filterSelect.appendChild(allOpt);
-    [
-      { val: CATEGORIES.SOUP, label: '🍲 Суп' },
-      { val: CATEGORIES.SALAD, label: '🥗 Салат' },
-      { val: CATEGORIES.MAIN, label: '🍖 Основное' },
-      { val: CATEGORIES.OTHER, label: '🍽️ Другое' }
-    ].forEach(cat => {
+    CATEGORY_OPTIONS.forEach(cat => {
       const opt = document.createElement('option');
       opt.value = cat.val;
       opt.textContent = cat.label;
@@ -679,6 +678,7 @@ export const Renderer = (function() {
         if (dish.category === CATEGORIES.SOUP) categoryClass = 'category-soup';
         else if (dish.category === CATEGORIES.SALAD) categoryClass = 'category-salad';
         else if (dish.category === CATEGORIES.MAIN) categoryClass = 'category-main';
+        else if (dish.category === CATEGORIES.BAKERY) categoryClass = 'category-bakery';
         const item = document.createElement('div');
         item.className = `menu-item ${dish.status} ${categoryClass}`;
         const nameSpan = document.createElement('span');
@@ -773,10 +773,11 @@ export const Renderer = (function() {
     container.appendChild(desc);
 
     const categories = [
-      { key: CATEGORIES.SOUP, label: '🍲 Супы' },
-      { key: CATEGORIES.SALAD, label: '🥗 Салаты' },
-      { key: CATEGORIES.MAIN, label: '🍖 Основные блюда' },
-      { key: CATEGORIES.OTHER, label: '🍽️ Другое' }
+      { key: CATEGORIES.SOUP,   label: '🍲 Супы' },
+      { key: CATEGORIES.SALAD,  label: '🥗 Салаты' },
+      { key: CATEGORIES.MAIN,   label: '🍖 Основные блюда' },
+      { key: CATEGORIES.BAKERY, label: '🥐 Выпечка' },
+      { key: CATEGORIES.OTHER,  label: '🍽️ Другое' }
     ];
 
     categories.forEach(cat => {
