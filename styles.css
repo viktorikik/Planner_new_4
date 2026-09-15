@@ -2101,3 +2101,52 @@ body.dark-theme #savedListsContainer h4 {
 .meal-chip {
   touch-action: none; /* отключаем стандартное поведение браузера для чипов */
 }
+
+/* ============================================================
+   ФИНАЛЬНОЕ ИСПРАВЛЕНИЕ КНОПОК В КАРТОЧКЕ РЕЦЕПТА
+   (с !important, чтобы перебить любые конфликты)
+   ============================================================ */
+.recipe-view-modal .recipe-card-buttons .btn-primary {
+  background: var(--accent-color) !important;
+  color: var(--accent-text) !important;
+  border: none !important;
+  padding: 8px 20px !important;
+  border-radius: var(--radius-lg) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  flex: 1 !important;
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.25) !important;
+  transition: 0.15s !important;
+}
+
+.recipe-view-modal .recipe-card-buttons .btn-primary:hover {
+  filter: brightness(1.05) !important;
+  transform: translateY(-2px) !important;
+}
+
+.recipe-view-modal .recipe-card-buttons .btn-secondary {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  border: 1.5px solid var(--text-muted) !important;
+  padding: 8px 20px !important;
+  border-radius: var(--radius-lg) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  flex: 1 !important;
+  transition: 0.15s !important;
+}
+
+.recipe-view-modal .recipe-card-buttons .btn-secondary:hover {
+  background: var(--cell-bg) !important;
+  border-color: var(--text-primary) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* На мобильных — кнопки одна под другой */
+@media (max-width: 480px) {
+  .recipe-view-modal .recipe-card-buttons {
+    flex-direction: column !important;
+  }
+}
