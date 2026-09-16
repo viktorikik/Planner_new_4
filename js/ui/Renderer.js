@@ -697,8 +697,9 @@ export const Renderer = (function() {
   function openModal(dateStr) {
     currentModalDate = dateStr;
     const d = new Date(dateStr);
-    modalDate.textContent = Utils.formatDate(d);
     const dayDishes = DishStore.getForDate(dateStr);
+    // Счётчик блюд прямо в заголовке модалки
+    modalDate.textContent = `${Utils.formatDate(d)} (${dayDishes.length})`;
     modalContent.innerHTML = '';
 
     const section = document.createElement('div');
