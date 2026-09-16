@@ -193,6 +193,25 @@
   </div>
 </div>
 
+<!-- Модалка выбора формата экспорта рецептов -->
+<div class="modal-overlay export-modal" id="recipeExportOverlay" role="dialog" aria-modal="true" aria-labelledby="recipeExportModalTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="recipeExportModalTitle">📤 Экспорт рецептов</h3>
+      <button class="modal-close" id="recipeExportClose" aria-label="Закрыть">✕</button>
+    </div>
+    <p class="modal-desc">Выберите формат для экспорта рецептов:</p>
+    <button class="recipe-export-option" data-format="json">
+      <span class="export-label">JSON (резервная копия)</span>
+      <span class="export-desc">Полный дамп рецептов для повторного импорта</span>
+    </button>
+    <button class="recipe-export-option" data-format="txt">
+      <span class="export-label">TXT (для чтения и печати)</span>
+      <span class="export-desc">Структурированный текст по категориям с ингредиентами и инструкцией</span>
+    </button>
+  </div>
+</div>
+
 <!-- Модалка выбора "Что приготовить?" -->
 <div class="choice-overlay" id="choiceOverlay" role="dialog" aria-modal="true" aria-labelledby="choiceTitle">
   <div class="choice-modal">
