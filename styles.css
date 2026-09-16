@@ -2169,3 +2169,94 @@ body.dark-theme #savedListsContainer h4 {
 body.dark-theme {
   --color-bakery: #fbbf24;
 }
+
+/* ============================================================
+   ПАНЕЛЬ КНОПОК В МОДАЛКЕ «МОИ РЕЦЕПТЫ»
+   ============================================================ */
+.recipes-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--cell-border);
+}
+
+.recipes-toolbar button {
+  flex: 1 1 0;
+  min-width: 100px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  appearance: none;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  line-height: 1.2;
+}
+
+/* Кнопка «Добавить» — главная, акцентная */
+.recipes-toolbar .btn-done {
+  background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+  color: var(--accent-text);
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.25);
+}
+.recipes-toolbar .btn-done:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 107, 53, 0.35);
+  filter: brightness(1.05);
+}
+.recipes-toolbar .btn-done:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(255, 107, 53, 0.25);
+}
+
+/* Кнопки «Экспорт» и «Импорт» — нейтральные с рамкой */
+.recipes-toolbar .btn-secondary {
+  background: var(--card-bg);
+  border: 1.5px solid var(--cell-border);
+  color: var(--text-primary);
+}
+.recipes-toolbar .btn-secondary:hover {
+  background: var(--card-hover-bg);
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+}
+.recipes-toolbar .btn-secondary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+/* Мобильные: «Добавить» на всю строку, Экспорт/Импорт — по половине */
+@media (max-width: 480px) {
+  .recipes-toolbar button {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 0;
+    font-size: 12px;
+    padding: 9px 10px;
+    border-radius: 12px;
+  }
+  .recipes-toolbar .btn-done {
+    flex: 1 1 100%;
+  }
+}
+
+/* Тёмная тема — небольшая корректировка теней */
+body.dark-theme .recipes-toolbar button {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+body.dark-theme .recipes-toolbar .btn-done {
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.35);
+}
+body.dark-theme .recipes-toolbar .btn-secondary:hover {
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
+}
