@@ -39,6 +39,22 @@ export const Renderer = (function() {
     { val: CATEGORIES.OTHER,  label: '🍽️ Другое' }
   ];
 
+  // Emoji и названия категорий в единственном числе — для бейджа в карточке рецепта
+  const CATEGORY_EMOJI = {
+    [CATEGORIES.SOUP]:   '🍲',
+    [CATEGORIES.SALAD]:  '🥗',
+    [CATEGORIES.MAIN]:   '🍖',
+    [CATEGORIES.BAKERY]: '🥐',
+    [CATEGORIES.OTHER]:  '🍽️'
+  };
+  const CATEGORY_NAMES = {
+    [CATEGORIES.SOUP]:   'Суп',
+    [CATEGORIES.SALAD]:  'Салат',
+    [CATEGORIES.MAIN]:   'Основное',
+    [CATEGORIES.BAKERY]: 'Выпечка',
+    [CATEGORIES.OTHER]:  'Другое'
+  };
+
   // Русское склонение по числу: 1 → one, 2–4 → few, 0 и 5+ → many
   function pluralizeRu(n, one, few, many) {
     const mod10 = n % 10;
@@ -1043,6 +1059,9 @@ export const Renderer = (function() {
   function setStatusFilter(f) { statusFilter = f; renderMenu(); }
   function setCategoryFilter(f) { categoryFilter = f; renderMenu(); }
 
+  // ============================================================
+  // КАРТОЧКА РЕЦЕПТА (просмотр)
+  // ============================================================
   function showRecipeCard(recipe) {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay active';
@@ -1053,27 +1072,44 @@ export const Renderer = (function() {
     
     const modal = document.createElement('div');
     modal.className = 'modal recipe-view-modal';
-    modal.classList.add('recipe-view-modal');
 
+    // --- Шапка: название + бейдж категории + закрыть ---
     const header = document.createElement('div');
-    header.className = 'modal-header';
+    header.className = 'modal-header recipe-view-header';
+
+    const titleRow = document.createElement('div');
+    titleRow.className = 'recipe-view-titlerow';
+
     const title = document.createElement('h3');
     title.id = 'recipeCardTitle';
     title.textContent = '📖 ' + recipe.name;
+    titleRow.appendChild(title);
+
+    const cat = recipe.category || Utils.guessCategory(recipe.name);
+    const categoryBadge = document.createElement('span');
+    categoryBadge.className = `recipe-category-badge category-${cat}`;
+    categoryBadge.textContent = `${CATEGORY_EMOJI[cat] || '🍽️'} ${CATEGORY_NAMES[cat] || 'Другое'}`;
+    titleRow.appendChild(categoryBadge);
+
     const closeButton = document.createElement('button');
     closeButton.className = 'modal-close';
     closeButton.id = 'recipeCardClose';
     closeButton.textContent = '✕';
     closeButton.setAttribute('aria-label', 'Закрыть');
-    header.appendChild(title);
+
+    header.appendChild(titleRow);
     header.appendChild(closeButton);
     modal.appendChild(header);
 
+    // --- Ингредиенты ---
     const ingredientsDiv = document.createElement('div');
-    ingredientsDiv.classList.add('recipe-ingredients');
-    const ingredientsLabel = document.createElement('strong');
-    ingredientsLabel.textContent = 'Ингредиенты:';
-    ingredientsDiv.appendChild(ingredientsLabel);
+    ingredientsDiv.className = 'recipe-section recipe-ingredients';
+
+    const ingredientsTitle = document.createElement('h4');
+    ingredientsTitle.className = 'recipe-section-title';
+    ingredientsTitle.textContent = '📝 Ингредиенты';
+    ingredientsDiv.appendChild(ingredientsTitle);
+
     const ingredientsList = document.createElement('ul');
     ingredientsList.className = 'recipe-ingredients-list';
     recipe.ingredients.forEach(ing => {
@@ -1084,12 +1120,16 @@ export const Renderer = (function() {
     ingredientsDiv.appendChild(ingredientsList);
     modal.appendChild(ingredientsDiv);
 
+    // --- Инструкция ---
     if (recipe.instructions) {
       const instrDiv = document.createElement('div');
-      instrDiv.className = 'recipe-instructions';
-      const instrLabel = document.createElement('strong');
-      instrLabel.textContent = 'Инструкция:';
-      instrDiv.appendChild(instrLabel);
+      instrDiv.className = 'recipe-section recipe-instructions';
+
+      const instrTitle = document.createElement('h4');
+      instrTitle.className = 'recipe-section-title';
+      instrTitle.textContent = '👨‍🍳 Инструкция';
+      instrDiv.appendChild(instrTitle);
+
       const pre = document.createElement('pre');
       pre.className = 'recipe-instructions-text';
       pre.textContent = recipe.instructions;
@@ -1097,12 +1137,13 @@ export const Renderer = (function() {
       modal.appendChild(instrDiv);
     }
 
+    // --- Кнопки ---
     const buttonsDiv = document.createElement('div');
     buttonsDiv.className = 'recipe-card-buttons';
     const addButton = document.createElement('button');
     addButton.className = 'btn-primary';
     addButton.id = 'addRecipeToCalendar';
-    addButton.textContent = 'Добавить в календарь';
+    addButton.textContent = '➕ Добавить в календарь';
     const closeButton2 = document.createElement('button');
     closeButton2.className = 'btn-secondary';
     closeButton2.id = 'recipeCardCloseBtn';
@@ -1120,7 +1161,7 @@ export const Renderer = (function() {
         delete overlay._trapFocusCleanup;
       }
       overlay.remove();
-      if (lastFocusedElement) {
+      if (typeof lastFocusedElement !== 'undefined' && lastFocusedElement) {
         lastFocusedElement.focus();
         lastFocusedElement = null;
       }
