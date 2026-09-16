@@ -235,7 +235,12 @@
       <button class="modal-close" id="recipesClose" aria-label="Закрыть">✕</button>
     </div>
     <div id="recipesContent">
-      <button class="btn-done" id="addRecipeBtn" style="margin-bottom:12px;">➕ Добавить рецепт</button>
+      <div class="recipes-toolbar">
+        <button class="btn-done" id="addRecipeBtn">➕ Добавить</button>
+        <button class="btn-secondary" id="exportRecipesBtn">📤 Экспорт</button>
+        <button class="btn-secondary" id="importRecipesBtn">📥 Импорт</button>
+      </div>
+      <input type="file" id="importRecipesFileInput" class="import-hidden" accept=".json" aria-label="Загрузить файл с рецептами">
       <div id="recipesList"></div>
     </div>
   </div>
