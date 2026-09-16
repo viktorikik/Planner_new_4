@@ -2400,3 +2400,145 @@ body.dark-theme .recipes-toolbar .btn-secondary:hover {
     flex: 1 1 100%;
   }
 }
+
+/* ============================================================
+   КАРТОЧКА РЕЦЕПТА — ФИНАЛЬНАЯ СТИЛИЗАЦИЯ
+   (перекрывает более ранние правила, размещено в конце файла)
+   ============================================================ */
+.recipe-view-modal {
+  max-width: 520px;
+}
+
+.recipe-view-modal .recipe-view-header {
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.recipe-view-titlerow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.recipe-view-titlerow h3 {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
+.recipe-view-modal .recipe-view-header .modal-close {
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: -4px;
+}
+
+/* Бейдж категории */
+.recipe-category-badge {
+  display: inline-block;
+  align-self: flex-start;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  background: var(--badge-bg);
+  color: var(--text-secondary);
+  border: 1px solid var(--cell-border);
+  white-space: nowrap;
+}
+.recipe-category-badge.category-soup   { color: var(--color-soup);   border-color: var(--color-soup); }
+.recipe-category-badge.category-salad  { color: var(--color-salad);  border-color: var(--color-salad); }
+.recipe-category-badge.category-main   { color: var(--color-main);   border-color: var(--color-main); }
+.recipe-category-badge.category-bakery { color: var(--color-bakery); border-color: var(--color-bakery); }
+.recipe-category-badge.category-other  { color: var(--text-secondary); }
+
+/* Секции карточки */
+.recipe-view-modal .recipe-section {
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--cell-border);
+}
+.recipe-view-modal .recipe-section:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.recipe-view-modal .recipe-section-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: 0.2px;
+}
+
+/* Ингредиенты — аккуратные буллиты */
+.recipe-view-modal .recipe-ingredients-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.recipe-view-modal .recipe-ingredients-list li {
+  position: relative;
+  padding: 6px 0 6px 20px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  border-bottom: 1px dashed var(--cell-border);
+  word-break: break-word;
+}
+.recipe-view-modal .recipe-ingredients-list li:last-child {
+  border-bottom: none;
+}
+.recipe-view-modal .recipe-ingredients-list li::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 13px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-color);
+}
+
+/* Инструкция — «карточка» с фоном */
+.recipe-view-modal .recipe-instructions-text {
+  white-space: pre-wrap;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  background: var(--cell-bg);
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--cell-border);
+  margin: 0;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Кнопки — чуть больше отступ сверху, чтобы не слипалось с секцией */
+.recipe-view-modal .recipe-card-buttons {
+  margin-top: 16px;
+}
+
+/* Мобильные тонкости */
+@media (max-width: 480px) {
+  .recipe-view-titlerow h3 {
+    font-size: 19px;
+  }
+  .recipe-view-modal .recipe-section-title {
+    font-size: 14px;
+  }
+  .recipe-view-modal .recipe-ingredients-list li,
+  .recipe-view-modal .recipe-instructions-text {
+    font-size: 13px;
+  }
+}
