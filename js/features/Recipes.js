@@ -4,6 +4,7 @@ import { RecipeStore } from '../stores/RecipeStore.js';
 import { Renderer } from '../ui/Renderer.js';
 import { showMessage } from '../utils/notifications.js';
 import { trapFocus } from '../utils/focusTrap.js';
+import { exportRecipesOnly, importRecipesOnly } from './ExportImport.js';
 
 export function openRecipesModal() {
   const overlay = document.getElementById(CONSTANTS.SELECTORS.recipesOverlay);
@@ -164,4 +165,37 @@ export function parseRecipeTextFromForm() {
   } else {
     showMessage('Не удалось распознать ингредиенты. Попробуйте вручную.', 'error');
   }
+}
+
+// ============================================================
+// ИНИЦИАЛИЗАЦИЯ ОБРАБОТЧИКОВ МОДАЛКИ «МОИ РЕЦЕПТЫ»
+// ============================================================
+export function initRecipesHandlers() {
+  // «➕ Добавить» — открыть пустую форму
+  document.getElementById(CONSTANTS.SELECTORS.addRecipeBtn).addEventListener('click', function() {
+    openRecipeForm(null);
+  });
+
+  // «📤 Экспорт» — скачать JSON-файл с рецептами
+  document.getElementById(CONSTANTS.SELECTORS.exportRecipesBtn).addEventListener('click', function() {
+    exportRecipesOnly();
+  });
+
+  // «📥 Импорт» — открыть диалог выбора файла
+  document.getElementById(CONSTANTS.SELECTORS.importRecipesBtn).addEventListener('click', function() {
+    document.getElementById(CONSTANTS.SELECTORS.importRecipesFileInput).click();
+  });
+
+  // Обработчик выбора файла для импорта
+  document.getElementById(CONSTANTS.SELECTORS.importRecipesFileInput).addEventListener('change', function() {
+    if (this.files && this.files.length > 0) {
+      importRecipesOnly(this.files[0], () => renderRecipesList());
+      this.value = '';
+    }
+  });
+
+  // Кнопки формы рецепта
+  document.getElementById(CONSTANTS.SELECTORS.recipeFormCancel).addEventListener('click', closeRecipeForm);
+  document.getElementById(CONSTANTS.SELECTORS.recipeFormSave).addEventListener('click', saveRecipeForm);
+  document.getElementById(CONSTANTS.SELECTORS.recipeParseBtn).addEventListener('click', parseRecipeTextFromForm);
 }
