@@ -2260,3 +2260,80 @@ body.dark-theme .recipes-toolbar .btn-done {
 body.dark-theme .recipes-toolbar .btn-secondary:hover {
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
 }
+
+
+/* ============================================================
+   ФИНАЛЬНАЯ ПАНЕЛЬ КНОПОК В МОДАЛКЕ «МОИ РЕЦЕПТЫ»
+   ============================================================ */
+.recipes-toolbar {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  margin-bottom: 16px !important;
+  padding-bottom: 16px !important;
+  border-bottom: 1px solid var(--cell-border) !important;
+}
+
+.recipes-toolbar > button {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  height: 42px !important;
+  padding: 0 16px !important;
+  border-radius: 14px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  font-family: inherit !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+}
+
+/* Кнопка «Добавить» */
+.recipes-toolbar > .btn-done {
+  background: linear-gradient(135deg, #ff6b35, #e55a2b) !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 4px 14px rgba(255, 107, 53, 0.35) !important;
+}
+.recipes-toolbar > .btn-done:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(255, 107, 53, 0.45) !important;
+  filter: brightness(1.05) !important;
+}
+.recipes-toolbar > .btn-done:active {
+  transform: translateY(0) !important;
+}
+
+/* Кнопки «Экспорт» и «Импорт» */
+.recipes-toolbar > .btn-secondary {
+  background: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border: 1.5px solid var(--cell-border) !important;
+}
+.recipes-toolbar > .btn-secondary:hover {
+  background: var(--card-hover-bg) !important;
+  border-color: #ff6b35 !important;
+  color: #ff6b35 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+.recipes-toolbar > .btn-secondary:active {
+  transform: translateY(0) !important;
+}
+
+/* Мобильные */
+@media (max-width: 480px) {
+  .recipes-toolbar > button {
+    flex: 1 1 calc(50% - 4px) !important;
+    font-size: 13px !important;
+    padding: 0 10px !important;
+  }
+  .recipes-toolbar > .btn-done {
+    flex: 1 1 100% !important;
+  }
+}
