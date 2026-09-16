@@ -2354,3 +2354,49 @@ body.dark-theme .recipes-toolbar .btn-secondary:hover {
   color: #e55a5a;
   transform: scale(1.2);
 }
+
+/* ============================================================
+   ФИЛЬТРЫ В МОДАЛКЕ «МОИ РЕЦЕПТЫ»
+   ============================================================ */
+.recipes-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.recipes-filters input,
+.recipes-filters select {
+  padding: 8px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--cell-border);
+  background: var(--search-bg);
+  font-size: 13px;
+  color: var(--text-primary);
+  outline: none;
+  transition: var(--transition-fast);
+  appearance: none;
+  min-width: 0;
+}
+
+.recipes-filters input {
+  flex: 2 1 160px;
+}
+
+.recipes-filters select {
+  flex: 1 1 120px;
+}
+
+.recipes-filters input:focus,
+.recipes-filters select:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+/* Мобильные — фильтры во всю ширину */
+@media (max-width: 480px) {
+  .recipes-filters input,
+  .recipes-filters select {
+    flex: 1 1 100%;
+  }
+}
