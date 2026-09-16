@@ -32,6 +32,19 @@ export function validateRecipe(recipe, index) {
 }
 
 // ============================================================
+// УТИЛИТА: скачать файл из строки
+// ============================================================
+function downloadFile(content, filename, mime) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ============================================================
 // ЭКСПОРТ ВСЕХ ДАННЫХ (меню + рецепты)
 // ============================================================
 export function exportData(format) {
@@ -188,22 +201,99 @@ export function importData(file) {
 }
 
 // ============================================================
-// ЭКСПОРТ ТОЛЬКО РЕЦЕПТОВ (резервная копия рецептов)
+// ЭКСПОРТ РЕЦЕПТОВ — JSON (резервная копия)
 // ============================================================
-export function exportRecipesOnly() {
+export function exportRecipesAsJson() {
   const recipes = RecipeStore.getAll();
   if (!recipes.length) {
     showMessage('Нет рецептов для экспорта.');
     return;
   }
   const json = JSON.stringify({ recipes }, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `recipes_backup_${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
+  const filename = `recipes_backup_${new Date().toISOString().slice(0,10)}.json`;
+  downloadFile(json, filename, 'application/json');
+}
+
+// ============================================================
+// ЭКСПОРТ РЕЦЕПТОВ — TXT (человекочитаемый)
+// ============================================================
+export function exportRecipesAsTxt() {
+  const recipes = RecipeStore.getAll();
+  if (!recipes.length) {
+    showMessage('Нет рецептов для экспорта.');
+    return;
+  }
+
+  const categoryOrder = [CATEGORIES.SOUP, CATEGORIES.SALAD, CATEGORIES.MAIN, CATEGORIES.BAKERY, CATEGORIES.OTHER];
+  const categoryTitles = {
+    [CATEGORIES.SOUP]:   '🍲 СУПЫ',
+    [CATEGORIES.SALAD]:  '🥗 САЛАТЫ',
+    [CATEGORIES.MAIN]:   '🍖 ОСНОВНЫЕ БЛЮДА',
+    [CATEGORIES.BAKERY]: '🥐 ВЫПЕЧКА',
+    [CATEGORIES.OTHER]:  '🍽️ ДРУГОЕ'
+  };
+
+  // Группируем рецепты по категориям
+  const grouped = {};
+  recipes.forEach(r => {
+    const cat = r.category || CATEGORIES.OTHER;
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(r);
+  });
+
+  const now = new Date();
+  const dd = String(now.getDate()).padStart(2, '0');
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const yyyy = now.getFullYear();
+  const dateHuman = `${dd}.${mm}.${yyyy}`;
+
+  const line = '═'.repeat(50);
+  const thin = '─'.repeat(50);
+
+  let text = '';
+  text += line + '\n';
+  text += `   📖 МОИ РЕЦЕПТЫ · всего: ${recipes.length}\n`;
+  text += `   Дата выгрузки: ${dateHuman}\n`;
+  text += line + '\n\n';
+
+  categoryOrder.forEach(cat => {
+    const items = grouped[cat];
+    if (!items || items.length === 0) return;
+
+    // Рецепты внутри категории — по алфавиту
+    items.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+
+    text += `${categoryTitles[cat] || cat} (${items.length})\n`;
+    text += thin + '\n\n';
+
+    items.forEach(recipe => {
+      text += `📖 ${recipe.name}\n`;
+
+      if (recipe.ingredients && recipe.ingredients.length > 0) {
+        text += `   Ингредиенты:\n`;
+        recipe.ingredients.forEach(ing => {
+          text += `   • ${ing}\n`;
+        });
+      }
+
+      if (recipe.instructions && recipe.instructions.trim()) {
+        text += `\n   Приготовление:\n`;
+        const lines = recipe.instructions.split('\n');
+        lines.forEach(l => {
+          text += `   ${l}\n`;
+        });
+      }
+
+      text += '\n' + thin + '\n\n';
+    });
+  });
+
+  text += line + '\n';
+  text += `Всего рецептов: ${recipes.length}\n`;
+  text += line + '\n';
+
+  const filename = `recipes_${yyyy}-${mm}-${dd}.txt`;
+  downloadFile(text, filename, 'text/plain;charset=utf-8');
 }
 
 // ============================================================
@@ -244,7 +334,6 @@ export function importRecipesOnly(file, onDone) {
       let added = 0, replaced = 0, skipped = 0;
 
       recipes.forEach(incoming => {
-        // Ищем существующий рецепт с таким же названием (без учёта регистра)
         const currentRecipes = RecipeStore.getAll();
         const existing = currentRecipes.find(
           r => r.name.toLowerCase() === incoming.name.toLowerCase()
@@ -255,11 +344,9 @@ export function importRecipesOnly(file, onDone) {
         const category = incoming.category;
 
         if (!existing) {
-          // Новый рецепт — добавляем
           RecipeStore.add(incoming.name, ingredientsStr, instructions, category);
           added++;
         } else {
-          // Дубликат — спрашиваем пользователя
           const answer = confirm(
             `Рецепт "${incoming.name}" уже существует.\n\n` +
             `OK — заменить его новым.\n` +
