@@ -115,6 +115,8 @@ export const CONSTANTS = {
     exportRecipesBtn: 'exportRecipesBtn',
     importRecipesBtn: 'importRecipesBtn',
     importRecipesFileInput: 'importRecipesFileInput',
+    recipesSearchInput: 'recipesSearchInput',
+    recipesCategoryFilter: 'recipesCategoryFilter',
     recipeFormOverlay: 'recipeFormOverlay',
     recipeFormClose: 'recipeFormClose',
     recipeFormTitle: 'recipeFormTitle',
