@@ -118,6 +118,11 @@ export const CONSTANTS = {
     importRecipesFileInput: 'importRecipesFileInput',
     recipesSearchInput: 'recipesSearchInput',
     recipesCategoryFilter: 'recipesCategoryFilter',
+    // ---- Модалка выбора формата экспорта рецептов (новое) ----
+    recipeExportOverlay: 'recipeExportOverlay',
+    recipeExportClose: 'recipeExportClose',
+    recipeExportOptions: '.recipe-export-option',
+    // --------------------------------------------------------
     recipeFormOverlay: 'recipeFormOverlay',
     recipeFormClose: 'recipeFormClose',
     recipeFormTitle: 'recipeFormTitle',
