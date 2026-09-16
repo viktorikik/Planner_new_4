@@ -1,6 +1,7 @@
 import { CATEGORIES, CATEGORY_LABELS, CONSTANTS } from '../utils/Constants.js';
 import { Utils } from '../utils/Utils.js';
 import { RecipeStore } from '../stores/RecipeStore.js';
+import { DishStore } from '../stores/DishStore.js';
 import { Renderer } from '../ui/Renderer.js';
 import { showMessage } from '../utils/notifications.js';
 import { trapFocus } from '../utils/focusTrap.js';
@@ -86,6 +87,25 @@ export function renderRecipesList() {
         openRecipeForm(recipe.id);
       });
       li.appendChild(editBtn);
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.textContent = '🗑️';
+      deleteBtn.className = 'recipe-delete-btn';
+      deleteBtn.title = 'Удалить рецепт';
+      deleteBtn.setAttribute('aria-label', `Удалить рецепт ${recipe.name}`);
+      deleteBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const answer = confirm(
+          `Удалить рецепт "${recipe.name}"?\n\n` +
+          `Блюда, которые на него ссылаются, потеряют связь с рецептом.`
+        );
+        if (!answer) return;
+        // Обнуляем ссылки у связанных блюд
+        DishStore.clearRecipeRefs(recipe.id);
+        // Удаляем рецепт (это триггерит 'recipes:changed' → renderRecipesList)
+        RecipeStore.remove(recipe.id);
+      });
+      li.appendChild(deleteBtn);
 
       ul.appendChild(li);
     });
