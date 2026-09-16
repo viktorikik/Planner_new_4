@@ -32,7 +32,7 @@ export function validateRecipe(recipe, index) {
 }
 
 // ============================================================
-// ЭКСПОРТ ДАННЫХ
+// ЭКСПОРТ ВСЕХ ДАННЫХ (меню + рецепты)
 // ============================================================
 export function exportData(format) {
   const data = DishStore.getAll();
@@ -132,7 +132,7 @@ export function exportData(format) {
 }
 
 // ============================================================
-// ИМПОРТ ДАННЫХ
+// ИМПОРТ ВСЕХ ДАННЫХ (меню + рецепты)
 // ============================================================
 export function importData(file) {
   const reader = new FileReader();
@@ -180,6 +180,105 @@ export function importData(file) {
         DishStore.replaceAll(dishes);
         showMessage('✅ Данные успешно импортированы!');
       }
+    } catch (err) {
+      showMessage('Ошибка при чтении файла: ' + err.message, 'error');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ============================================================
+// ЭКСПОРТ ТОЛЬКО РЕЦЕПТОВ (резервная копия рецептов)
+// ============================================================
+export function exportRecipesOnly() {
+  const recipes = RecipeStore.getAll();
+  if (!recipes.length) {
+    showMessage('Нет рецептов для экспорта.');
+    return;
+  }
+  const json = JSON.stringify({ recipes }, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `recipes_backup_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ============================================================
+// ИМПОРТ ТОЛЬКО РЕЦЕПТОВ
+// Логика: добавляем к существующим.
+// При совпадении названия (регистронезависимо) — спрашиваем:
+//   OK     → заменить существующий (сохраняя его id),
+//   Отмена → пропустить.
+// ============================================================
+export function importRecipesOnly(file, onDone) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if (!parsed || typeof parsed !== 'object') {
+        showMessage('Некорректный файл: ожидается объект.', 'error');
+        return;
+      }
+      const recipes = parsed.recipes;
+      if (!Array.isArray(recipes)) {
+        showMessage('Поле recipes должно быть массивом.', 'error');
+        return;
+      }
+      if (recipes.length === 0) {
+        showMessage('Файл не содержит рецептов.');
+        return;
+      }
+
+      // Валидация всех рецептов до начала импорта
+      for (let i = 0; i < recipes.length; i++) {
+        const err = validateRecipe(recipes[i], i);
+        if (err) {
+          showMessage('Ошибка валидации: ' + err, 'error');
+          return;
+        }
+      }
+
+      let added = 0, replaced = 0, skipped = 0;
+
+      recipes.forEach(incoming => {
+        // Ищем существующий рецепт с таким же названием (без учёта регистра)
+        const currentRecipes = RecipeStore.getAll();
+        const existing = currentRecipes.find(
+          r => r.name.toLowerCase() === incoming.name.toLowerCase()
+        );
+
+        const ingredientsStr = incoming.ingredients.join('\n');
+        const instructions = incoming.instructions || '';
+        const category = incoming.category;
+
+        if (!existing) {
+          // Новый рецепт — добавляем
+          RecipeStore.add(incoming.name, ingredientsStr, instructions, category);
+          added++;
+        } else {
+          // Дубликат — спрашиваем пользователя
+          const answer = confirm(
+            `Рецепт "${incoming.name}" уже существует.\n\n` +
+            `OK — заменить его новым.\n` +
+            `Отмена — пропустить.`
+          );
+          if (answer) {
+            RecipeStore.update(existing.id, incoming.name, ingredientsStr, instructions, category);
+            replaced++;
+          } else {
+            skipped++;
+          }
+        }
+      });
+
+      showMessage(
+        `✅ Импорт рецептов завершён: добавлено ${added}, заменено ${replaced}, пропущено ${skipped}.`
+      );
+
+      if (typeof onDone === 'function') onDone();
     } catch (err) {
       showMessage('Ошибка при чтении файла: ' + err.message, 'error');
     }
