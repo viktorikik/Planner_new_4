@@ -110,6 +110,7 @@ export const CONSTANTS = {
     welcomeStartBtn: 'welcomeStartBtn',
     recipesOverlay: 'recipesOverlay',
     recipesClose: 'recipesClose',
+    recipesTitle: 'recipesTitle',
     recipesList: 'recipesList',
     addRecipeBtn: 'addRecipeBtn',
     exportRecipesBtn: 'exportRecipesBtn',
