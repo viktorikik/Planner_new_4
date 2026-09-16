@@ -5,14 +5,13 @@ import { DishStore } from '../stores/DishStore.js';
 import { Renderer } from '../ui/Renderer.js';
 import { showMessage } from '../utils/notifications.js';
 import { trapFocus } from '../utils/focusTrap.js';
-import { exportRecipesOnly, importRecipesOnly } from './ExportImport.js';
+import { exportRecipesAsJson, exportRecipesAsTxt, importRecipesOnly } from './ExportImport.js';
 
 // ---------- Состояние фильтров модалки «Мои рецепты» ----------
 let recipesSearchQuery = '';
 let recipesCategoryFilter = 'all';
 
 // ---------- Счётчик в заголовке модалки ----------
-// isFiltered=true → показываем «найдено из всего», иначе — просто «всего»
 function updateRecipesTitle(total, found, isFiltered) {
   const title = document.getElementById(CONSTANTS.SELECTORS.recipesTitle);
   if (!title) return;
@@ -52,7 +51,6 @@ export function renderRecipesList() {
   const allRecipes = RecipeStore.getAll();
   list.innerHTML = '';
 
-  // Применяем фильтры
   const query = recipesSearchQuery.trim().toLowerCase();
   const isFiltered = query !== '' || recipesCategoryFilter !== 'all';
 
@@ -231,6 +229,26 @@ export function parseRecipeTextFromForm() {
 }
 
 // ============================================================
+// МОДАЛКА ВЫБОРА ФОРМАТА ЭКСПОРТА РЕЦЕПТОВ
+// ============================================================
+export function openRecipeExportModal() {
+  const overlay = document.getElementById(CONSTANTS.SELECTORS.recipeExportOverlay);
+  if (!overlay) return;
+  overlay.classList.add('active');
+  trapFocus(overlay, closeRecipeExportModal);
+}
+
+export function closeRecipeExportModal() {
+  const overlay = document.getElementById(CONSTANTS.SELECTORS.recipeExportOverlay);
+  if (!overlay) return;
+  overlay.classList.remove('active');
+  if (overlay._trapFocusCleanup) {
+    overlay._trapFocusCleanup();
+    delete overlay._trapFocusCleanup;
+  }
+}
+
+// ============================================================
 // ИНИЦИАЛИЗАЦИЯ ОБРАБОТЧИКОВ МОДАЛКИ «МОИ РЕЦЕПТЫ»
 // ============================================================
 export function initRecipesHandlers() {
@@ -239,9 +257,9 @@ export function initRecipesHandlers() {
     openRecipeForm(null);
   });
 
-  // «📤 Экспорт» — скачать JSON-файл с рецептами
+  // «📤 Экспорт» — открыть модалку выбора формата
   document.getElementById(CONSTANTS.SELECTORS.exportRecipesBtn).addEventListener('click', function() {
-    exportRecipesOnly();
+    openRecipeExportModal();
   });
 
   // «📥 Импорт» — открыть диалог выбора файла
@@ -275,4 +293,29 @@ export function initRecipesHandlers() {
   document.getElementById(CONSTANTS.SELECTORS.recipeFormCancel).addEventListener('click', closeRecipeForm);
   document.getElementById(CONSTANTS.SELECTORS.recipeFormSave).addEventListener('click', saveRecipeForm);
   document.getElementById(CONSTANTS.SELECTORS.recipeParseBtn).addEventListener('click', parseRecipeTextFromForm);
+
+  // ---- Модалка выбора формата экспорта рецептов ----
+  const exportOverlay = document.getElementById(CONSTANTS.SELECTORS.recipeExportOverlay);
+  if (exportOverlay) {
+    const closeBtn = document.getElementById(CONSTANTS.SELECTORS.recipeExportClose);
+    if (closeBtn) closeBtn.addEventListener('click', closeRecipeExportModal);
+
+    // Клик по затемнённому фону — закрыть
+    exportOverlay.addEventListener('click', function(e) {
+      if (e.target === this) closeRecipeExportModal();
+    });
+
+    // Кнопки формата
+    exportOverlay.querySelectorAll(CONSTANTS.SELECTORS.recipeExportOptions).forEach(btn => {
+      btn.addEventListener('click', function() {
+        const format = this.dataset.format;
+        closeRecipeExportModal();
+        if (format === 'json') {
+          exportRecipesAsJson();
+        } else if (format === 'txt') {
+          exportRecipesAsTxt();
+        }
+      });
+    });
+  }
 }
