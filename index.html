@@ -240,6 +240,17 @@
         <button class="btn-secondary" id="exportRecipesBtn">📤 Экспорт</button>
         <button class="btn-secondary" id="importRecipesBtn">📥 Импорт</button>
       </div>
+      <div class="recipes-filters">
+        <input type="text" id="recipesSearchInput" placeholder="🔍 Поиск рецепта..." aria-label="Поиск по названию рецепта">
+        <select id="recipesCategoryFilter" aria-label="Фильтр по категории рецептов">
+          <option value="all">Все категории</option>
+          <option value="soup">Супы</option>
+          <option value="salad">Салаты</option>
+          <option value="main">Основные</option>
+          <option value="bakery">Выпечка</option>
+          <option value="other">Другое</option>
+        </select>
+      </div>
       <input type="file" id="importRecipesFileInput" class="import-hidden" accept=".json" aria-label="Загрузить файл с рецептами">
       <div id="recipesList"></div>
     </div>
