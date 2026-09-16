@@ -7,9 +7,21 @@ import { showMessage } from '../utils/notifications.js';
 import { trapFocus } from '../utils/focusTrap.js';
 import { exportRecipesOnly, importRecipesOnly } from './ExportImport.js';
 
+// ---------- Состояние фильтров модалки «Мои рецепты» ----------
+let recipesSearchQuery = '';
+let recipesCategoryFilter = 'all';
+
 export function openRecipesModal() {
   const overlay = document.getElementById(CONSTANTS.SELECTORS.recipesOverlay);
   overlay.classList.add('active');
+  // Сбрасываем фильтры при каждом открытии
+  recipesSearchQuery = '';
+  recipesCategoryFilter = 'all';
+  const searchInput = document.getElementById(CONSTANTS.SELECTORS.recipesSearchInput);
+  const categorySelect = document.getElementById(CONSTANTS.SELECTORS.recipesCategoryFilter);
+  if (searchInput) searchInput.value = '';
+  if (categorySelect) categorySelect.value = 'all';
+
   renderRecipesList();
   trapFocus(overlay, closeRecipesModal);
 }
@@ -25,10 +37,26 @@ export function closeRecipesModal() {
 
 export function renderRecipesList() {
   const list = document.getElementById(CONSTANTS.SELECTORS.recipesList);
-  const recipes = RecipeStore.getAll();
+  const allRecipes = RecipeStore.getAll();
   list.innerHTML = '';
-  if (recipes.length === 0) {
+
+  if (allRecipes.length === 0) {
     list.innerHTML = '<div class="modal-empty">😌 У вас пока нет рецептов. Нажмите «Добавить рецепт».</div>';
+    return;
+  }
+
+  // Применяем фильтры
+  const query = recipesSearchQuery.trim().toLowerCase();
+  let recipes = allRecipes;
+  if (query) {
+    recipes = recipes.filter(r => r.name.toLowerCase().includes(query));
+  }
+  if (recipesCategoryFilter !== 'all') {
+    recipes = recipes.filter(r => (r.category || Utils.guessCategory(r.name)) === recipesCategoryFilter);
+  }
+
+  if (recipes.length === 0) {
+    list.innerHTML = '<div class="modal-empty">😌 Ничего не найдено. Измените поиск или фильтр.</div>';
     return;
   }
 
@@ -100,9 +128,7 @@ export function renderRecipesList() {
           `Блюда, которые на него ссылаются, потеряют связь с рецептом.`
         );
         if (!answer) return;
-        // Обнуляем ссылки у связанных блюд
         DishStore.clearRecipeRefs(recipe.id);
-        // Удаляем рецепт (это триггерит 'recipes:changed' → renderRecipesList)
         RecipeStore.remove(recipe.id);
       });
       li.appendChild(deleteBtn);
@@ -212,6 +238,20 @@ export function initRecipesHandlers() {
       importRecipesOnly(this.files[0], () => renderRecipesList());
       this.value = '';
     }
+  });
+
+  // Поиск рецептов (с debounce)
+  const searchInput = document.getElementById(CONSTANTS.SELECTORS.recipesSearchInput);
+  const debouncedSearch = Utils.debounce(function() {
+    recipesSearchQuery = this.value;
+    renderRecipesList();
+  }, 250);
+  searchInput.addEventListener('input', debouncedSearch);
+
+  // Фильтр по категории
+  document.getElementById(CONSTANTS.SELECTORS.recipesCategoryFilter).addEventListener('change', function() {
+    recipesCategoryFilter = this.value;
+    renderRecipesList();
   });
 
   // Кнопки формы рецепта
