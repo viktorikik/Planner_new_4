@@ -233,10 +233,24 @@ export const DishStore = (function() {
     return true;
   }
 
+  // Обнуляет ссылки на удалённый рецепт у всех блюд.
+  // Возвращает true, если что-то изменилось.
+  function clearRecipeRefs(recipeId) {
+    let changed = false;
+    dishes.forEach(d => {
+      if (d.recipeId === recipeId) {
+        d.recipeId = null;
+        changed = true;
+      }
+    });
+    if (changed) save();
+    return changed;
+  }
+
   return {
     init, editDishName, updateNote, getAll, getForDate, addDish, removeDish,
     toggleStatus, toggleLike, getAllUniqueWithLastDone,
     getRecommendations, getFavorites, invalidateCache, replaceAll,
-    getRandomDishFromTaste, setRecipeId, updateDishDate
+    getRandomDishFromTaste, setRecipeId, updateDishDate, clearRecipeRefs
   };
 })();
