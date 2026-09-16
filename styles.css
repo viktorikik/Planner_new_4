@@ -2337,3 +2337,20 @@ body.dark-theme .recipes-toolbar .btn-secondary:hover {
     flex: 1 1 100% !important;
   }
 }
+
+/* ============================================================
+   КНОПКА УДАЛЕНИЯ РЕЦЕПТА
+   ============================================================ */
+.recipe-delete-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: var(--transition-fast);
+  padding: 0 6px;
+}
+.recipe-delete-btn:hover {
+  color: #e55a5a;
+  transform: scale(1.2);
+}
