@@ -11,6 +11,18 @@ import { exportRecipesOnly, importRecipesOnly } from './ExportImport.js';
 let recipesSearchQuery = '';
 let recipesCategoryFilter = 'all';
 
+// ---------- Счётчик в заголовке модалки ----------
+// isFiltered=true → показываем «найдено из всего», иначе — просто «всего»
+function updateRecipesTitle(total, found, isFiltered) {
+  const title = document.getElementById(CONSTANTS.SELECTORS.recipesTitle);
+  if (!title) return;
+  if (isFiltered) {
+    title.textContent = `📖 Мои рецепты (${found} из ${total})`;
+  } else {
+    title.textContent = `📖 Мои рецепты (${total})`;
+  }
+}
+
 export function openRecipesModal() {
   const overlay = document.getElementById(CONSTANTS.SELECTORS.recipesOverlay);
   overlay.classList.add('active');
@@ -40,19 +52,24 @@ export function renderRecipesList() {
   const allRecipes = RecipeStore.getAll();
   list.innerHTML = '';
 
-  if (allRecipes.length === 0) {
-    list.innerHTML = '<div class="modal-empty">😌 У вас пока нет рецептов. Нажмите «Добавить рецепт».</div>';
-    return;
-  }
-
   // Применяем фильтры
   const query = recipesSearchQuery.trim().toLowerCase();
+  const isFiltered = query !== '' || recipesCategoryFilter !== 'all';
+
   let recipes = allRecipes;
   if (query) {
     recipes = recipes.filter(r => r.name.toLowerCase().includes(query));
   }
   if (recipesCategoryFilter !== 'all') {
     recipes = recipes.filter(r => (r.category || Utils.guessCategory(r.name)) === recipesCategoryFilter);
+  }
+
+  // Обновляем счётчик в заголовке ДО всех ранних return
+  updateRecipesTitle(allRecipes.length, recipes.length, isFiltered);
+
+  if (allRecipes.length === 0) {
+    list.innerHTML = '<div class="modal-empty">😌 У вас пока нет рецептов. Нажмите «Добавить рецепт».</div>';
+    return;
   }
 
   if (recipes.length === 0) {
