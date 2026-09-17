@@ -3488,3 +3488,20 @@ body.dark-theme .recipe-category-header {
 body.dark-theme .recipe-category-header:hover {
   background: rgba(255, 255, 255, 0.08);
 }
+
+/* ============================================================
+   УВАЖЕНИЕ К НАСТРОЙКЕ «УМЕНЬШИТЬ ДВИЖЕНИЕ»
+   Отключает анимации и transition для пользователей, которые
+   включили prefers-reduced-motion в системе (эпилепсия,
+   вестибулярные расстройства).
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
