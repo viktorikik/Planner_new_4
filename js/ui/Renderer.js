@@ -64,6 +64,9 @@ export const Renderer = (function() {
     return many;
   }
 
+  // ============================================================
+  // ЭЛЕМЕНТ БЛЮДА В МОДАЛКЕ ДНЯ
+  // ============================================================
   function buildDishElement(dish, dateStr) {
     const dishDiv = document.createElement('div');
     dishDiv.className = `modal-dish ${dish.status}`;
@@ -71,7 +74,7 @@ export const Renderer = (function() {
 
     const nameSpan = document.createElement('span');
     nameSpan.className = 'dish-name';
-    
+
     if (dish.recipeId) {
       const recipeLink = document.createElement('span');
       recipeLink.className = 'recipe-link';
@@ -89,7 +92,7 @@ export const Renderer = (function() {
       });
       nameSpan.appendChild(recipeLink);
     }
-    
+
     const nameText = document.createTextNode(' ' + dish.name);
     nameSpan.appendChild(nameText);
     dishDiv.appendChild(nameSpan);
@@ -102,56 +105,15 @@ export const Renderer = (function() {
     statusSpan.textContent = dish.status === STATUSES.DONE ? '✅ Готовила' : '📅 Планирую';
     actions.appendChild(statusSpan);
 
+    // ✎ Редактировать — открывает отдельную модалку редактирования
     const editBtn = document.createElement('button');
     editBtn.className = 'action-btn edit-btn';
     editBtn.textContent = '✎';
     editBtn.title = 'Редактировать';
-    editBtn.setAttribute('aria-label', 'Редактировать блюдо');
-    editBtn.dataset.id = dish.id;
+    editBtn.setAttribute('aria-label', `Редактировать блюдо ${dish.name}`);
     editBtn.addEventListener('click', function(e) {
       e.stopPropagation();
-      const id = Number(this.dataset.id);
-      const parentDish = this.closest('.modal-dish');
-      const nameSpanEl = parentDish.querySelector('.dish-name');
-      const currentName = nameSpanEl.textContent.trim();
-      const noteDiv = parentDish.querySelector('.dish-note');
-      const currentNote = noteDiv ? noteDiv.textContent : '';
-
-      const editContainer = document.createElement('div');
-      editContainer.className = 'edit-container';
-      const nameInput = document.createElement('input');
-      nameInput.type = 'text';
-      nameInput.value = currentName;
-      nameInput.className = 'edit-input';
-      nameInput.placeholder = 'Название';
-      const noteInput = document.createElement('input');
-      noteInput.type = 'text';
-      noteInput.value = currentNote;
-      noteInput.className = 'edit-input note-edit';
-      noteInput.placeholder = 'Заметка';
-      editContainer.appendChild(nameInput);
-      editContainer.appendChild(noteInput);
-      nameSpanEl.replaceWith(editContainer);
-      if (noteDiv) noteDiv.remove();
-
-      const saveEdit = () => {
-        const newName = nameInput.value.trim();
-        const newNote = noteInput.value.trim();
-        if (newName && newName !== currentName) DishStore.editDishName(id, newName);
-        if (newNote !== currentNote) DishStore.updateNote(id, newNote);
-      };
-      nameInput.addEventListener('blur', saveEdit);
-      noteInput.addEventListener('blur', saveEdit);
-      nameInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') { e.preventDefault(); nameInput.blur(); }
-        if (e.key === 'Escape') { nameInput.value = currentName; noteInput.value = currentNote; nameInput.blur(); }
-      });
-      noteInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') { e.preventDefault(); noteInput.blur(); }
-        if (e.key === 'Escape') { nameInput.value = currentName; noteInput.value = currentNote; noteInput.blur(); }
-      });
-      nameInput.focus();
-      nameInput.select();
+      openEditDishModal(dish.id);
     });
     actions.appendChild(editBtn);
 
@@ -205,6 +167,9 @@ export const Renderer = (function() {
     return dishDiv;
   }
 
+  // ============================================================
+  // ФОРМА ДОБАВЛЕНИЯ БЛЮДА В МОДАЛКЕ ДНЯ
+  // ============================================================
   function buildAddForm(dateStr) {
     const addSection = document.createElement('div');
     addSection.className = 'modal-add-section';
@@ -408,6 +373,9 @@ export const Renderer = (function() {
     return addSection;
   }
 
+  // ============================================================
+  // КАЛЕНДАРЬ — МЕСЯЦ / НЕДЕЛЯ
+  // ============================================================
   function renderCalendar(view, date) {
     currentView = view;
     currentDate = date;
@@ -465,7 +433,6 @@ export const Renderer = (function() {
       numDiv.textContent = d.getDate();
       cell.appendChild(numDiv);
 
-      // Скрытый текст со статусами для скринридеров
       const statusText = document.createElement('span');
       statusText.className = 'sr-only';
       statusText.textContent = dayDishes.map(d => d.status === STATUSES.DONE ? 'Готовила' : 'Планирую').join(', ');
@@ -648,6 +615,9 @@ export const Renderer = (function() {
     calendarContent.appendChild(list);
   }
 
+  // ============================================================
+  // СПИСОК МЕНЮ (НИЖНИЙ БЛОК)
+  // ============================================================
   function renderMenu() {
     menuPeriod.textContent = currentView === 'month' ? 'месяц' : 'неделю';
     let days = [];
@@ -706,24 +676,45 @@ export const Renderer = (function() {
         else if (dish.category === CATEGORIES.BAKERY) categoryClass = 'category-bakery';
         const item = document.createElement('div');
         item.className = `menu-item ${dish.status} ${categoryClass}`;
+
         const nameSpan = document.createElement('span');
         nameSpan.textContent = dish.name;
         item.appendChild(nameSpan);
+
+        // Обёртка для бейджа и кнопки ✎ (чтобы выровнять справа)
+        const itemActions = document.createElement('span');
+        itemActions.className = 'menu-item-actions';
+
         const badge = document.createElement('span');
         badge.className = 'status-badge';
         badge.textContent = dish.status === STATUSES.DONE ? '✅' : '📅';
-        item.appendChild(badge);
+        itemActions.appendChild(badge);
+
+        const editBtn = document.createElement('button');
+        editBtn.className = 'menu-item-edit-btn';
+        editBtn.textContent = '✎';
+        editBtn.title = 'Редактировать';
+        editBtn.setAttribute('aria-label', `Редактировать блюдо ${dish.name}`);
+        editBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          openEditDishModal(dish.id);
+        });
+        itemActions.appendChild(editBtn);
+
+        item.appendChild(itemActions);
         group.appendChild(item);
       });
       menuContent.appendChild(group);
     });
   }
 
+  // ============================================================
+  // МОДАЛКА ДНЯ
+  // ============================================================
   function openModal(dateStr) {
     currentModalDate = dateStr;
     const d = new Date(dateStr);
     const dayDishes = DishStore.getForDate(dateStr);
-    // Счётчик блюд прямо в заголовке модалки, с правильным склонением
     const dishWord = pluralizeRu(dayDishes.length, 'блюдо', 'блюда', 'блюд');
     modalDate.textContent = `${Utils.formatDate(d)} (${dayDishes.length} ${dishWord})`;
     modalContent.innerHTML = '';
@@ -760,6 +751,74 @@ export const Renderer = (function() {
     currentModalDate = null;
   }
 
+  // ============================================================
+  // МОДАЛКА РЕДАКТИРОВАНИЯ БЛЮДА
+  // ============================================================
+  function openEditDishModal(dishId) {
+    const dish = DishStore.getAll().find(d => d.id === dishId);
+    if (!dish) { showMessage('Блюдо не найдено', 'error'); return; }
+
+    const overlay = document.getElementById(CONSTANTS.SELECTORS.editDishOverlay);
+    if (!overlay) return;
+
+    document.getElementById(CONSTANTS.SELECTORS.editDishId).value = dish.id;
+    document.getElementById(CONSTANTS.SELECTORS.editDishName).value = dish.name;
+    document.getElementById(CONSTANTS.SELECTORS.editDishNote).value = dish.note || '';
+    document.getElementById(CONSTANTS.SELECTORS.editDishStatus).value = dish.status;
+    document.getElementById(CONSTANTS.SELECTORS.editDishCategory).value = dish.category || CATEGORIES.OTHER;
+
+    // Пересобираем селект рецептов (могли добавляться/удаляться)
+    const recipeSelect = document.getElementById(CONSTANTS.SELECTORS.editDishRecipe);
+    recipeSelect.innerHTML = '';
+    const defaultOpt = document.createElement('option');
+    defaultOpt.value = '';
+    defaultOpt.textContent = 'Без рецепта';
+    recipeSelect.appendChild(defaultOpt);
+    RecipeStore.getAll().forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r.id;
+      opt.textContent = r.name;
+      recipeSelect.appendChild(opt);
+    });
+    recipeSelect.value = dish.recipeId ? String(dish.recipeId) : '';
+
+    overlay.classList.add('active');
+    trapFocus(overlay, closeEditDishModal);
+
+    // Фокус в название для быстрого редактирования
+    const nameInput = document.getElementById(CONSTANTS.SELECTORS.editDishName);
+    setTimeout(() => { nameInput.focus(); nameInput.select(); }, 50);
+  }
+
+  function closeEditDishModal() {
+    const overlay = document.getElementById(CONSTANTS.SELECTORS.editDishOverlay);
+    if (!overlay) return;
+    overlay.classList.remove('active');
+    if (overlay._trapFocusCleanup) {
+      overlay._trapFocusCleanup();
+      delete overlay._trapFocusCleanup;
+    }
+  }
+
+  function saveEditDishModal() {
+    const id = Number(document.getElementById(CONSTANTS.SELECTORS.editDishId).value);
+    const name = document.getElementById(CONSTANTS.SELECTORS.editDishName).value.trim();
+    const note = document.getElementById(CONSTANTS.SELECTORS.editDishNote).value.trim();
+    const status = document.getElementById(CONSTANTS.SELECTORS.editDishStatus).value;
+    const category = document.getElementById(CONSTANTS.SELECTORS.editDishCategory).value;
+    const recipeValue = document.getElementById(CONSTANTS.SELECTORS.editDishRecipe).value;
+    const recipeId = recipeValue ? Number(recipeValue) : null;
+
+    if (!name) { showMessage('Введите название блюда', 'error'); return; }
+
+    DishStore.updateDish(id, { name, status, category, note, recipeId });
+    closeEditDishModal();
+    showMessage(`✅ Блюдо "${name}" обновлено`);
+  }
+
+  // ============================================================
+  // ПЕРЕНОС НА ЗАВТРА + РЕКОМЕНДАЦИИ + ЛЮБИМЫЕ
+  // ============================================================
   function addDishToTomorrow(name, recipeId = null, closeModalCallback) {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -1069,11 +1128,10 @@ export const Renderer = (function() {
     overlay.setAttribute('role', 'dialog');
     overlay.setAttribute('aria-modal', 'true');
     overlay.setAttribute('aria-labelledby', 'recipeCardTitle');
-    
+
     const modal = document.createElement('div');
     modal.className = 'modal recipe-view-modal';
 
-    // --- Шапка: название + бейдж категории + закрыть ---
     const header = document.createElement('div');
     header.className = 'modal-header recipe-view-header';
 
@@ -1101,7 +1159,6 @@ export const Renderer = (function() {
     header.appendChild(closeButton);
     modal.appendChild(header);
 
-    // --- Ингредиенты ---
     const ingredientsDiv = document.createElement('div');
     ingredientsDiv.className = 'recipe-section recipe-ingredients';
 
@@ -1120,7 +1177,6 @@ export const Renderer = (function() {
     ingredientsDiv.appendChild(ingredientsList);
     modal.appendChild(ingredientsDiv);
 
-    // --- Инструкция ---
     if (recipe.instructions) {
       const instrDiv = document.createElement('div');
       instrDiv.className = 'recipe-section recipe-instructions';
@@ -1137,7 +1193,6 @@ export const Renderer = (function() {
       modal.appendChild(instrDiv);
     }
 
-    // --- Кнопки ---
     const buttonsDiv = document.createElement('div');
     buttonsDiv.className = 'recipe-card-buttons';
     const addButton = document.createElement('button');
@@ -1161,10 +1216,6 @@ export const Renderer = (function() {
         delete overlay._trapFocusCleanup;
       }
       overlay.remove();
-      if (typeof lastFocusedElement !== 'undefined' && lastFocusedElement) {
-        lastFocusedElement.focus();
-        lastFocusedElement = null;
-      }
     };
     closeButton.addEventListener('click', close);
     closeButton2.addEventListener('click', close);
@@ -1176,6 +1227,9 @@ export const Renderer = (function() {
     trapFocus(overlay, close);
   }
 
+  // ============================================================
+  // ОБРАБОТЧИКИ
+  // ============================================================
   function initEventListeners() {
     EventBus.on(CONSTANTS.EVENTS.DISHES_CHANGED, () => {
       renderCalendar(currentView, currentDate);
@@ -1187,9 +1241,30 @@ export const Renderer = (function() {
       const recipesOverlay = document.getElementById(CONSTANTS.SELECTORS.recipesOverlay);
       if (recipesOverlay && recipesOverlay.classList.contains('active')) {
         // renderRecipesList будет вызван из main.js через импорт
-        // во избежание циклической зависимости оставляем пустым
       }
     });
+
+    // ---- Модалка редактирования блюда ----
+    const editOverlay = document.getElementById(CONSTANTS.SELECTORS.editDishOverlay);
+    if (editOverlay) {
+      document.getElementById(CONSTANTS.SELECTORS.editDishClose).addEventListener('click', closeEditDishModal);
+      document.getElementById(CONSTANTS.SELECTORS.editDishCancel).addEventListener('click', closeEditDishModal);
+      document.getElementById(CONSTANTS.SELECTORS.editDishSave).addEventListener('click', saveEditDishModal);
+
+      // Клик по тёмному фону — закрыть
+      editOverlay.addEventListener('click', function(e) {
+        if (e.target === this) closeEditDishModal();
+      });
+
+      // Подстановка названия при выборе рецепта
+      document.getElementById(CONSTANTS.SELECTORS.editDishRecipe).addEventListener('change', function() {
+        if (!this.value) return;
+        const recipe = RecipeStore.getById(Number(this.value));
+        if (recipe) {
+          document.getElementById(CONSTANTS.SELECTORS.editDishName).value = recipe.name;
+        }
+      });
+    }
   }
 
   initEventListeners();
@@ -1204,6 +1279,9 @@ export const Renderer = (function() {
     setCurrentView: (v) => { currentView = v; },
     showRecipeCard,
     showCategorySelection,
-    showRecommendationsForCategory
+    showRecommendationsForCategory,
+    openEditDishModal,
+    closeEditDishModal,
+    saveEditDishModal
   };
 })();
