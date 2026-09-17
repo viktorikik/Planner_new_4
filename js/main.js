@@ -19,6 +19,7 @@ import {
   closeShoppingList,
   initShoppingListHandlers
 } from './features/ShoppingList.js';
+import { Onboarding } from './features/Onboarding.js'; // ← новое
 
 // ============================================================
 // ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ
@@ -44,8 +45,19 @@ import {
     }
   }
 
-  setTimeout(showWelcome, 300);
-  document.getElementById(CONSTANTS.SELECTORS.welcomeStartBtn).addEventListener('click', hideWelcome);
+  // ← новое: тур (onboarding). Кнопка «❓» в шапке открывает его повторно.
+  Onboarding.init();
+
+  // ← новое: приветствие и тур — только при первом запуске.
+  if (Onboarding.shouldShow()) {
+    setTimeout(showWelcome, 300);
+  }
+
+  // ← новое: после welcome открываем тур
+  document.getElementById(CONSTANTS.SELECTORS.welcomeStartBtn).addEventListener('click', function() {
+    hideWelcome();
+    Onboarding.open();
+  });
 
   // ---------- Тема (светлая/тёмная) ----------
   let theme = localStorage.getItem(CONSTANTS.STORAGE_KEYS.THEME);
@@ -185,6 +197,7 @@ import {
     { overlay: document.getElementById(CONSTANTS.SELECTORS.recipesOverlay), close: closeRecipesModal },
     { overlay: document.getElementById(CONSTANTS.SELECTORS.recipeFormOverlay), close: closeRecipeForm },
     { overlay: document.getElementById(CONSTANTS.SELECTORS.shoppingListOverlay), close: closeShoppingList }
+    // ← тур (onboardingOverlay) сюда НЕ добавляем — у него свои обработчики в Onboarding.js
   ];
 
   modals.forEach(({ overlay, close }) => {
@@ -200,7 +213,7 @@ import {
   // ---------- Глобальный Escape (для любых открытых модалок) ----------
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
-      const activeModal = document.querySelector('.modal-overlay.active, .choice-overlay.active, .welcome-overlay.active');
+      const activeModal = document.querySelector('.modal-overlay.active, .choice-overlay.active, .welcome-overlay.active, .onboarding-overlay.active');
       if (activeModal) {
         const id = activeModal.id;
         if (id === CONSTANTS.SELECTORS.modalOverlay) Renderer.closeModal();
@@ -228,6 +241,7 @@ import {
         else if (id === CONSTANTS.SELECTORS.recipesOverlay) closeRecipesModal();
         else if (id === CONSTANTS.SELECTORS.recipeFormOverlay) closeRecipeForm();
         else if (id === CONSTANTS.SELECTORS.shoppingListOverlay) closeShoppingList();
+        else if (id === CONSTANTS.SELECTORS.onboardingOverlay) Onboarding.close(true); // ← новое
       }
     }
   });
@@ -419,4 +433,5 @@ import {
   console.log('🔄 В недельном виде есть подсказка о перетаскивании блюд.');
   console.log('🌓 Тема определяется автоматически по настройкам системы.');
   console.log('📤 Доступен экспорт в JSON, CSV и TXT.');
+  console.log('❓ Обучающий тур: кнопка в шапке или первый запуск.');
 })();
