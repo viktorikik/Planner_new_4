@@ -3406,3 +3406,85 @@ body.dark-theme .onboarding-modal {
   }
   .onboarding-dots { padding: var(--spacing-sm) 0 var(--spacing-xs); }
 }
+/* ============================================================
+   СВОРАЧИВАНИЕ КАТЕГОРИЙ В МОДАЛКЕ «МОИ РЕЦЕПТЫ»
+   ============================================================ */
+
+/* Заголовок-кнопка категории */
+.recipe-category-header {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  padding: 8px 10px;
+  background: var(--badge-bg);
+  border: none;
+  border-left: 4px solid var(--accent-color);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  appearance: none;
+  box-sizing: border-box;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.recipe-category-header:hover {
+  background: var(--day-hover);
+}
+.recipe-category-header:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+.recipe-category-header:active {
+  transform: scale(0.995);
+}
+
+/* Стрелка-индикатор */
+.recipe-category-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--accent-color);
+  flex-shrink: 0;
+  transition: transform var(--transition-fast);
+  transform: rotate(90deg); /* развёрнута — стрелка вниз */
+}
+.recipe-category-section.collapsed .recipe-category-arrow {
+  transform: rotate(0deg); /* свёрнута — стрелка вправо */
+}
+
+/* Название категории — занимает всё свободное место */
+.recipe-category-title {
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+}
+
+/* Счётчик рецептов */
+.recipe-category-count {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* Свёрнутое состояние: список скрыт */
+.recipe-category-section.collapsed .recipe-list {
+  display: none;
+}
+
+/* В тёмной теме заголовок чуть контрастнее */
+body.dark-theme .recipe-category-header {
+  background: rgba(255, 255, 255, 0.04);
+}
+body.dark-theme .recipe-category-header:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
