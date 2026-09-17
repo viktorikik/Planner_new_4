@@ -15,6 +15,8 @@
       <h1>🍽️ Планировщик меню</h1>
     </div>
     <div class="controls">
+      <!-- ← новое: кнопка справки -->
+      <button class="help-btn" id="onboardingHelpBtn" aria-label="Показать справку">❓</button>
       <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему">🌓</button>
       <div class="view-toggle" id="viewToggle" role="group" aria-label="Переключение вида календаря">
         <button class="active" data-view="month" aria-pressed="true">Месяц</button>
@@ -307,6 +309,68 @@
       <p style="margin-top: 8px;">Всё работает в вашем браузере, данные хранятся локально. <strong>Начните прямо сейчас!</strong></p>
     </div>
     <button class="welcome-btn" id="welcomeStartBtn">🚀 Начать!</button>
+  </div>
+</div>
+
+<!-- ← новое: Обучающий тур (слайды). Открывается после welcome и по кнопке «❓» -->
+<div class="onboarding-overlay" id="onboardingOverlay" role="dialog" aria-modal="true" aria-label="Обучение по использованию приложения">
+  <div class="onboarding-modal">
+    <button class="onboarding-close" id="onboardingClose" aria-label="Закрыть обучение">✕</button>
+
+    <div class="onboarding-slides" id="onboardingSlides">
+
+      <section class="onboarding-slide active">
+        <span class="onboarding-icon" aria-hidden="true">👋</span>
+        <h2 class="onboarding-title">Добро пожаловать!</h2>
+        <p class="onboarding-text">Планировщик меню — личный помощник для планирования питания. Храните рецепты, составляйте меню и создавайте списки покупок — всё в одном месте.</p>
+        <p class="onboarding-text">Далее — краткий обзор основных возможностей. Это займёт меньше минуты.</p>
+      </section>
+
+      <section class="onboarding-slide">
+        <span class="onboarding-icon" aria-hidden="true">➕</span>
+        <h2 class="onboarding-title">Добавить блюдо</h2>
+        <p class="onboarding-text">Нажмите <strong>«➕ Добавить блюдо»</strong> на главном экране. Заполните название, выберите дату и статус — блюдо появится в календаре на выбранный день.</p>
+        <p class="onboarding-text">Клик по названию блюда открывает редактирование, клик по статус-плашке — переключает статус.</p>
+      </section>
+
+      <section class="onboarding-slide">
+        <span class="onboarding-icon" aria-hidden="true">📖</span>
+        <h2 class="onboarding-title">Добавить рецепт</h2>
+        <p class="onboarding-text">Откройте <strong>«📖 Мои рецепты»</strong> и нажмите <strong>«➕ Добавить»</strong>. Сохраните ингредиенты и инструкцию — потом сможете привязать рецепт к блюду и быстро находить его.</p>
+        <p class="onboarding-text">Рецепты можно искать, фильтровать по категориям, экспортировать в JSON или TXT.</p>
+      </section>
+
+      <section class="onboarding-slide">
+        <span class="onboarding-icon" aria-hidden="true">👍</span>
+        <h2 class="onboarding-title">Оценка блюд</h2>
+        <p class="onboarding-text">Отметьте блюдо <strong>👍</strong> или <strong>👎</strong> в модалке дня. Блюда с 👍 попадут в «Любимые», а с 👎 не будут предлагаться в рекомендациях.</p>
+        <p class="onboarding-text">Оценки взаимоисключающие: если поставить 👎, 👍 снимается автоматически.</p>
+      </section>
+
+      <section class="onboarding-slide">
+        <span class="onboarding-icon" aria-hidden="true">🔁</span>
+        <h2 class="onboarding-title">Повторить меню</h2>
+        <p class="onboarding-text">В модалке дня есть кнопка <strong>«🔄 Повторить меню»</strong>. Она копирует все блюда со статусом «Планирую» на выбранную вами дату.</p>
+      </section>
+
+      <section class="onboarding-slide">
+        <span class="onboarding-icon" aria-hidden="true">🛒</span>
+        <h2 class="onboarding-title">Список покупок</h2>
+        <p class="onboarding-text">Нажмите <strong>«🛒 Список покупок»</strong>, выберите период и нажмите «Собрать список». Ингредиенты из рецептов сгруппируются по отделам магазина.</p>
+        <p class="onboarding-text">Список можно отредактировать вручную, сохранить и экспортировать в TXT.</p>
+      </section>
+
+    </div>
+
+    <div class="onboarding-dots" id="onboardingDots" aria-hidden="true"></div>
+
+    <div class="onboarding-nav">
+      <button class="onboarding-btn onboarding-btn-ghost" id="onboardingSkip" type="button">Пропустить</button>
+      <div class="onboarding-nav-right">
+        <button class="onboarding-btn onboarding-btn-secondary" id="onboardingPrev" type="button">Назад</button>
+        <button class="onboarding-btn onboarding-btn-primary" id="onboardingNext" type="button">Далее</button>
+      </div>
+    </div>
   </div>
 </div>
 
