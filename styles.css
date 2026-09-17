@@ -2616,3 +2616,102 @@ body.dark-theme .recipes-toolbar .btn-secondary:hover {
   outline: 2px solid var(--accent-color);
   outline-offset: 2px;
 }
+
+
+/* ============================================================
+   ГРУППА A — стили для кликов и книжки рецепта
+   ============================================================ */
+
+/* Название блюда — кликабельно (открывает редактирование) */
+.modal-dish .dish-name {
+  cursor: pointer;
+}
+.modal-dish .dish-name:hover .dish-name-text {
+  color: var(--accent-color);
+}
+.modal-dish .dish-name:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Чип «📖 Рецепт» */
+.modal-dish .recipe-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 9px;
+  margin-left: 6px;
+  border-radius: 999px;
+  border: 1px solid var(--accent-color);
+  background: var(--accent-light);
+  color: var(--accent-color);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.5;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  appearance: none;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.modal-dish .recipe-chip:hover {
+  background: var(--accent-color);
+  color: var(--accent-text);
+  transform: scale(1.04);
+}
+.modal-dish .recipe-chip:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+/* Статус — кликабельная кнопка-плашка */
+.modal-dish .dish-status {
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: var(--transition-fast);
+  appearance: none;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.modal-dish .dish-status:hover {
+  background: var(--badge-bg);
+  color: var(--text-primary);
+}
+.modal-dish .dish-status:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+/* Название в списке меню — кликабельно */
+.menu-item .menu-item-name {
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+  padding-right: 8px;
+  transition: var(--transition-fast);
+}
+.menu-item .menu-item-name:hover {
+  color: var(--accent-color);
+}
+.menu-item .menu-item-name:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Чип рецепта в тёмной теме */
+body.dark-theme .modal-dish .recipe-chip {
+  background: rgba(255, 107, 53, 0.18);
+}
+body.dark-theme .modal-dish .recipe-chip:hover {
+  background: var(--accent-color);
+  color: #1a1a1a;
+}
