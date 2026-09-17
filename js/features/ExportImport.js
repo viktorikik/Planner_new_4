@@ -7,7 +7,7 @@ import { showMessage } from '../utils/notifications.js';
 // ============================================================
 // ВАЛИДАЦИЯ ИМПОРТА
 // ============================================================
-export function validateDish(dish, index) {
+function validateDish(dish, index) {
   if (!dish || typeof dish !== 'object') return `Блюдо №${index+1}: не объект`;
   if (typeof dish.name !== 'string' || dish.name.trim() === '') return `Блюдо №${index+1}: отсутствует или некорректное name`;
   if (![STATUSES.DONE, STATUSES.PLANNED].includes(dish.status)) return `Блюдо №${index+1}: недопустимый status`;
@@ -20,7 +20,7 @@ export function validateDish(dish, index) {
   return null;
 }
 
-export function validateRecipe(recipe, index) {
+function validateRecipe(recipe, index) {
   if (!recipe || typeof recipe !== 'object') return `Рецепт №${index+1}: не объект`;
   if (typeof recipe.name !== 'string' || recipe.name.trim() === '') return `Рецепт №${index+1}: отсутствует или некорректное name`;
   if (!Array.isArray(recipe.ingredients) || !recipe.ingredients.every(i => typeof i === 'string')) return `Рецепт №${index+1}: ингредиенты должны быть массивом строк`;
@@ -42,6 +42,18 @@ function downloadFile(content, filename, mime) {
   a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+// ============================================================
+// ЗАЩИТА ОТ CSV INJECTION
+// Значения, начинающиеся с =, +, -, @, \t, \r, Excel/Sheets/LibreOffice
+// интерпретируют как формулу. Добавляем апостроф в начало, чтобы
+// принудительно оставить значение текстом.
+// ============================================================
+function sanitizeCsvCell(value) {
+  let s = String(value);
+  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+  return '"' + s.replace(/"/g, '""') + '"';
 }
 
 // ============================================================
@@ -75,7 +87,7 @@ export function exportData(format) {
       ];
     });
     const csvContent = [headers, ...rows]
-      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(';'))
+      .map(row => row.map(sanitizeCsvCell).join(';'))
       .join('\n');
     const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -194,7 +206,8 @@ export function importData(file) {
         showMessage('✅ Данные успешно импортированы!');
       }
     } catch (err) {
-      showMessage('Ошибка при чтении файла: ' + err.message, 'error');
+      console.error('Import error:', err);
+      showMessage('Не удалось прочитать файл. Проверьте, что это корректный JSON.', 'error');
     }
   };
   reader.readAsText(file);
@@ -367,7 +380,8 @@ export function importRecipesOnly(file, onDone) {
 
       if (typeof onDone === 'function') onDone();
     } catch (err) {
-      showMessage('Ошибка при чтении файла: ' + err.message, 'error');
+      console.error('Import error:', err);
+      showMessage('Не удалось прочитать файл. Проверьте, что это корректный JSON.', 'error');
     }
   };
   reader.readAsText(file);
