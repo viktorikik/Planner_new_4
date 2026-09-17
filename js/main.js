@@ -161,6 +161,7 @@ import {
     { overlay: document.getElementById(CONSTANTS.SELECTORS.modalOverlay), close: Renderer.closeModal },
     { overlay: document.getElementById(CONSTANTS.SELECTORS.recOverlay), close: Renderer.closeRecModal },
     { overlay: document.getElementById(CONSTANTS.SELECTORS.addModalOverlay), close: Renderer.closeAddModal },
+    { overlay: document.getElementById(CONSTANTS.SELECTORS.editDishOverlay), close: Renderer.closeEditDishModal },
     { overlay: document.getElementById(CONSTANTS.SELECTORS.exportModalOverlay), close: () => {
         const overlay = document.getElementById(CONSTANTS.SELECTORS.exportModalOverlay);
         overlay.classList.remove('active');
@@ -204,6 +205,7 @@ import {
         if (id === CONSTANTS.SELECTORS.modalOverlay) Renderer.closeModal();
         else if (id === CONSTANTS.SELECTORS.recOverlay) Renderer.closeRecModal();
         else if (id === CONSTANTS.SELECTORS.addModalOverlay) Renderer.closeAddModal();
+        else if (id === CONSTANTS.SELECTORS.editDishOverlay) Renderer.closeEditDishModal();
         else if (id === CONSTANTS.SELECTORS.exportModalOverlay) {
           const overlay = document.getElementById(CONSTANTS.SELECTORS.exportModalOverlay);
           overlay.classList.remove('active');
