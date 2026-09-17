@@ -6,7 +6,6 @@ import { showStorageError } from '../utils/notifications.js';
 export const DishStore = (function() {
   const STORAGE_KEY = CONSTANTS.STORAGE_KEYS.DISHES;
   let dishes = [];
-  let cacheUnique = null;
   let cacheRecs = null;
   let cacheAllWithDone = null;
 
@@ -69,7 +68,6 @@ export const DishStore = (function() {
   function save() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(dishes));
-      cacheUnique = null;
       cacheRecs = null;
       cacheAllWithDone = null;
     } catch (e) {
@@ -243,7 +241,7 @@ export const DishStore = (function() {
   }
 
   function getFavorites() { return dishes.filter(d => d.liked); }
-  function invalidateCache() { cacheUnique = null; cacheRecs = null; cacheAllWithDone = null; }
+  function invalidateCache() { cacheRecs = null; cacheAllWithDone = null; }
   function replaceAll(newDishes) {
     dishes = newDishes.map(normalizeDish);
     save();
