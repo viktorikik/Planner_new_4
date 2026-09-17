@@ -30,7 +30,6 @@ export const Renderer = (function() {
   const recTitle = els.recTitle;
   const recContent = els.recContent;
 
-  // Единый массив категорий — чтобы не дублировать в трёх местах
   const CATEGORY_OPTIONS = [
     { val: CATEGORIES.SOUP,   label: '🍲 Суп' },
     { val: CATEGORIES.SALAD,  label: '🥗 Салат' },
@@ -39,7 +38,6 @@ export const Renderer = (function() {
     { val: CATEGORIES.OTHER,  label: '🍽️ Другое' }
   ];
 
-  // Emoji и названия категорий в единственном числе — для бейджа в карточке рецепта
   const CATEGORY_EMOJI = {
     [CATEGORIES.SOUP]:   '🍲',
     [CATEGORIES.SALAD]:  '🥗',
@@ -55,7 +53,6 @@ export const Renderer = (function() {
     [CATEGORIES.OTHER]:  'Другое'
   };
 
-  // Русское склонение по числу: 1 → one, 2–4 → few, 0 и 5+ → many
   function pluralizeRu(n, one, few, many) {
     const mod10 = n % 10;
     const mod100 = n % 100;
@@ -72,16 +69,40 @@ export const Renderer = (function() {
     dishDiv.className = `modal-dish ${dish.status}`;
     if (dish.liked) dishDiv.classList.add('liked');
 
+    // --- Название блюда: клик → редактирование ---
     const nameSpan = document.createElement('span');
     nameSpan.className = 'dish-name';
+    nameSpan.setAttribute('role', 'button');
+    nameSpan.setAttribute('tabindex', '0');
+    nameSpan.setAttribute('aria-label', `Редактировать блюдо ${dish.name}`);
 
+    const nameText = document.createElement('span');
+    nameText.className = 'dish-name-text';
+    nameText.textContent = dish.name;
+    nameSpan.appendChild(nameText);
+
+    nameSpan.addEventListener('click', function(e) {
+      // Если клик по вложенной кнопке «Рецепт» — не открываем редактирование
+      if (e.target.closest('.recipe-chip')) return;
+      openEditDishModal(dish.id);
+    });
+    nameSpan.addEventListener('keydown', function(e) {
+      if (e.target.closest('.recipe-chip')) return;
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openEditDishModal(dish.id);
+      }
+    });
+
+    // --- Чип «📖 Рецепт» (если есть recipeId) ---
     if (dish.recipeId) {
-      const recipeLink = document.createElement('span');
-      recipeLink.className = 'recipe-link';
-      recipeLink.textContent = '📖';
-      recipeLink.title = 'Открыть рецепт';
-      recipeLink.setAttribute('aria-label', 'Открыть рецепт');
-      recipeLink.addEventListener('click', function(e) {
+      const recipeChip = document.createElement('button');
+      recipeChip.type = 'button';
+      recipeChip.className = 'recipe-chip';
+      recipeChip.textContent = '📖 Рецепт';
+      recipeChip.title = 'Открыть рецепт';
+      recipeChip.setAttribute('aria-label', `Открыть рецепт блюда ${dish.name}`);
+      recipeChip.addEventListener('click', function(e) {
         e.stopPropagation();
         const recipe = RecipeStore.getById(dish.recipeId);
         if (recipe) {
@@ -90,67 +111,51 @@ export const Renderer = (function() {
           showMessage('Рецепт не найден', 'error');
         }
       });
-      nameSpan.appendChild(recipeLink);
+      nameSpan.appendChild(recipeChip);
     }
 
-    const nameText = document.createTextNode(' ' + dish.name);
-    nameSpan.appendChild(nameText);
     dishDiv.appendChild(nameSpan);
 
     const actions = document.createElement('div');
     actions.className = 'dish-actions';
 
-    const statusSpan = document.createElement('span');
-    statusSpan.className = 'dish-status';
-    statusSpan.textContent = dish.status === STATUSES.DONE ? '✅ Готовила' : '📅 Планирую';
-    actions.appendChild(statusSpan);
-
-    // ✎ Редактировать — открывает отдельную модалку редактирования
-    const editBtn = document.createElement('button');
-    editBtn.className = 'action-btn edit-btn';
-    editBtn.textContent = '✎';
-    editBtn.title = 'Редактировать';
-    editBtn.setAttribute('aria-label', `Редактировать блюдо ${dish.name}`);
-    editBtn.addEventListener('click', function(e) {
+    // --- Статус: клик → переключение ---
+    const statusBtn = document.createElement('button');
+    statusBtn.type = 'button';
+    statusBtn.className = 'dish-status';
+    statusBtn.textContent = dish.status === STATUSES.DONE ? '✅ Приготовлено' : '📅 Планирую';
+    statusBtn.title = 'Переключить статус';
+    statusBtn.setAttribute('aria-label', dish.status === STATUSES.DONE
+      ? 'Отметить как запланированное'
+      : 'Отметить как приготовленное');
+    statusBtn.addEventListener('click', function(e) {
       e.stopPropagation();
-      openEditDishModal(dish.id);
+      DishStore.toggleStatus(dish.id);
     });
-    actions.appendChild(editBtn);
+    actions.appendChild(statusBtn);
 
+    // --- Лайк (пока ❤️/🤍 — в группе C заменим на 👍/👎) ---
     const likeBtn = document.createElement('button');
     likeBtn.className = `action-btn like-btn ${dish.liked ? 'liked' : ''}`;
     likeBtn.textContent = dish.liked ? '❤️' : '🤍';
     likeBtn.title = 'Лайк';
     likeBtn.setAttribute('aria-label', dish.liked ? 'Убрать из любимых' : 'Добавить в любимые');
-    likeBtn.dataset.id = dish.id;
     likeBtn.addEventListener('click', function(e) {
       e.stopPropagation();
-      DishStore.toggleLike(Number(this.dataset.id));
+      DishStore.toggleLike(dish.id);
     });
     actions.appendChild(likeBtn);
 
-    const toggleBtn = document.createElement('button');
-    toggleBtn.className = 'action-btn toggle-status-btn';
-    toggleBtn.textContent = '🔄';
-    toggleBtn.title = 'Переключить статус';
-    toggleBtn.setAttribute('aria-label', 'Переключить статус блюда');
-    toggleBtn.dataset.id = dish.id;
-    toggleBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      DishStore.toggleStatus(Number(this.dataset.id));
-    });
-    actions.appendChild(toggleBtn);
-
+    // --- Удаление ---
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'action-btn delete-btn';
     deleteBtn.textContent = '🗑️';
     deleteBtn.title = 'Удалить';
     deleteBtn.setAttribute('aria-label', 'Удалить блюдо');
-    deleteBtn.dataset.id = dish.id;
     deleteBtn.addEventListener('click', function(e) {
       e.stopPropagation();
       if (confirm('Удалить это блюдо?')) {
-        DishStore.removeDish(Number(this.dataset.id));
+        DishStore.removeDish(dish.id);
       }
     });
     actions.appendChild(deleteBtn);
@@ -201,7 +206,7 @@ export const Renderer = (function() {
     [STATUSES.PLANNED, STATUSES.DONE].forEach(val => {
       const opt = document.createElement('option');
       opt.value = val;
-      opt.textContent = val === STATUSES.PLANNED ? '📅 Планирую' : '✅ Готовила';
+      opt.textContent = val === STATUSES.PLANNED ? '📅 Планирую' : '✅ Приготовлено';
       statusSelect.appendChild(opt);
     });
     addForm.appendChild(statusSelect);
@@ -435,7 +440,7 @@ export const Renderer = (function() {
 
       const statusText = document.createElement('span');
       statusText.className = 'sr-only';
-      statusText.textContent = dayDishes.map(d => d.status === STATUSES.DONE ? 'Готовила' : 'Планирую').join(', ');
+      statusText.textContent = dayDishes.map(d => d.status === STATUSES.DONE ? 'Приготовлено' : 'Планирую').join(', ');
       cell.appendChild(statusText);
 
       const handleOpen = () => openModal(dateStr);
@@ -510,7 +515,6 @@ export const Renderer = (function() {
             chip.appendChild(badge);
           }
 
-          // Настройка touch-событий для мобильного перетаскивания
           let touchDragData = null;
           let longPressTimer = null;
           let wasTouchDragged = false;
@@ -677,31 +681,30 @@ export const Renderer = (function() {
         const item = document.createElement('div');
         item.className = `menu-item ${dish.status} ${categoryClass}`;
 
+        // Название блюда — кликабельно, открывает редактирование
         const nameSpan = document.createElement('span');
+        nameSpan.className = 'menu-item-name';
         nameSpan.textContent = dish.name;
+        nameSpan.setAttribute('role', 'button');
+        nameSpan.setAttribute('tabindex', '0');
+        nameSpan.setAttribute('aria-label', `Редактировать блюдо ${dish.name}`);
+        nameSpan.addEventListener('click', function() {
+          openEditDishModal(dish.id);
+        });
+        nameSpan.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openEditDishModal(dish.id);
+          }
+        });
         item.appendChild(nameSpan);
 
-        // Обёртка для бейджа и кнопки ✎ (чтобы выровнять справа)
-        const itemActions = document.createElement('span');
-        itemActions.className = 'menu-item-actions';
-
+        // Статус-бейдж (только индикатор, клик по нему не делаем — он слишком мелкий)
         const badge = document.createElement('span');
         badge.className = 'status-badge';
         badge.textContent = dish.status === STATUSES.DONE ? '✅' : '📅';
-        itemActions.appendChild(badge);
+        item.appendChild(badge);
 
-        const editBtn = document.createElement('button');
-        editBtn.className = 'menu-item-edit-btn';
-        editBtn.textContent = '✎';
-        editBtn.title = 'Редактировать';
-        editBtn.setAttribute('aria-label', `Редактировать блюдо ${dish.name}`);
-        editBtn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          openEditDishModal(dish.id);
-        });
-        itemActions.appendChild(editBtn);
-
-        item.appendChild(itemActions);
         group.appendChild(item);
       });
       menuContent.appendChild(group);
@@ -767,7 +770,6 @@ export const Renderer = (function() {
     document.getElementById(CONSTANTS.SELECTORS.editDishStatus).value = dish.status;
     document.getElementById(CONSTANTS.SELECTORS.editDishCategory).value = dish.category || CATEGORIES.OTHER;
 
-    // Пересобираем селект рецептов (могли добавляться/удаляться)
     const recipeSelect = document.getElementById(CONSTANTS.SELECTORS.editDishRecipe);
     recipeSelect.innerHTML = '';
     const defaultOpt = document.createElement('option');
@@ -785,7 +787,6 @@ export const Renderer = (function() {
     overlay.classList.add('active');
     trapFocus(overlay, closeEditDishModal);
 
-    // Фокус в название для быстрого редактирования
     const nameInput = document.getElementById(CONSTANTS.SELECTORS.editDishName);
     setTimeout(() => { nameInput.focus(); nameInput.select(); }, 50);
   }
@@ -1244,19 +1245,16 @@ export const Renderer = (function() {
       }
     });
 
-    // ---- Модалка редактирования блюда ----
     const editOverlay = document.getElementById(CONSTANTS.SELECTORS.editDishOverlay);
     if (editOverlay) {
       document.getElementById(CONSTANTS.SELECTORS.editDishClose).addEventListener('click', closeEditDishModal);
       document.getElementById(CONSTANTS.SELECTORS.editDishCancel).addEventListener('click', closeEditDishModal);
       document.getElementById(CONSTANTS.SELECTORS.editDishSave).addEventListener('click', saveEditDishModal);
 
-      // Клик по тёмному фону — закрыть
       editOverlay.addEventListener('click', function(e) {
         if (e.target === this) closeEditDishModal();
       });
 
-      // Подстановка названия при выборе рецепта
       document.getElementById(CONSTANTS.SELECTORS.editDishRecipe).addEventListener('change', function() {
         if (!this.value) return;
         const recipe = RecipeStore.getById(Number(this.value));
