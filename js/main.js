@@ -1,4 +1,4 @@
-import { STATUSES, CATEGORIES, CONSTANTS } from './utils/Constants.js';
+import { STATUSES, CONSTANTS } from './utils/Constants.js';
 import { Utils } from './utils/Utils.js';
 import { EventBus } from './utils/EventBus.js';
 import { showMessage } from './utils/notifications.js';
@@ -19,7 +19,7 @@ import {
   closeShoppingList,
   initShoppingListHandlers
 } from './features/ShoppingList.js';
-import { Onboarding } from './features/Onboarding.js'; // ← новое
+import { Onboarding } from './features/Onboarding.js';
 
 // ============================================================
 // ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ
@@ -45,15 +45,15 @@ import { Onboarding } from './features/Onboarding.js'; // ← новое
     }
   }
 
-  // ← новое: тур (onboarding). Кнопка «❓» в шапке открывает его повторно.
+  // Тур (onboarding). Кнопка «❓» в шапке открывает его повторно.
   Onboarding.init();
 
-  // ← новое: приветствие и тур — только при первом запуске.
+  // Приветствие и тур — только при первом запуске.
   if (Onboarding.shouldShow()) {
     setTimeout(showWelcome, 300);
   }
 
-  // ← новое: после welcome открываем тур
+  // После welcome открываем тур
   document.getElementById(CONSTANTS.SELECTORS.welcomeStartBtn).addEventListener('click', function() {
     hideWelcome();
     Onboarding.open();
@@ -197,7 +197,6 @@ import { Onboarding } from './features/Onboarding.js'; // ← новое
     { overlay: document.getElementById(CONSTANTS.SELECTORS.recipesOverlay), close: closeRecipesModal },
     { overlay: document.getElementById(CONSTANTS.SELECTORS.recipeFormOverlay), close: closeRecipeForm },
     { overlay: document.getElementById(CONSTANTS.SELECTORS.shoppingListOverlay), close: closeShoppingList }
-    // ← тур (onboardingOverlay) сюда НЕ добавляем — у него свои обработчики в Onboarding.js
   ];
 
   modals.forEach(({ overlay, close }) => {
@@ -241,7 +240,7 @@ import { Onboarding } from './features/Onboarding.js'; // ← новое
         else if (id === CONSTANTS.SELECTORS.recipesOverlay) closeRecipesModal();
         else if (id === CONSTANTS.SELECTORS.recipeFormOverlay) closeRecipeForm();
         else if (id === CONSTANTS.SELECTORS.shoppingListOverlay) closeShoppingList();
-        else if (id === CONSTANTS.SELECTORS.onboardingOverlay) Onboarding.close(true); // ← новое
+        else if (id === CONSTANTS.SELECTORS.onboardingOverlay) Onboarding.close(true);
       }
     }
   });
