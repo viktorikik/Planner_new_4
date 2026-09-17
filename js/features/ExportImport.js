@@ -4,9 +4,6 @@ import { DishStore } from '../stores/DishStore.js';
 import { RecipeStore } from '../stores/RecipeStore.js';
 import { showMessage } from '../utils/notifications.js';
 
-// ============================================================
-// ВАЛИДАЦИЯ ИМПОРТА
-// ============================================================
 function validateDish(dish, index) {
   if (!dish || typeof dish !== 'object') return `Блюдо №${index+1}: не объект`;
   if (typeof dish.name !== 'string' || dish.name.trim() === '') return `Блюдо №${index+1}: отсутствует или некорректное name`;
@@ -31,9 +28,6 @@ function validateRecipe(recipe, index) {
   return null;
 }
 
-// ============================================================
-// УТИЛИТА: скачать файл из строки
-// ============================================================
 function downloadFile(content, filename, mime) {
   const blob = new Blob([content], { type: mime });
   const url = URL.createObjectURL(blob);
@@ -44,21 +38,6 @@ function downloadFile(content, filename, mime) {
   URL.revokeObjectURL(url);
 }
 
-// ============================================================
-// ЗАЩИТА ОТ CSV INJECTION
-// Значения, начинающиеся с =, +, -, @, \t, \r, Excel/Sheets/LibreOffice
-// интерпретируют как формулу. Добавляем апостроф в начало, чтобы
-// принудительно оставить значение текстом.
-// ============================================================
-function sanitizeCsvCell(value) {
-  let s = String(value);
-  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
-  return '"' + s.replace(/"/g, '""') + '"';
-}
-
-// ============================================================
-// ЭКСПОРТ ВСЕХ ДАННЫХ (меню + рецепты)
-// ============================================================
 export function exportData(format) {
   const data = DishStore.getAll();
   if (!data.length) { showMessage('Нет данных для экспорта.'); return; }
@@ -87,7 +66,7 @@ export function exportData(format) {
       ];
     });
     const csvContent = [headers, ...rows]
-      .map(row => row.map(sanitizeCsvCell).join(';'))
+      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(';'))
       .join('\n');
     const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -156,9 +135,6 @@ export function exportData(format) {
   }
 }
 
-// ============================================================
-// ИМПОРТ ВСЕХ ДАННЫХ (меню + рецепты)
-// ============================================================
 export function importData(file) {
   const reader = new FileReader();
   reader.onload = (e) => {
@@ -206,16 +182,12 @@ export function importData(file) {
         showMessage('✅ Данные успешно импортированы!');
       }
     } catch (err) {
-      console.error('Import error:', err);
-      showMessage('Не удалось прочитать файл. Проверьте, что это корректный JSON.', 'error');
+      showMessage('Ошибка при чтении файла: ' + err.message, 'error');
     }
   };
   reader.readAsText(file);
 }
 
-// ============================================================
-// ЭКСПОРТ РЕЦЕПТОВ — JSON (резервная копия)
-// ============================================================
 export function exportRecipesAsJson() {
   const recipes = RecipeStore.getAll();
   if (!recipes.length) {
@@ -227,9 +199,6 @@ export function exportRecipesAsJson() {
   downloadFile(json, filename, 'application/json');
 }
 
-// ============================================================
-// ЭКСПОРТ РЕЦЕПТОВ — TXT (человекочитаемый)
-// ============================================================
 export function exportRecipesAsTxt() {
   const recipes = RecipeStore.getAll();
   if (!recipes.length) {
@@ -246,7 +215,6 @@ export function exportRecipesAsTxt() {
     [CATEGORIES.OTHER]:  '🍽️ ДРУГОЕ'
   };
 
-  // Группируем рецепты по категориям
   const grouped = {};
   recipes.forEach(r => {
     const cat = r.category || CATEGORIES.OTHER;
@@ -273,7 +241,6 @@ export function exportRecipesAsTxt() {
     const items = grouped[cat];
     if (!items || items.length === 0) return;
 
-    // Рецепты внутри категории — по алфавиту
     items.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
 
     text += `${categoryTitles[cat] || cat} (${items.length})\n`;
@@ -309,13 +276,6 @@ export function exportRecipesAsTxt() {
   downloadFile(text, filename, 'text/plain;charset=utf-8');
 }
 
-// ============================================================
-// ИМПОРТ ТОЛЬКО РЕЦЕПТОВ
-// Логика: добавляем к существующим.
-// При совпадении названия (регистронезависимо) — спрашиваем:
-//   OK     → заменить существующий (сохраняя его id),
-//   Отмена → пропустить.
-// ============================================================
 export function importRecipesOnly(file, onDone) {
   const reader = new FileReader();
   reader.onload = (e) => {
@@ -335,7 +295,6 @@ export function importRecipesOnly(file, onDone) {
         return;
       }
 
-      // Валидация всех рецептов до начала импорта
       for (let i = 0; i < recipes.length; i++) {
         const err = validateRecipe(recipes[i], i);
         if (err) {
@@ -380,8 +339,7 @@ export function importRecipesOnly(file, onDone) {
 
       if (typeof onDone === 'function') onDone();
     } catch (err) {
-      console.error('Import error:', err);
-      showMessage('Не удалось прочитать файл. Проверьте, что это корректный JSON.', 'error');
+      showMessage('Ошибка при чтении файла: ' + err.message, 'error');
     }
   };
   reader.readAsText(file);
