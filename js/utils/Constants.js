@@ -63,11 +63,11 @@ export const PRODUCT_WORDS = [
 
 // Объект с ключами хранилища, событиями и селекторами
 export const CONSTANTS = {
-    STORAGE_KEYS: {
+  STORAGE_KEYS: {
     RECIPES: 'smartMenuRecipes_v1',
     DISHES: 'smartMenuDishes_v5',
     THEME: 'mealPlannerTheme',
-    ONBOARDING_SHOWN: 'smartMenuOnboardingShown_v1' // новое
+    ONBOARDING_SHOWN: 'smartMenuOnboardingShown_v1' // ← новое
   },
   EVENTS: {
     DISHES_CHANGED: 'dishes:changed',
@@ -180,7 +180,6 @@ export const CONSTANTS = {
     todayBtn: 'todayBtn',
     calendarWrap: 'calendarWrap',
     viewToggleButtons: '#viewToggle button',
-        viewToggleButtons: '#viewToggle button',
     exportOptions: '.export-option',
 
     // ---- Обучающий тур (новое) ----
@@ -192,6 +191,5 @@ export const CONSTANTS = {
     onboardingNext: 'onboardingNext',
     onboardingSkip: 'onboardingSkip',
     onboardingClose: 'onboardingClose'
-    exportOptions: '.export-option'
   }
 };
