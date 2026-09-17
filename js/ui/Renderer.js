@@ -69,7 +69,6 @@ export const Renderer = (function() {
     dishDiv.className = `modal-dish ${dish.status}`;
     if (dish.liked) dishDiv.classList.add('liked');
 
-    // --- Название блюда: клик → редактирование ---
     const nameSpan = document.createElement('span');
     nameSpan.className = 'dish-name';
     nameSpan.setAttribute('role', 'button');
@@ -82,7 +81,6 @@ export const Renderer = (function() {
     nameSpan.appendChild(nameText);
 
     nameSpan.addEventListener('click', function(e) {
-      // Если клик по вложенной кнопке «Рецепт» — не открываем редактирование
       if (e.target.closest('.recipe-chip')) return;
       openEditDishModal(dish.id);
     });
@@ -94,7 +92,6 @@ export const Renderer = (function() {
       }
     });
 
-    // --- Чип «📖 Рецепт» (если есть recipeId) ---
     if (dish.recipeId) {
       const recipeChip = document.createElement('button');
       recipeChip.type = 'button';
@@ -105,15 +102,11 @@ export const Renderer = (function() {
       recipeChip.addEventListener('click', function(e) {
         e.stopPropagation();
         const recipe = RecipeStore.getById(dish.recipeId);
-        if (recipe) {
-          showRecipeCard(recipe);
-        } else {
-          showMessage('Рецепт не найден', 'error');
-        }
+        if (recipe) showRecipeCard(recipe);
+        else showMessage('Рецепт не найден', 'error');
       });
       nameSpan.appendChild(recipeChip);
     }
-
     dishDiv.appendChild(nameSpan);
 
     const actions = document.createElement('div');
@@ -134,17 +127,31 @@ export const Renderer = (function() {
     });
     actions.appendChild(statusBtn);
 
-    // --- Лайк (пока ❤️/🤍 — в группе C заменим на 👍/👎) ---
-    const likeBtn = document.createElement('button');
-    likeBtn.className = `action-btn like-btn ${dish.liked ? 'liked' : ''}`;
-    likeBtn.textContent = dish.liked ? '❤️' : '🤍';
-    likeBtn.title = 'Лайк';
-    likeBtn.setAttribute('aria-label', dish.liked ? 'Убрать из любимых' : 'Добавить в любимые');
-    likeBtn.addEventListener('click', function(e) {
+    // --- 👍 Нравится ---
+    const upBtn = document.createElement('button');
+    upBtn.type = 'button';
+    upBtn.className = `thumb-btn thumb-up ${dish.liked ? 'active' : ''}`;
+    upBtn.textContent = '👍';
+    upBtn.title = dish.liked ? 'Убрать оценку «нравится»' : 'Нравится';
+    upBtn.setAttribute('aria-label', dish.liked ? 'Убрать оценку нравится' : 'Отметить как понравившееся');
+    upBtn.addEventListener('click', function(e) {
       e.stopPropagation();
-      DishStore.toggleLike(dish.id);
+      DishStore.toggleThumbUp(dish.id);
     });
-    actions.appendChild(likeBtn);
+    actions.appendChild(upBtn);
+
+    // --- 👎 Не нравится ---
+    const downBtn = document.createElement('button');
+    downBtn.type = 'button';
+    downBtn.className = `thumb-btn thumb-down ${dish.disliked ? 'active' : ''}`;
+    downBtn.textContent = '👎';
+    downBtn.title = dish.disliked ? 'Убрать оценку «не нравится»' : 'Не нравится';
+    downBtn.setAttribute('aria-label', dish.disliked ? 'Убрать оценку не нравится' : 'Отметить как непонравившееся');
+    downBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      DishStore.toggleThumbDown(dish.id);
+    });
+    actions.appendChild(downBtn);
 
     // --- Удаление ---
     const deleteBtn = document.createElement('button');
@@ -229,8 +236,7 @@ export const Renderer = (function() {
     defaultOpt.value = '';
     defaultOpt.textContent = 'Без рецепта';
     recipeSelect.appendChild(defaultOpt);
-    const allRecipes = RecipeStore.getAll();
-    allRecipes.forEach(r => {
+    RecipeStore.getAll().forEach(r => {
       const opt = document.createElement('option');
       opt.value = r.id;
       opt.textContent = r.name;
@@ -356,9 +362,7 @@ export const Renderer = (function() {
       const recipeId = this.value;
       if (recipeId) {
         const recipe = RecipeStore.getById(Number(recipeId));
-        if (recipe) {
-          nameInput.value = recipe.name;
-        }
+        if (recipe) nameInput.value = recipe.name;
       }
     });
 
@@ -379,7 +383,7 @@ export const Renderer = (function() {
   }
 
   // ============================================================
-  // КАЛЕНДАРЬ — МЕСЯЦ / НЕДЕЛЯ
+  // КАЛЕНДАРЬ
   // ============================================================
   function renderCalendar(view, date) {
     currentView = view;
@@ -526,10 +530,7 @@ export const Renderer = (function() {
             startY = touch.clientY;
             touchDragData = { dishId: dish.id, fromDate: dateStr, chip: chip };
             wasTouchDragged = false;
-
-            longPressTimer = setTimeout(() => {
-              activateTouchDrag(e);
-            }, 300);
+            longPressTimer = setTimeout(() => activateTouchDrag(e), 300);
           }, { passive: false });
 
           const activateTouchDrag = (e) => {
@@ -555,22 +556,18 @@ export const Renderer = (function() {
                 return;
               }
             }
-
             if (window.__touchDragActive && touchDragData) {
               e.preventDefault();
               const element = document.elementFromPoint(touch.clientX, touch.clientY);
               const targetRow = element ? element.closest('.week-row') : null;
               document.querySelectorAll('.week-row').forEach(r => r.classList.remove('drag-over'));
-              if (targetRow) {
-                targetRow.classList.add('drag-over');
-              }
+              if (targetRow) targetRow.classList.add('drag-over');
               touchDragData.targetRow = targetRow;
             }
           }, { passive: false });
 
           chip.addEventListener('touchend', (e) => {
             if (longPressTimer) clearTimeout(longPressTimer);
-
             if (window.__touchDragActive && touchDragData) {
               e.preventDefault();
               const targetRow = touchDragData.targetRow;
@@ -596,9 +593,7 @@ export const Renderer = (function() {
             if (e.target.closest('.recipe-badge')) return;
             if (e.detail > 0) openModal(dateStr);
           };
-
           chip.addEventListener('click', originalClickHandler);
-
           mealsCol.appendChild(chip);
         });
       }
@@ -681,17 +676,14 @@ export const Renderer = (function() {
         const item = document.createElement('div');
         item.className = `menu-item ${dish.status} ${categoryClass}`;
 
-        // Название блюда — кликабельно, открывает редактирование
         const nameSpan = document.createElement('span');
         nameSpan.className = 'menu-item-name';
         nameSpan.textContent = dish.name;
         nameSpan.setAttribute('role', 'button');
         nameSpan.setAttribute('tabindex', '0');
         nameSpan.setAttribute('aria-label', `Редактировать блюдо ${dish.name}`);
-        nameSpan.addEventListener('click', function() {
-          openEditDishModal(dish.id);
-        });
-        nameSpan.addEventListener('keydown', function(e) {
+        nameSpan.addEventListener('click', () => openEditDishModal(dish.id));
+        nameSpan.addEventListener('keydown', (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             openEditDishModal(dish.id);
@@ -699,7 +691,6 @@ export const Renderer = (function() {
         });
         item.appendChild(nameSpan);
 
-        // Статус-бейдж (только индикатор, клик по нему не делаем — он слишком мелкий)
         const badge = document.createElement('span');
         badge.className = 'status-badge';
         badge.textContent = dish.status === STATUSES.DONE ? '✅' : '📅';
@@ -738,6 +729,18 @@ export const Renderer = (function() {
       });
     }
     modalContent.appendChild(section);
+
+    // Кнопка «Повторить меню» — только если есть блюда
+    if (dayDishes.length > 0) {
+      const repeatBtn = document.createElement('button');
+      repeatBtn.type = 'button';
+      repeatBtn.className = 'repeat-menu-btn';
+      repeatBtn.textContent = '🔄 Повторить меню на другой день';
+      repeatBtn.addEventListener('click', function() {
+        openRepeatMenuModal(dateStr);
+      });
+      modalContent.appendChild(repeatBtn);
+    }
 
     modalContent.appendChild(buildAddForm(dateStr));
 
@@ -818,6 +821,71 @@ export const Renderer = (function() {
   }
 
   // ============================================================
+  // МОДАЛКА «ПОВТОРИТЬ МЕНЮ»
+  // ============================================================
+  function openRepeatMenuModal(sourceDate) {
+    const overlay = document.getElementById(CONSTANTS.SELECTORS.repeatMenuOverlay);
+    if (!overlay) return;
+
+    document.getElementById(CONSTANTS.SELECTORS.repeatMenuSourceDate).value = sourceDate;
+
+    // Дефолт: следующий день после источника
+    const d = new Date(sourceDate);
+    d.setDate(d.getDate() + 1);
+    document.getElementById(CONSTANTS.SELECTORS.repeatMenuDate).value = Utils.formatDateLocal(d);
+
+    const subtitle = document.getElementById('repeatMenuSubtitle');
+    if (subtitle) {
+      subtitle.textContent = `Куда скопировать блюда из ${Utils.formatDate(new Date(sourceDate))}?`;
+    }
+
+    overlay.classList.add('active');
+    trapFocus(overlay, closeRepeatMenuModal);
+  }
+
+  function closeRepeatMenuModal() {
+    const overlay = document.getElementById(CONSTANTS.SELECTORS.repeatMenuOverlay);
+    if (!overlay) return;
+    overlay.classList.remove('active');
+    if (overlay._trapFocusCleanup) {
+      overlay._trapFocusCleanup();
+      delete overlay._trapFocusCleanup;
+    }
+  }
+
+  function executeRepeatMenu() {
+    const sourceDate = document.getElementById(CONSTANTS.SELECTORS.repeatMenuSourceDate).value;
+    const targetDate = document.getElementById(CONSTANTS.SELECTORS.repeatMenuDate).value;
+
+    if (!targetDate) { showMessage('Выберите дату', 'error'); return; }
+    if (sourceDate === targetDate) { showMessage('Выберите другой день', 'error'); return; }
+
+    const sourceDishes = DishStore.getForDate(sourceDate);
+    if (sourceDishes.length === 0) {
+      showMessage('Нечего повторять — на исходном дне нет блюд', 'error');
+      return;
+    }
+
+    let added = 0;
+    sourceDishes.forEach(dish => {
+      DishStore.addDish(
+        dish.name,
+        STATUSES.PLANNED,
+        targetDate,
+        dish.category,
+        false,
+        dish.note || '',
+        dish.recipeId || null
+      );
+      added++;
+    });
+
+    closeRepeatMenuModal();
+    const word = pluralizeRu(added, 'блюдо', 'блюда', 'блюд');
+    showMessage(`✅ Скопировано ${added} ${word} на ${Utils.formatDate(new Date(targetDate))}`);
+  }
+
+  // ============================================================
   // ПЕРЕНОС НА ЗАВТРА + РЕКОМЕНДАЦИИ + ЛЮБИМЫЕ
   // ============================================================
   function addDishToTomorrow(name, recipeId = null, closeModalCallback) {
@@ -871,18 +939,14 @@ export const Renderer = (function() {
       const btn = document.createElement('button');
       btn.className = 'category-choice-btn';
       btn.textContent = cat.label;
-      btn.addEventListener('click', () => {
-        showRecommendationsForCategory(cat.key);
-      });
+      btn.addEventListener('click', () => showRecommendationsForCategory(cat.key));
       container.appendChild(btn);
     });
 
     const backBtn = document.createElement('button');
     backBtn.className = 'rec-back-btn';
     backBtn.textContent = '← Назад';
-    backBtn.addEventListener('click', () => {
-      recOverlay.classList.remove('active');
-    });
+    backBtn.addEventListener('click', () => recOverlay.classList.remove('active'));
     container.appendChild(backBtn);
 
     recContent.appendChild(container);
@@ -898,16 +962,16 @@ export const Renderer = (function() {
     allUnique.forEach(item => {
       const dish = DishStore.getAll().find(d => d.name === item.name);
       if (dish && dish.category === category && item.lastDoneDate) {
+        // Исключаем блюда с оценкой 👎
+        if (DishStore.isDishNameDisliked(item.name)) return;
         const liked = DishStore.getAll().some(d => d.name === item.name && d.liked);
         filtered.push({ name: item.name, lastDate: item.lastDoneDate, liked });
       }
     });
 
     filtered.sort((a, b) => a.lastDate.localeCompare(b.lastDate));
-
     const likedItems = filtered.filter(item => item.liked);
     const otherItems = filtered.filter(item => !item.liked);
-
     const likedResult = likedItems.slice(0, 1);
     const othersResult = otherItems.slice(0, 3);
 
@@ -923,34 +987,10 @@ export const Renderer = (function() {
         const section = document.createElement('div');
         section.className = 'rec-section';
         const title = document.createElement('h4');
-        title.textContent = '❤️ Давно не готовили любимое блюдо';
+        title.textContent = '👍 Давно не готовили любимое блюдо';
         section.appendChild(title);
         likedResult.forEach(item => {
-          const row = document.createElement('div');
-          row.className = 'rec-item';
-          row.dataset.name = item.name;
-          row.setAttribute('tabindex', '0');
-          row.setAttribute('role', 'button');
-          row.setAttribute('aria-label', `Добавить блюдо ${item.name} на завтра`);
-          const nameSpan = document.createElement('span');
-          nameSpan.className = 'rec-name';
-          nameSpan.textContent = item.name;
-          row.appendChild(nameSpan);
-          const daysSpan = document.createElement('span');
-          daysSpan.className = 'rec-days';
-          daysSpan.textContent = `последний раз ${Utils.daysAgo(item.lastDate)}`;
-          row.appendChild(daysSpan);
-          const handleSelect = () => {
-            addDishToTomorrow(item.name, null, () => recOverlay.classList.remove('active'));
-          };
-          row.addEventListener('click', handleSelect);
-          row.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              handleSelect();
-            }
-          });
-          section.appendChild(row);
+          section.appendChild(buildRecItem(item));
         });
         recContent.appendChild(section);
       }
@@ -961,31 +1001,7 @@ export const Renderer = (function() {
         title.textContent = '🍽️ Другие давние блюда';
         section.appendChild(title);
         othersResult.forEach(item => {
-          const row = document.createElement('div');
-          row.className = 'rec-item';
-          row.dataset.name = item.name;
-          row.setAttribute('tabindex', '0');
-          row.setAttribute('role', 'button');
-          row.setAttribute('aria-label', `Добавить блюдо ${item.name} на завтра`);
-          const nameSpan = document.createElement('span');
-          nameSpan.className = 'rec-name';
-          nameSpan.textContent = item.name;
-          row.appendChild(nameSpan);
-          const daysSpan = document.createElement('span');
-          daysSpan.className = 'rec-days';
-          daysSpan.textContent = `последний раз ${Utils.daysAgo(item.lastDate)}`;
-          row.appendChild(daysSpan);
-          const handleSelect = () => {
-            addDishToTomorrow(item.name, null, () => recOverlay.classList.remove('active'));
-          };
-          row.addEventListener('click', handleSelect);
-          row.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              handleSelect();
-            }
-          });
-          section.appendChild(row);
+          section.appendChild(buildRecItem(item));
         });
         recContent.appendChild(section);
       }
@@ -998,23 +1014,50 @@ export const Renderer = (function() {
     const backBtn = document.createElement('button');
     backBtn.className = 'rec-back-btn';
     backBtn.textContent = '← Назад к категориям';
-    backBtn.addEventListener('click', () => {
-      showCategorySelection();
-    });
+    backBtn.addEventListener('click', showCategorySelection);
     recContent.appendChild(backBtn);
 
     recOverlay.classList.add('active');
     trapFocus(recOverlay, closeRecModal);
   }
 
+  // Хелпер: один элемент списка рекомендаций
+  function buildRecItem(item) {
+    const row = document.createElement('div');
+    row.className = 'rec-item';
+    row.dataset.name = item.name;
+    row.setAttribute('tabindex', '0');
+    row.setAttribute('role', 'button');
+    row.setAttribute('aria-label', `Добавить блюдо ${item.name} на завтра`);
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'rec-name';
+    nameSpan.textContent = item.name;
+    row.appendChild(nameSpan);
+    const daysSpan = document.createElement('span');
+    daysSpan.className = 'rec-days';
+    daysSpan.textContent = `последний раз ${Utils.daysAgo(item.lastDate)}`;
+    row.appendChild(daysSpan);
+    const handleSelect = () => {
+      addDishToTomorrow(item.name, null, () => recOverlay.classList.remove('active'));
+    };
+    row.addEventListener('click', handleSelect);
+    row.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        handleSelect();
+      }
+    });
+    return row;
+  }
+
   function openFavorites() {
-    recTitle.textContent = '❤️ Любимые блюда';
+    recTitle.textContent = '👍 Понравившиеся блюда';
     const favs = DishStore.getFavorites();
     recContent.innerHTML = '';
     if (favs.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'modal-empty';
-      empty.textContent = '😌 У вас пока нет любимых блюд. Отмечайте блюда сердечком ❤️ в модалке дня.';
+      empty.textContent = '😌 У вас пока нет понравившихся блюд. Отмечайте их пальцем вверх 👍 в модалке дня.';
       recContent.appendChild(empty);
     } else {
       const map = {};
@@ -1026,7 +1069,7 @@ export const Renderer = (function() {
       const section = document.createElement('div');
       section.className = 'rec-section';
       const title = document.createElement('h4');
-      title.textContent = 'Все любимые блюда';
+      title.textContent = 'Все понравившиеся блюда';
       section.appendChild(title);
       list.forEach(item => {
         const row = document.createElement('div');
@@ -1038,7 +1081,7 @@ export const Renderer = (function() {
         row.setAttribute('aria-label', `Добавить ${item.name} на завтра`);
         const nameSpan = document.createElement('span');
         nameSpan.className = 'rec-name';
-        nameSpan.textContent = '❤️ ' + item.name;
+        nameSpan.textContent = '👍 ' + item.name;
         row.appendChild(nameSpan);
         const daysSpan = document.createElement('span');
         daysSpan.className = 'rec-days';
@@ -1047,8 +1090,8 @@ export const Renderer = (function() {
         const removeBtn = document.createElement('button');
         removeBtn.className = 'rec-remove';
         removeBtn.textContent = '✕';
-        removeBtn.title = 'Убрать из любимых';
-        removeBtn.setAttribute('aria-label', `Убрать ${item.name} из любимых`);
+        removeBtn.title = 'Убрать оценку';
+        removeBtn.setAttribute('aria-label', `Убрать оценку у ${item.name}`);
         row.appendChild(removeBtn);
         const handleAdd = () => {
           addDishToTomorrow(item.name, null, () => recOverlay.classList.remove('active'));
@@ -1078,7 +1121,7 @@ export const Renderer = (function() {
       recContent.appendChild(section);
       const hint = document.createElement('div');
       hint.className = 'rec-hint';
-      hint.textContent = '👆 Кликните по блюду (кроме крестика), чтобы добавить его в план на завтра. Нажмите ✕, чтобы убрать из любимых.';
+      hint.textContent = '👆 Кликните по блюду (кроме крестика), чтобы добавить его в план на завтра. Нажмите ✕, чтобы убрать оценку.';
       recContent.appendChild(hint);
     }
     recOverlay.classList.add('active');
@@ -1120,7 +1163,7 @@ export const Renderer = (function() {
   function setCategoryFilter(f) { categoryFilter = f; renderMenu(); }
 
   // ============================================================
-  // КАРТОЧКА РЕЦЕПТА (просмотр)
+  // КАРТОЧКА РЕЦЕПТА
   // ============================================================
   function showRecipeCard(recipe) {
     const overlay = document.createElement('div');
@@ -1241,26 +1284,36 @@ export const Renderer = (function() {
     EventBus.on(CONSTANTS.EVENTS.RECIPES_CHANGED, () => {
       const recipesOverlay = document.getElementById(CONSTANTS.SELECTORS.recipesOverlay);
       if (recipesOverlay && recipesOverlay.classList.contains('active')) {
-        // renderRecipesList будет вызван из main.js через импорт
+        // renderRecipesList вызовется из main.js
       }
     });
 
+    // Модалка редактирования блюда
     const editOverlay = document.getElementById(CONSTANTS.SELECTORS.editDishOverlay);
     if (editOverlay) {
       document.getElementById(CONSTANTS.SELECTORS.editDishClose).addEventListener('click', closeEditDishModal);
       document.getElementById(CONSTANTS.SELECTORS.editDishCancel).addEventListener('click', closeEditDishModal);
       document.getElementById(CONSTANTS.SELECTORS.editDishSave).addEventListener('click', saveEditDishModal);
-
       editOverlay.addEventListener('click', function(e) {
         if (e.target === this) closeEditDishModal();
       });
-
       document.getElementById(CONSTANTS.SELECTORS.editDishRecipe).addEventListener('change', function() {
         if (!this.value) return;
         const recipe = RecipeStore.getById(Number(this.value));
         if (recipe) {
           document.getElementById(CONSTANTS.SELECTORS.editDishName).value = recipe.name;
         }
+      });
+    }
+
+    // Модалка повтора меню
+    const repeatOverlay = document.getElementById(CONSTANTS.SELECTORS.repeatMenuOverlay);
+    if (repeatOverlay) {
+      document.getElementById(CONSTANTS.SELECTORS.repeatMenuClose).addEventListener('click', closeRepeatMenuModal);
+      document.getElementById(CONSTANTS.SELECTORS.repeatMenuCancel).addEventListener('click', closeRepeatMenuModal);
+      document.getElementById(CONSTANTS.SELECTORS.repeatMenuSave).addEventListener('click', executeRepeatMenu);
+      repeatOverlay.addEventListener('click', function(e) {
+        if (e.target === this) closeRepeatMenuModal();
       });
     }
   }
@@ -1280,6 +1333,9 @@ export const Renderer = (function() {
     showRecommendationsForCategory,
     openEditDishModal,
     closeEditDishModal,
-    saveEditDishModal
+    saveEditDishModal,
+    openRepeatMenuModal,
+    closeRepeatMenuModal,
+    executeRepeatMenu
   };
 })();
