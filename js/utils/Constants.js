@@ -110,6 +110,13 @@ export const CONSTANTS = {
     editDishRecipe: 'editDishRecipe',
     editDishCancel: 'editDishCancel',
     editDishSave: 'editDishSave',
+        // ---- Модалка «Повторить меню» (новое) ----
+    repeatMenuOverlay: 'repeatMenuOverlay',
+    repeatMenuClose: 'repeatMenuClose',
+    repeatMenuDate: 'repeatMenuDate',
+    repeatMenuSourceDate: 'repeatMenuSourceDate',
+    repeatMenuCancel: 'repeatMenuCancel',
+    repeatMenuSave: 'repeatMenuSave',
     // ---------------------------------------------
     exportModalOverlay: 'exportModalOverlay',
     exportModalClose: 'exportModalClose',
