@@ -99,6 +99,18 @@ export const CONSTANTS = {
     newDishStatus: 'newDishStatus',
     newDishCategory: 'newDishCategory',
     addModalSave: 'addModalSave',
+    // ---- Модалка редактирования блюда (новое) ----
+    editDishOverlay: 'editDishOverlay',
+    editDishClose: 'editDishClose',
+    editDishId: 'editDishId',
+    editDishName: 'editDishName',
+    editDishNote: 'editDishNote',
+    editDishStatus: 'editDishStatus',
+    editDishCategory: 'editDishCategory',
+    editDishRecipe: 'editDishRecipe',
+    editDishCancel: 'editDishCancel',
+    editDishSave: 'editDishSave',
+    // ---------------------------------------------
     exportModalOverlay: 'exportModalOverlay',
     exportModalClose: 'exportModalClose',
     choiceOverlay: 'choiceOverlay',
@@ -118,11 +130,9 @@ export const CONSTANTS = {
     importRecipesFileInput: 'importRecipesFileInput',
     recipesSearchInput: 'recipesSearchInput',
     recipesCategoryFilter: 'recipesCategoryFilter',
-    // ---- Модалка выбора формата экспорта рецептов (новое) ----
     recipeExportOverlay: 'recipeExportOverlay',
     recipeExportClose: 'recipeExportClose',
     recipeExportOptions: '.recipe-export-option',
-    // --------------------------------------------------------
     recipeFormOverlay: 'recipeFormOverlay',
     recipeFormClose: 'recipeFormClose',
     recipeFormTitle: 'recipeFormTitle',
