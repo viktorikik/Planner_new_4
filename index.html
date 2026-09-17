@@ -37,7 +37,7 @@
     </div>
     <!-- Третья строка: Любимые (по центру) -->
     <div class="btn-row center-row">
-      <button class="btn btn-secondary" id="favoritesBtn"><span class="heart">❤️</span> Любимые</button>
+      <button class="btn btn-secondary" id="favoritesBtn"><span class="heart">👍</span> Любимые</button>
     </div>
   </section>
 
@@ -70,7 +70,7 @@
     <input type="text" id="searchInput" placeholder="🔍 Поиск блюда..." aria-label="Поиск по названию блюда">
     <select id="statusFilter" aria-label="Фильтр по статусу">
       <option value="all">Все статусы</option>
-      <option value="done">✅ Готовила</option>
+      <option value="done">✅ Приготовлено</option>
       <option value="planned">📅 Планирую</option>
     </select>
     <select id="categoryFilter" aria-label="Фильтр по категории">
@@ -185,7 +185,7 @@
       <label for="editDishStatus">Статус</label>
       <select id="editDishStatus">
         <option value="planned">📅 Планирую</option>
-        <option value="done">✅ Уже поиготовлено</option>
+        <option value="done">✅ Уже приготовлено</option>
       </select>
     </div>
     <div class="form-group">
@@ -235,7 +235,7 @@
     <input type="hidden" id="repeatMenuSourceDate" value="">
   </div>
 </div>
-  
+
 <!-- Модалка экспорта (добавлен TXT) -->
 <div class="modal-overlay export-modal" id="exportModalOverlay" role="dialog" aria-modal="true" aria-labelledby="exportModalTitle">
   <div class="modal">
@@ -301,7 +301,7 @@
         <li>📅 Планировать блюда на месяц или неделю</li>
         <li>📖 Хранить рецепты с ингредиентами и инструкцией</li>
         <li>🛒 Генерировать список покупок из выбранных рецептов</li>
-        <li>❤️ Отмечать любимые блюда и получать рекомендации</li>
+        <li>👍 Отмечать любимые блюда и получать рекомендации</li>
         <li>💾 Экспортировать данные в JSON, CSV или TXT</li>
       </ul>
       <p style="margin-top: 8px;">Всё работает в вашем браузере, данные хранятся локально. <strong>Начните прямо сейчас!</strong></p>
@@ -391,26 +391,28 @@
       <button class="modal-close" id="shoppingListClose" aria-label="Закрыть">✕</button>
     </div>
     <div>
-      <div class="form-group" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-        <label for="shoppingDateFrom" style="font-weight:500;">От:</label>
+      <div class="shopping-dates-row">
+        <label for="shoppingDateFrom">От:</label>
         <input type="date" id="shoppingDateFrom">
-        <label for="shoppingDateTo" style="font-weight:500;">До:</label>
+        <label for="shoppingDateTo">До:</label>
         <input type="date" id="shoppingDateTo">
-        <button class="btn-primary" id="generateShoppingListBtn">Собрать список</button>
       </div>
+      <button class="btn-primary shopping-generate-btn" id="generateShoppingListBtn">🛒 Собрать список</button>
 
-      <div id="savedListsContainer">
-        <h4 style="margin:12px 0 8px;">Сохранённые списки</h4>
+      <div id="savedListsContainer" class="shopping-saved-block">
+        <h4>💾 Сохранённые списки</h4>
         <div id="savedListsList"></div>
       </div>
 
       <div id="shoppingListDisplay" style="display:none;">
-        <button id="backToSavedListsBtn" class="btn-secondary" style="margin-bottom:8px;">← Назад к спискам</button>
-        <textarea id="shoppingListResult" placeholder="Сгенерированный список появится здесь. Вы можете редактировать его вручную."></textarea>
-        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;">
-          <button id="saveCurrentListBtn" class="btn-done">💾 Сохранить изменения</button>
-          <button id="deleteCurrentListBtn" class="btn-secondary">🗑️ Удалить этот список</button>
-          <button id="exportShoppingListTxtBtn" class="btn-secondary">📄 Сохранить как .txt</button>
+        <button id="backToSavedListsBtn" class="btn-secondary shopping-back-btn">← Назад к спискам</button>
+        <div id="shoppingListView" class="shopping-list-view"></div>
+        <textarea id="shoppingListResult" placeholder="Сгенерированный список появится здесь."></textarea>
+        <div class="shopping-actions-row">
+          <button id="shoppingListEditBtn" class="btn-secondary">✎ Редактировать вручную</button>
+          <button id="saveCurrentListBtn" class="btn-done">💾 Сохранить</button>
+          <button id="deleteCurrentListBtn" class="btn-secondary">🗑️ Удалить</button>
+          <button id="exportShoppingListTxtBtn" class="btn-secondary">📄 .txt</button>
         </div>
       </div>
     </div>
