@@ -44,6 +44,7 @@ export const DishStore = (function() {
     if (!dish.category) dish.category = Utils.guessCategory(dish.name);
     if (!dish.note) dish.note = '';
     if (dish.liked === undefined) dish.liked = false;
+    if (dish.disliked === undefined) dish.disliked = false;
     if (!dish.id) dish.id = generateId();
     if (dish.recipeId === undefined) dish.recipeId = null;
     return dish;
@@ -80,7 +81,7 @@ export const DishStore = (function() {
 
   function init() {
     if (!load()) {
-      const result = DEFAULT_DISHES.map((d, i) => ({ ...d, id: generateId() + i, liked: false, recipeId: null }));
+      const result = DEFAULT_DISHES.map((d, i) => ({ ...d, id: generateId() + i, liked: false, disliked: false, recipeId: null }));
       const noDate = [
         { name: 'Салат с морской капустой и крабовым мясом', category: CATEGORIES.SALAD, note: '' },
         { name: 'Гречка и салат из свежей капусты как в столовой', category: CATEGORIES.MAIN, note: '' },
@@ -97,6 +98,7 @@ export const DishStore = (function() {
           date: Utils.formatDateLocal(d),
           category: item.category,
           liked: false,
+          disliked: false,
           note: item.note || '',
           recipeId: null
         });
@@ -130,7 +132,7 @@ export const DishStore = (function() {
   function addDish(name, status, date, category, liked = false, note = '', recipeId = null) {
     if (!name || !status || !date || !category) return false;
     const id = generateId();
-    dishes.push({ id, name, status, date, category, liked, note, recipeId });
+    dishes.push({ id, name, status, date, category, liked, disliked: false, note, recipeId });
     save();
     return true;
   }
@@ -151,12 +153,50 @@ export const DishStore = (function() {
     return true;
   }
 
+  // Классический toggleLike оставлен — используется в «Любимых» для снятия оценки
   function toggleLike(id) {
     const dish = dishes.find(d => d.id === id);
     if (!dish) return false;
     dish.liked = !dish.liked;
+    if (dish.liked) dish.disliked = false;
     save();
     return true;
+  }
+
+  // 👍 Нравится — взаимоисключение с 👎
+  function toggleThumbUp(id) {
+    const dish = dishes.find(d => d.id === id);
+    if (!dish) return false;
+    if (dish.liked) {
+      dish.liked = false;
+    } else {
+      dish.liked = true;
+      dish.disliked = false;
+    }
+    save();
+    return true;
+  }
+
+  // 👎 Не нравится — взаимоисключение с 👍
+  function toggleThumbDown(id) {
+    const dish = dishes.find(d => d.id === id);
+    if (!dish) return false;
+    if (dish.disliked) {
+      dish.disliked = false;
+    } else {
+      dish.disliked = true;
+      dish.liked = false;
+    }
+    save();
+    return true;
+  }
+
+  // Проверка: последняя по дате запись с этим именем имеет 👎?
+  function isDishNameDisliked(name) {
+    const entries = dishes.filter(d => d.name === name);
+    if (entries.length === 0) return false;
+    const sorted = entries.slice().sort((a, b) => b.date.localeCompare(a.date));
+    return sorted[0].disliked === true;
   }
 
   function getAllUniqueWithLastDone() {
@@ -233,8 +273,6 @@ export const DishStore = (function() {
     return true;
   }
 
-  // Обнуляет ссылки на удалённый рецепт у всех блюд.
-  // Возвращает true, если что-то изменилось.
   function clearRecipeRefs(recipeId) {
     let changed = false;
     dishes.forEach(d => {
@@ -247,10 +285,6 @@ export const DishStore = (function() {
     return changed;
   }
 
-  // Полное обновление блюда (кроме даты).
-  // Принимает объект с любым набором полей:
-  // { name, status, category, note, recipeId, liked }
-  // Обновляет только те поля, которые переданы (undefined игнорируется).
   function updateDish(id, fields) {
     const dish = dishes.find(d => d.id === id);
     if (!dish) return false;
@@ -260,13 +294,16 @@ export const DishStore = (function() {
     if (fields.note !== undefined) dish.note = String(fields.note).trim();
     if (fields.recipeId !== undefined) dish.recipeId = fields.recipeId;
     if (fields.liked !== undefined) dish.liked = fields.liked;
+    if (fields.disliked !== undefined) dish.disliked = fields.disliked;
     save();
     return true;
   }
 
   return {
     init, editDishName, updateNote, getAll, getForDate, addDish, removeDish,
-    toggleStatus, toggleLike, getAllUniqueWithLastDone,
+    toggleStatus, toggleLike, toggleThumbUp, toggleThumbDown,
+    isDishNameDisliked,
+    getAllUniqueWithLastDone,
     getRecommendations, getFavorites, invalidateCache, replaceAll,
     getRandomDishFromTaste, setRecipeId, updateDishDate, clearRecipeRefs,
     updateDish
