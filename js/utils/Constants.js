@@ -164,6 +164,8 @@ export const CONSTANTS = {
     deleteCurrentListBtn: 'deleteCurrentListBtn',
     backToSavedListsBtn: 'backToSavedListsBtn',
     exportShoppingListTxtBtn: 'exportShoppingListTxtBtn',
+    shoppingListView: 'shoppingListView',
+    shoppingListEditBtn: 'shoppingListEditBtn',
     importFileInput: 'importFileInput',
     importBtn: 'importBtn',
     exportBtn: 'exportBtn',
