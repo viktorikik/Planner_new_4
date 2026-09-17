@@ -247,10 +247,28 @@ export const DishStore = (function() {
     return changed;
   }
 
+  // Полное обновление блюда (кроме даты).
+  // Принимает объект с любым набором полей:
+  // { name, status, category, note, recipeId, liked }
+  // Обновляет только те поля, которые переданы (undefined игнорируется).
+  function updateDish(id, fields) {
+    const dish = dishes.find(d => d.id === id);
+    if (!dish) return false;
+    if (fields.name !== undefined) dish.name = String(fields.name).trim();
+    if (fields.status !== undefined) dish.status = fields.status;
+    if (fields.category !== undefined) dish.category = fields.category;
+    if (fields.note !== undefined) dish.note = String(fields.note).trim();
+    if (fields.recipeId !== undefined) dish.recipeId = fields.recipeId;
+    if (fields.liked !== undefined) dish.liked = fields.liked;
+    save();
+    return true;
+  }
+
   return {
     init, editDishName, updateNote, getAll, getForDate, addDish, removeDish,
     toggleStatus, toggleLike, getAllUniqueWithLastDone,
     getRecommendations, getFavorites, invalidateCache, replaceAll,
-    getRandomDishFromTaste, setRecipeId, updateDishDate, clearRecipeRefs
+    getRandomDishFromTaste, setRecipeId, updateDishDate, clearRecipeRefs,
+    updateDish
   };
 })();
