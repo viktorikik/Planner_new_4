@@ -66,7 +66,7 @@ export function exportData(format) {
       const recipe = d.recipeId ? RecipeStore.getById(d.recipeId) : null;
       return [
         d.name,
-        d.status === STATUSES.DONE ? 'Готовила' : 'Планирую',
+        d.status === STATUSES.DONE ? 'Приготовлено' : 'Планирую',
         d.date,
         d.category,
         d.note || '',
