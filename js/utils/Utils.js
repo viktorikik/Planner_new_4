@@ -1,13 +1,6 @@
 import { CATEGORIES, PRODUCT_WORDS } from './Constants.js';
 
 export const Utils = {
-  escapeHtml(str) {
-    if (!str) return '';
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-  },
-
   formatDate(date) {
     const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
     return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
