@@ -1281,12 +1281,6 @@ export const Renderer = (function() {
         openModal(currentModalDate);
       }
     });
-    EventBus.on(CONSTANTS.EVENTS.RECIPES_CHANGED, () => {
-      const recipesOverlay = document.getElementById(CONSTANTS.SELECTORS.recipesOverlay);
-      if (recipesOverlay && recipesOverlay.classList.contains('active')) {
-        // renderRecipesList вызовется из main.js
-      }
-    });
 
     // Модалка редактирования блюда
     const editOverlay = document.getElementById(CONSTANTS.SELECTORS.editDishOverlay);
