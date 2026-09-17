@@ -216,6 +216,26 @@
   </div>
 </div>
 
+<!-- Модалка «Повторить меню» -->
+<div class="modal-overlay add-modal" id="repeatMenuOverlay" role="dialog" aria-modal="true" aria-labelledby="repeatMenuTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="repeatMenuTitle">🔄 Повторить меню</h3>
+      <button class="modal-close" id="repeatMenuClose" aria-label="Закрыть">✕</button>
+    </div>
+    <p class="modal-desc" id="repeatMenuSubtitle">Выберите день, на который скопировать блюда.</p>
+    <div class="form-group">
+      <label for="repeatMenuDate">Дата, на которую копировать</label>
+      <input type="date" id="repeatMenuDate">
+    </div>
+    <div class="form-actions">
+      <button class="btn-secondary" id="repeatMenuCancel">Отмена</button>
+      <button class="btn-primary" id="repeatMenuSave">Скопировать</button>
+    </div>
+    <input type="hidden" id="repeatMenuSourceDate" value="">
+  </div>
+</div>
+  
 <!-- Модалка экспорта (добавлен TXT) -->
 <div class="modal-overlay export-modal" id="exportModalOverlay" role="dialog" aria-modal="true" aria-labelledby="exportModalTitle">
   <div class="modal">
