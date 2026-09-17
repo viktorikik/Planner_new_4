@@ -2813,3 +2813,66 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   border-color: var(--accent-color);
   box-shadow: 0 0 0 3px var(--accent-light);
 }
+
+/* ============================================================
+   ИСПРАВЛЕНИЕ РАСКЛАДКИ БЛЮДА В МОДАЛКЕ ДНЯ
+   Название — отдельная строка, действия (статус, 👍, 👎, 🗑️) —
+   всегда строго под названием, а не справа.
+   ============================================================ */
+.modal-dish {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 6px !important;
+  flex-wrap: nowrap !important;
+}
+
+/* Первая строка: название блюда + чип «📖 Рецепт» (если есть) */
+.modal-dish .dish-name {
+  width: 100% !important;
+  flex: 0 0 auto !important;
+  min-width: 0 !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 6px !important;
+  cursor: pointer;
+}
+
+/* Название — переносится, если длинное */
+.modal-dish .dish-name .dish-name-text {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+}
+
+/* Вторая строка: статус + 👍 + 👎 + 🗑️ */
+.modal-dish .dish-actions {
+  margin-left: 0 !important;
+  justify-content: flex-start !important;
+  flex-wrap: wrap !important;
+  gap: 6px 10px !important;
+  align-items: center;
+}
+
+/* Статус — плашка фиксированной высоты, чтобы строка не «прыгала» */
+.modal-dish .dish-status {
+  line-height: 1.4;
+}
+
+/* Кнопки 👍/👎/🗑️ — одного размера, ровно */
+.modal-dish .thumb-btn,
+.modal-dish .action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  line-height: 1;
+}
+
+/* Заметка — на всю ширину, как и была */
+.modal-dish .dish-note {
+  flex: 0 0 auto !important;
+  width: 100%;
+  margin-top: 4px;
+}
