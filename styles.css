@@ -2586,3 +2586,33 @@ body.dark-theme .recipes-toolbar .btn-secondary:hover {
 #recipeExportOverlay {
   z-index: 1100;
 }
+
+/* ============================================================
+   КНОПКА ✎ В СПИСКЕ МЕНЮ (нижний блок)
+   ============================================================ */
+.menu-item .menu-item-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.menu-item .menu-item-edit-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-muted);
+  padding: 0 4px;
+  line-height: 1;
+  transition: var(--transition-fast);
+  appearance: none;
+}
+.menu-item .menu-item-edit-btn:hover {
+  color: var(--accent-color);
+  transform: scale(1.15);
+}
+.menu-item .menu-item-edit-btn:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
