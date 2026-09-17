@@ -11,6 +11,30 @@ import { exportRecipesAsJson, exportRecipesAsTxt, importRecipesOnly } from './Ex
 let recipesSearchQuery = '';
 let recipesCategoryFilter = 'all';
 
+// ---------- Состояние свёрнутых категорий ----------
+// { soup: true, salad: false, ... }
+let collapsedCategories = loadCollapsedState();
+
+function loadCollapsedState() {
+  try {
+    const raw = localStorage.getItem(CONSTANTS.STORAGE_KEYS.RECIPES_COLLAPSED);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return (parsed && typeof parsed === 'object') ? parsed : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveCollapsedState() {
+  try {
+    localStorage.setItem(CONSTANTS.STORAGE_KEYS.RECIPES_COLLAPSED, JSON.stringify(collapsedCategories));
+  } catch (e) {
+    // Если localStorage недоступен — молча игнорируем: состояние не сохранится между сессиями,
+    // но приложение продолжит работать.
+  }
+}
+
 // ---------- Счётчик в заголовке модалки ----------
 function updateRecipesTitle(total, found, isFiltered) {
   const title = document.getElementById(CONSTANTS.SELECTORS.recipesTitle);
@@ -66,12 +90,18 @@ export function renderRecipesList() {
   updateRecipesTitle(allRecipes.length, recipes.length, isFiltered);
 
   if (allRecipes.length === 0) {
-    list.innerHTML = '<div class="modal-empty">😌 У вас пока нет рецептов. Нажмите «Добавить рецепт».</div>';
+    const empty = document.createElement('div');
+    empty.className = 'modal-empty';
+    empty.textContent = '😌 У вас пока нет рецептов. Нажмите «Добавить рецепт».';
+    list.appendChild(empty);
     return;
   }
 
   if (recipes.length === 0) {
-    list.innerHTML = '<div class="modal-empty">😌 Ничего не найдено. Измените поиск или фильтр.</div>';
+    const empty = document.createElement('div');
+    empty.className = 'modal-empty';
+    empty.textContent = '😌 Ничего не найдено. Измените поиск или фильтр.';
+    list.appendChild(empty);
     return;
   }
 
@@ -87,19 +117,55 @@ export function renderRecipesList() {
     return categoryOrder.indexOf(a) - categoryOrder.indexOf(b);
   });
 
+  // При активном фильтре/поиске разворачиваем всё принудительно,
+  // чтобы результаты были видны пользователю.
+  const forceExpand = isFiltered;
+
   sortedCategories.forEach(cat => {
+    const items = grouped[cat];
+    const isCollapsed = !forceExpand && collapsedCategories[cat] === true;
+
     const section = document.createElement('div');
     section.className = 'recipe-category-section';
+    if (isCollapsed) section.classList.add('collapsed');
 
-    const header = document.createElement('h4');
+    // ----- Заголовок-кнопка -----
+    const header = document.createElement('button');
+    header.type = 'button';
     header.className = 'recipe-category-header';
-    header.textContent = CATEGORY_LABELS[cat] || cat;
+    header.setAttribute('aria-expanded', String(!isCollapsed));
+    header.setAttribute('aria-label', `Категория ${CATEGORY_LABELS[cat] || cat}, рецептов: ${items.length}`);
+
+    const arrow = document.createElement('span');
+    arrow.className = 'recipe-category-arrow';
+    arrow.textContent = '▶';
+    arrow.setAttribute('aria-hidden', 'true');
+    header.appendChild(arrow);
+
+    const titleSpan = document.createElement('span');
+    titleSpan.className = 'recipe-category-title';
+    titleSpan.textContent = CATEGORY_LABELS[cat] || cat;
+    header.appendChild(titleSpan);
+
+    const countSpan = document.createElement('span');
+    countSpan.className = 'recipe-category-count';
+    countSpan.textContent = `(${items.length})`;
+    header.appendChild(countSpan);
+
+    header.addEventListener('click', function() {
+      const nowCollapsed = section.classList.toggle('collapsed');
+      header.setAttribute('aria-expanded', String(!nowCollapsed));
+      collapsedCategories[cat] = nowCollapsed;
+      saveCollapsedState();
+    });
+
     section.appendChild(header);
 
+    // ----- Список рецептов -----
     const ul = document.createElement('ul');
     ul.className = 'recipe-list';
 
-    grouped[cat].forEach(recipe => {
+    items.forEach(recipe => {
       const li = document.createElement('li');
       li.className = 'recipe-list-item';
 
@@ -156,7 +222,7 @@ export function renderRecipesList() {
   });
 }
 
-export function openRecipeForm(recipeId = null) {
+function openRecipeForm(recipeId = null) {
   const overlay = document.getElementById(CONSTANTS.SELECTORS.recipeFormOverlay);
   const formId = document.getElementById(CONSTANTS.SELECTORS.recipeFormId);
   const nameInput = document.getElementById(CONSTANTS.SELECTORS.recipeName);
@@ -194,7 +260,7 @@ export function closeRecipeForm() {
   }
 }
 
-export function saveRecipeForm() {
+function saveRecipeForm() {
   const id = document.getElementById(CONSTANTS.SELECTORS.recipeFormId).value;
   const name = document.getElementById(CONSTANTS.SELECTORS.recipeName).value.trim();
   const ingredients = document.getElementById(CONSTANTS.SELECTORS.recipeIngredients).value.trim();
@@ -213,7 +279,7 @@ export function saveRecipeForm() {
   renderRecipesList();
 }
 
-export function parseRecipeTextFromForm() {
+function parseRecipeTextFromForm() {
   const ingrText = document.getElementById(CONSTANTS.SELECTORS.recipeIngredients).value;
   const result = Utils.parseRecipeText(ingrText);
   if (result.title) {
@@ -231,14 +297,14 @@ export function parseRecipeTextFromForm() {
 // ============================================================
 // МОДАЛКА ВЫБОРА ФОРМАТА ЭКСПОРТА РЕЦЕПТОВ
 // ============================================================
-export function openRecipeExportModal() {
+function openRecipeExportModal() {
   const overlay = document.getElementById(CONSTANTS.SELECTORS.recipeExportOverlay);
   if (!overlay) return;
   overlay.classList.add('active');
   trapFocus(overlay, closeRecipeExportModal);
 }
 
-export function closeRecipeExportModal() {
+function closeRecipeExportModal() {
   const overlay = document.getElementById(CONSTANTS.SELECTORS.recipeExportOverlay);
   if (!overlay) return;
   overlay.classList.remove('active');
