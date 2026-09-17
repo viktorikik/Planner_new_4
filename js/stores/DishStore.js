@@ -6,7 +6,6 @@ import { showStorageError } from '../utils/notifications.js';
 export const DishStore = (function() {
   const STORAGE_KEY = CONSTANTS.STORAGE_KEYS.DISHES;
   let dishes = [];
-  let cacheRecs = null;
   let cacheAllWithDone = null;
 
   const DEFAULT_DISHES = [
@@ -68,7 +67,6 @@ export const DishStore = (function() {
   function save() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(dishes));
-      cacheRecs = null;
       cacheAllWithDone = null;
     } catch (e) {
       console.error('Ошибка сохранения данных:', e);
@@ -106,22 +104,6 @@ export const DishStore = (function() {
     } else {
       EventBus.emit(CONSTANTS.EVENTS.DISHES_CHANGED);
     }
-  }
-
-  function editDishName(id, newName) {
-    const dish = dishes.find(d => d.id === id);
-    if (!dish) return false;
-    dish.name = newName.trim();
-    save();
-    return true;
-  }
-
-  function updateNote(id, note) {
-    const dish = dishes.find(d => d.id === id);
-    if (!dish) return false;
-    dish.note = note.trim();
-    save();
-    return true;
   }
 
   function getAll() { return dishes.slice(); }
@@ -219,33 +201,10 @@ export const DishStore = (function() {
     return result;
   }
 
-  function getRecommendations() {
-    if (cacheRecs) return cacheRecs;
-    const doneDishes = dishes.filter(d => d.status === STATUSES.DONE);
-    const map = {};
-    doneDishes.forEach(d => {
-      if (!map[d.name] || d.date > map[d.name]) {
-        map[d.name] = { name: d.name, lastDate: d.date, liked: d.liked };
-      }
-    });
-    const unique = Object.values(map);
-    const likedItems = unique.filter(item => item.liked);
-    const otherItems = unique.filter(item => !item.liked);
-    likedItems.sort((a, b) => a.lastDate.localeCompare(b.lastDate));
-    otherItems.sort((a, b) => a.lastDate.localeCompare(b.lastDate));
-    const likedResult = likedItems.slice(0, 1);
-    const othersResult = otherItems.slice(0, 3);
-    const result = { liked: likedResult, others: othersResult };
-    cacheRecs = result;
-    return result;
-  }
-
   function getFavorites() { return dishes.filter(d => d.liked); }
-  function invalidateCache() { cacheRecs = null; cacheAllWithDone = null; }
   function replaceAll(newDishes) {
     dishes = newDishes.map(normalizeDish);
     save();
-    invalidateCache();
   }
   function getRandomDishFromTaste() {
     const categories = [CATEGORIES.SOUP, CATEGORIES.MAIN, CATEGORIES.SALAD];
@@ -253,14 +212,6 @@ export const DishStore = (function() {
     const list = TASTE_DISHES[cat];
     const name = list[Math.floor(Math.random() * list.length)];
     return { name, category: cat, categoryLabel: CATEGORY_LABELS[cat] };
-  }
-
-  function setRecipeId(dishId, recipeId) {
-    const dish = dishes.find(d => d.id === dishId);
-    if (!dish) return false;
-    dish.recipeId = recipeId;
-    save();
-    return true;
   }
 
   function updateDishDate(id, newDate) {
@@ -298,12 +249,12 @@ export const DishStore = (function() {
   }
 
   return {
-    init, editDishName, updateNote, getAll, getForDate, addDish, removeDish,
+    init, getAll, getForDate, addDish, removeDish,
     toggleStatus, toggleLike, toggleThumbUp, toggleThumbDown,
     isDishNameDisliked,
     getAllUniqueWithLastDone,
-    getRecommendations, getFavorites, invalidateCache, replaceAll,
-    getRandomDishFromTaste, setRecipeId, updateDishDate, clearRecipeRefs,
+    getFavorites, replaceAll,
+    getRandomDishFromTaste, updateDishDate, clearRecipeRefs,
     updateDish
   };
 })();
