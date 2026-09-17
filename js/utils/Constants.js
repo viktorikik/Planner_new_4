@@ -67,7 +67,8 @@ export const CONSTANTS = {
     RECIPES: 'smartMenuRecipes_v1',
     DISHES: 'smartMenuDishes_v5',
     THEME: 'mealPlannerTheme',
-    ONBOARDING_SHOWN: 'smartMenuOnboardingShown_v1' // ← новое
+    ONBOARDING_SHOWN: 'smartMenuOnboardingShown_v1',
+    RECIPES_COLLAPSED: 'smartMenuRecipesCollapsed_v1' // ← новое
   },
   EVENTS: {
     DISHES_CHANGED: 'dishes:changed',
@@ -100,7 +101,7 @@ export const CONSTANTS = {
     newDishStatus: 'newDishStatus',
     newDishCategory: 'newDishCategory',
     addModalSave: 'addModalSave',
-    // ---- Модалка редактирования блюда (новое) ----
+    // ---- Модалка редактирования блюда ----
     editDishOverlay: 'editDishOverlay',
     editDishClose: 'editDishClose',
     editDishId: 'editDishId',
@@ -111,7 +112,7 @@ export const CONSTANTS = {
     editDishRecipe: 'editDishRecipe',
     editDishCancel: 'editDishCancel',
     editDishSave: 'editDishSave',
-        // ---- Модалка «Повторить меню» (новое) ----
+    // ---- Модалка «Повторить меню» ----
     repeatMenuOverlay: 'repeatMenuOverlay',
     repeatMenuClose: 'repeatMenuClose',
     repeatMenuDate: 'repeatMenuDate',
@@ -182,7 +183,7 @@ export const CONSTANTS = {
     viewToggleButtons: '#viewToggle button',
     exportOptions: '.export-option',
 
-    // ---- Обучающий тур (новое) ----
+    // ---- Обучающий тур ----
     onboardingHelpBtn: 'onboardingHelpBtn',
     onboardingOverlay: 'onboardingOverlay',
     onboardingSlides: 'onboardingSlides',
