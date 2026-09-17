@@ -45,15 +45,12 @@ import { Onboarding } from './features/Onboarding.js';
     }
   }
 
-  // Тур (onboarding). Кнопка «❓» в шапке открывает его повторно.
   Onboarding.init();
 
-  // Приветствие и тур — только при первом запуске.
   if (Onboarding.shouldShow()) {
     setTimeout(showWelcome, 300);
   }
 
-  // После welcome открываем тур
   document.getElementById(CONSTANTS.SELECTORS.welcomeStartBtn).addEventListener('click', function() {
     hideWelcome();
     Onboarding.open();
@@ -168,7 +165,7 @@ import { Onboarding } from './features/Onboarding.js';
     });
   });
 
-  // ---------- Универсальное закрытие модалок (клик по оверлею, Escape) ----------
+  // ---------- Универсальное закрытие модалок ----------
   const modals = [
     { overlay: document.getElementById(CONSTANTS.SELECTORS.modalOverlay), close: Renderer.closeModal },
     { overlay: document.getElementById(CONSTANTS.SELECTORS.recOverlay), close: Renderer.closeRecModal },
@@ -209,23 +206,40 @@ import { Onboarding } from './features/Onboarding.js';
     });
   });
 
-  // ---------- Глобальный Escape (по массиву modals, без дублирующих if/else) ----------
+  // ---------- Глобальный Escape ----------
   document.addEventListener('keydown', function(e) {
-    if (e.key !== 'Escape') return;
-
-    const activeModal = document.querySelector(
-      '.modal-overlay.active, .choice-overlay.active, .welcome-overlay.active, .onboarding-overlay.active'
-    );
-    if (!activeModal) return;
-
-    // Тур (onboarding) — особый случай: он не в массиве modals.
-    if (activeModal.id === CONSTANTS.SELECTORS.onboardingOverlay) {
-      Onboarding.close(true);
-      return;
+    if (e.key === 'Escape') {
+      const activeModal = document.querySelector('.modal-overlay.active, .choice-overlay.active, .welcome-overlay.active, .onboarding-overlay.active');
+      if (activeModal) {
+        const id = activeModal.id;
+        if (id === CONSTANTS.SELECTORS.modalOverlay) Renderer.closeModal();
+        else if (id === CONSTANTS.SELECTORS.recOverlay) Renderer.closeRecModal();
+        else if (id === CONSTANTS.SELECTORS.addModalOverlay) Renderer.closeAddModal();
+        else if (id === CONSTANTS.SELECTORS.editDishOverlay) Renderer.closeEditDishModal();
+        else if (id === CONSTANTS.SELECTORS.repeatMenuOverlay) Renderer.closeRepeatMenuModal();
+        else if (id === CONSTANTS.SELECTORS.exportModalOverlay) {
+          const overlay = document.getElementById(CONSTANTS.SELECTORS.exportModalOverlay);
+          overlay.classList.remove('active');
+          if (overlay._trapFocusCleanup) {
+            overlay._trapFocusCleanup();
+            delete overlay._trapFocusCleanup;
+          }
+        }
+        else if (id === CONSTANTS.SELECTORS.choiceOverlay) {
+          const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
+          overlay.classList.remove('active');
+          if (overlay._trapFocusCleanup) {
+            overlay._trapFocusCleanup();
+            delete overlay._trapFocusCleanup;
+          }
+        }
+        else if (id === CONSTANTS.SELECTORS.welcomeOverlay) hideWelcome();
+        else if (id === CONSTANTS.SELECTORS.recipesOverlay) closeRecipesModal();
+        else if (id === CONSTANTS.SELECTORS.recipeFormOverlay) closeRecipeForm();
+        else if (id === CONSTANTS.SELECTORS.shoppingListOverlay) closeShoppingList();
+        else if (id === CONSTANTS.SELECTORS.onboardingOverlay) Onboarding.close(true);
+      }
     }
-
-    const found = modals.find(m => m.overlay === activeModal);
-    if (found) found.close();
   });
 
   // ---------- Кнопки закрытия статических модалок ----------
@@ -365,13 +379,13 @@ import { Onboarding } from './features/Onboarding.js';
     }
   });
 
-  // ---------- Модалка рецептов: обработчики ----------
+  // ---------- Модалка рецептов ----------
   initRecipesHandlers();
 
-  // ---------- Список покупок: обработчики ----------
+  // ---------- Список покупок ----------
   initShoppingListHandlers();
 
-  // ---------- Подписка на изменения рецептов для перерисовки списка ----------
+  // ---------- Подписка на изменения рецептов ----------
   EventBus.on(CONSTANTS.EVENTS.RECIPES_CHANGED, () => {
     const recipesOverlay = document.getElementById(CONSTANTS.SELECTORS.recipesOverlay);
     if (recipesOverlay && recipesOverlay.classList.contains('active')) {
@@ -379,7 +393,7 @@ import { Onboarding } from './features/Onboarding.js';
     }
   });
 
-  // ---------- Обработка свайпов для календаря ----------
+  // ---------- Свайпы для календаря ----------
   let touchStartX = 0, touchStartY = 0;
   const wrap = document.getElementById(CONSTANTS.SELECTORS.calendarWrap);
 
@@ -409,4 +423,6 @@ import { Onboarding } from './features/Onboarding.js';
       Renderer.renderCalendar(view, newDate);
     }
   }, { passive: true });
+
+  console.log('✅ Планировщик меню готов!');
 })();
