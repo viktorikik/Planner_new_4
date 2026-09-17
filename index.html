@@ -170,6 +170,52 @@
   </div>
 </div>
 
+<!-- Модалка редактирования блюда -->
+<div class="modal-overlay add-modal" id="editDishOverlay" role="dialog" aria-modal="true" aria-labelledby="editDishModalTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="editDishModalTitle">✎ Редактировать блюдо</h3>
+      <button class="modal-close" id="editDishClose" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="form-group">
+      <label for="editDishName">Название блюда</label>
+      <input type="text" id="editDishName" placeholder="Например, Плов">
+    </div>
+    <div class="form-group">
+      <label for="editDishStatus">Статус</label>
+      <select id="editDishStatus">
+        <option value="planned">📅 Планирую</option>
+        <option value="done">✅ Уже готовила</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="editDishCategory">Категория</label>
+      <select id="editDishCategory">
+        <option value="soup">🍲 Суп</option>
+        <option value="salad">🥗 Салат</option>
+        <option value="main">🍖 Основное</option>
+        <option value="bakery">🥐 Выпечка</option>
+        <option value="other">🍽️ Другое</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="editDishRecipe">Рецепт</label>
+      <select id="editDishRecipe">
+        <option value="">Без рецепта</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="editDishNote">Заметка (рецепт, продукты…)</label>
+      <input type="text" id="editDishNote" placeholder="Необязательно">
+    </div>
+    <div class="form-actions">
+      <button class="btn-secondary" id="editDishCancel">Отмена</button>
+      <button class="btn-primary" id="editDishSave">Сохранить</button>
+    </div>
+    <input type="hidden" id="editDishId" value="">
+  </div>
+</div>
+
 <!-- Модалка экспорта (добавлен TXT) -->
 <div class="modal-overlay export-modal" id="exportModalOverlay" role="dialog" aria-modal="true" aria-labelledby="exportModalTitle">
   <div class="modal">
