@@ -1116,8 +1116,10 @@ export const Renderer = (function() {
   }
 
   // Возврат из recOverlay в модалку «Что приготовить?».
-  // Закрываем рекомендации и снова открываем choiceOverlay с trapFocus,
-  // чтобы навигация «шаг назад» работала корректно.
+  // Используется кнопками «← Назад» во всех внутренних экранах:
+  // выбор категории, рекомендации, «на твой вкус», «любимые».
+  // Также вызывается из Recipes.closeRecipesModal, когда модалка «Мои рецепты»
+  // была открыта из «Что приготовить?».
   function returnToChoice() {
     closeRecModal();
     const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
@@ -1407,6 +1409,7 @@ export const Renderer = (function() {
     showRecipeCard,
     showCategorySelection,
     showTasteCategorySelection,
+    returnToChoice,
     closeEditDishModal,
     closeRepeatMenuModal
   };
