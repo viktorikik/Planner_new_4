@@ -38,6 +38,18 @@ function downloadFile(content, filename, mime) {
   URL.revokeObjectURL(url);
 }
 
+// ============================================================
+// ЗАЩИТА ОТ CSV INJECTION
+// Значения, начинающиеся с =, +, -, @, \t, \r, Excel/Sheets/LibreOffice
+// интерпретируют как формулу. Добавляем апостроф в начало, чтобы
+// принудительно оставить значение текстом.
+// ============================================================
+function sanitizeCsvCell(value) {
+  let s = String(value);
+  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+  return '"' + s.replace(/"/g, '""') + '"';
+}
+
 export function exportData(format) {
   const data = DishStore.getAll();
   if (!data.length) { showMessage('Нет данных для экспорта.'); return; }
@@ -66,7 +78,7 @@ export function exportData(format) {
       ];
     });
     const csvContent = [headers, ...rows]
-      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(';'))
+      .map(row => row.map(sanitizeCsvCell).join(';'))
       .join('\n');
     const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
