@@ -206,40 +206,23 @@ import { Onboarding } from './features/Onboarding.js';
     });
   });
 
-  // ---------- Глобальный Escape ----------
+  // ---------- Глобальный Escape (по массиву modals, без дублирующих if/else) ----------
   document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-      const activeModal = document.querySelector('.modal-overlay.active, .choice-overlay.active, .welcome-overlay.active, .onboarding-overlay.active');
-      if (activeModal) {
-        const id = activeModal.id;
-        if (id === CONSTANTS.SELECTORS.modalOverlay) Renderer.closeModal();
-        else if (id === CONSTANTS.SELECTORS.recOverlay) Renderer.closeRecModal();
-        else if (id === CONSTANTS.SELECTORS.addModalOverlay) Renderer.closeAddModal();
-        else if (id === CONSTANTS.SELECTORS.editDishOverlay) Renderer.closeEditDishModal();
-        else if (id === CONSTANTS.SELECTORS.repeatMenuOverlay) Renderer.closeRepeatMenuModal();
-        else if (id === CONSTANTS.SELECTORS.exportModalOverlay) {
-          const overlay = document.getElementById(CONSTANTS.SELECTORS.exportModalOverlay);
-          overlay.classList.remove('active');
-          if (overlay._trapFocusCleanup) {
-            overlay._trapFocusCleanup();
-            delete overlay._trapFocusCleanup;
-          }
-        }
-        else if (id === CONSTANTS.SELECTORS.choiceOverlay) {
-          const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
-          overlay.classList.remove('active');
-          if (overlay._trapFocusCleanup) {
-            overlay._trapFocusCleanup();
-            delete overlay._trapFocusCleanup;
-          }
-        }
-        else if (id === CONSTANTS.SELECTORS.welcomeOverlay) hideWelcome();
-        else if (id === CONSTANTS.SELECTORS.recipesOverlay) closeRecipesModal();
-        else if (id === CONSTANTS.SELECTORS.recipeFormOverlay) closeRecipeForm();
-        else if (id === CONSTANTS.SELECTORS.shoppingListOverlay) closeShoppingList();
-        else if (id === CONSTANTS.SELECTORS.onboardingOverlay) Onboarding.close(true);
-      }
+    if (e.key !== 'Escape') return;
+
+    const activeModal = document.querySelector(
+      '.modal-overlay.active, .choice-overlay.active, .welcome-overlay.active, .onboarding-overlay.active'
+    );
+    if (!activeModal) return;
+
+    // Тур (onboarding) — особый случай: он не в массиве modals.
+    if (activeModal.id === CONSTANTS.SELECTORS.onboardingOverlay) {
+      Onboarding.close(true);
+      return;
     }
+
+    const found = modals.find(m => m.overlay === activeModal);
+    if (found) found.close();
   });
 
   // ---------- Кнопки закрытия статических модалок ----------
