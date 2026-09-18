@@ -3736,3 +3736,95 @@ body {
 .recipes-back-btn[hidden] {
   display: none;
 }
+
+
+/* ============================================================
+   ПЕРЕКЛЮЧЕНИЕ КОНТЕНТА ПО ТАБАМ (v4.0)
+   Активный таб задаётся атрибутом data-active-tab на .app.
+   Показывается только соответствующий .tab-view.
+   ============================================================ */
+.tab-view {
+  display: none;
+}
+.app[data-active-tab="today"] .tab-view[data-tab-view="today"],
+.app[data-active-tab="menu"] .tab-view[data-tab-view="menu"],
+.app[data-active-tab="recipes"] .tab-view[data-tab-view="recipes"],
+.app[data-active-tab="shopping"] .tab-view[data-tab-view="shopping"] {
+  display: block;
+}
+
+/* Переключатель «Месяц/Неделя» имеет смысл только на вкладке «Меню» */
+.app:not([data-active-tab="menu"]) .controls {
+  display: none;
+}
+
+/* ============================================================
+   ЗАГОТОВКИ ЭКРАНОВ-ТАБОВ (v4.0)
+   Пока это простые заглушки: иконка, текст, одна кнопка.
+   Со временем заменятся настоящими экранами.
+   ============================================================ */
+.tab-placeholder {
+  padding: 40px 20px;
+  text-align: center;
+  background: var(--card-bg);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--cell-border);
+  margin-top: var(--spacing-md);
+}
+.tab-placeholder-icon {
+  font-size: 56px;
+  display: block;
+  margin-bottom: 12px;
+  line-height: 1;
+}
+.tab-placeholder-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  letter-spacing: -0.3px;
+}
+.tab-placeholder-text {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+  line-height: 1.55;
+}
+.tab-placeholder-btn {
+  padding: 10px 22px;
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: var(--accent-color);
+  color: var(--accent-text);
+  transition: var(--transition-fast);
+  appearance: none;
+  font-family: inherit;
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.25);
+}
+.tab-placeholder-btn:hover {
+  filter: brightness(1.05);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(255, 107, 53, 0.3);
+}
+.tab-placeholder-btn:active {
+  transform: translateY(0);
+}
+.tab-placeholder-btn:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .tab-placeholder {
+    padding: 32px 16px;
+  }
+  .tab-placeholder-icon {
+    font-size: 48px;
+  }
+  .tab-placeholder-title {
+    font-size: 18px;
+  }
+}
