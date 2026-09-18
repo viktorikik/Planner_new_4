@@ -30,10 +30,12 @@ import { printWeeklyMenu } from './features/Print.js';
   DishStore.init();
 
   // ---------- Bottom navigation + hash routing (v4.0) ----------
-  // Табы переключают только hash. Контент по экранам пока НЕ разносим —
-  // это следующий коммит. Здесь только UI-состояние панели.
+  // Табы переключают hash и видимый экран. Контент каждого таба живёт
+  // в <div class="tab-view" data-tab-view="..."> внутри .app.
+  // Активный таб задаётся атрибутом data-active-tab на .app — CSS
+  // показывает только нужный .tab-view.
   const TABS = ['today', 'menu', 'recipes', 'shopping'];
-  const DEFAULT_TAB = 'today';
+  const DEFAULT_TAB = 'menu';
 
   function getTabFromHash() {
     const raw = (window.location.hash || '').replace('#', '');
@@ -41,10 +43,14 @@ import { printWeeklyMenu } from './features/Print.js';
   }
 
   function setActiveTab(tab) {
+    // Подсветка кнопок нижней навигации
     const buttons = document.querySelectorAll(CONSTANTS.SELECTORS.bottomNavButtons);
     buttons.forEach(btn => {
       btn.classList.toggle('active', btn.dataset.tab === tab);
     });
+    // Переключение видимого экрана
+    const app = document.querySelector('.app');
+    if (app) app.setAttribute('data-active-tab', tab);
   }
 
   function handleHashChange() {
@@ -66,6 +72,28 @@ import { printWeeklyMenu } from './features/Print.js';
       window.location.hash = tab;
     });
   });
+
+  // ---------- Кнопки-заглушки на табах «Сегодня», «Рецепты», «Покупки» ----------
+  const goToMenuFromToday = document.getElementById('goToMenuFromToday');
+  if (goToMenuFromToday) {
+    goToMenuFromToday.addEventListener('click', function() {
+      window.location.hash = 'menu';
+    });
+  }
+
+  const goToRecipesFromTab = document.getElementById('goToRecipesFromTab');
+  if (goToRecipesFromTab) {
+    goToRecipesFromTab.addEventListener('click', function() {
+      openRecipesModal();
+    });
+  }
+
+  const goToShoppingFromTab = document.getElementById('goToShoppingFromTab');
+  if (goToShoppingFromTab) {
+    goToShoppingFromTab.addEventListener('click', function() {
+      openShoppingList();
+    });
+  }
 
   // ---------- Приветственное окно ----------
   function showWelcome() {
@@ -368,7 +396,6 @@ import { printWeeklyMenu } from './features/Print.js';
   });
 
   // «📖 Из моих рецептов» — открываем модалку рецептов в режиме «из выбора».
-  // В этом режиме появляется кнопка «← Назад» и закрытие возвращает в choiceOverlay.
   document.getElementById(CONSTANTS.SELECTORS.choiceFromRecipes).addEventListener('click', function() {
     const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
     overlay.classList.remove('active');
