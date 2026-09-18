@@ -160,13 +160,19 @@ textarea:focus-visible {
   margin: 0 auto;
 }
 
+/* ← изменено: убран justify-content, чтобы logo и гамбургер сами распределились */
 .app-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm) var(--spacing-md);
   margin-bottom: var(--spacing-lg);
+}
+
+/* ← новое: logo тянется, гамбургер прижимается вправо */
+.logo {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .logo h1 {
@@ -188,11 +194,14 @@ textarea:focus-visible {
   border-radius: 3px;
 }
 
+/* ← изменено: flex 1 1 100% — на мобильном toggle уходит на вторую строку */
 .controls {
   display: flex;
   gap: var(--spacing-sm);
   flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
+  flex: 1 1 100%;
 }
 
 .theme-toggle {
@@ -1490,7 +1499,7 @@ body.dark-theme #recipesList li button:hover {
   color: var(--text-primary);
 }
 
-/* ===== КАРТОЧКА РЕЦЕПТА (просмотр) – исправление цвета в тёмной теме ===== */
+/* ===== КАРТОЧКА РЕЦЕПТА (просмотр) ===== */
 .recipe-view-modal,
 .recipe-view-modal .modal-header h3,
 .recipe-view-modal ul,
@@ -1510,7 +1519,7 @@ body.dark-theme #recipesList li button:hover {
   color: var(--text-primary);
 }
 
-/* ===== КНОПКИ В КАРТОЧКЕ РЕЦЕПТА (контраст в обеих темах) ===== */
+/* ===== КНОПКИ В КАРТОЧКЕ РЕЦЕПТА ===== */
 .recipe-view-modal .recipe-card-buttons {
   display: flex;
   gap: 8px;
@@ -1650,7 +1659,7 @@ body.dark-theme #savedListsContainer h4 {
 }
 
 /* ============================================================
-   БЛОК ЭКСПОРТА/ИМПОРТА – улучшена адаптивность
+   БЛОК ЭКСПОРТА/ИМПОРТА
    ============================================================ */
 .backup-section {
   margin-top: 24px;
@@ -1722,14 +1731,8 @@ body.dark-theme #savedListsContainer h4 {
     height: 22px;
   }
 
-  .app-header {
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-  }
-  .controls {
-    justify-content: center;
-  }
+  /* ← удалены блоки .app-header { flex-direction: column } и .controls { justify-content: center },
+       которые конфликтовали с новым расположением гамбургера */
 
   #monthTitle {
     font-size: 18px;
@@ -1822,7 +1825,6 @@ body.dark-theme #savedListsContainer h4 {
     flex: 1 1 auto;
   }
 
-  /* Кнопки в карточке рецепта на мобильных */
   .recipe-view-modal .recipe-card-buttons {
     flex-direction: column;
   }
@@ -1853,6 +1855,11 @@ body.dark-theme #savedListsContainer h4 {
     padding: var(--spacing-xl) var(--spacing-xl);
     border-radius: var(--radius-lg);
   }
+  /* ← новое: на десктопе toggle возвращается в общую строку с гамбургером */
+  .controls {
+    flex: 0 0 auto;
+    justify-content: flex-end;
+  }
   .day-cell {
     min-height: 72px;
     padding: 8px 4px;
@@ -1863,9 +1870,6 @@ body.dark-theme #savedListsContainer h4 {
   .app-header {
     flex-direction: row;
     justify-content: space-between;
-  }
-  .controls {
-    justify-content: flex-end;
   }
   .logo h1 {
     font-size: 28px;
@@ -1957,7 +1961,7 @@ body.dark-theme #savedListsContainer h4 {
   }
 }
 
-/* ===== ДОПОЛНИТЕЛЬНЫЕ КЛАССЫ ДЛЯ УДАЛЕНИЯ INLINE-СТИЛЕЙ ===== */
+/* ===== ДОПОЛНИТЕЛЬНЫЕ КЛАССЫ ===== */
 
 .rec-category-desc {
   margin-bottom: 16px;
@@ -2140,7 +2144,7 @@ body.dark-theme #savedListsContainer h4 {
 }
 
 /* ============================================================
-   КАТЕГОРИЯ «ВЫПЕЧКА» — цветовая метка
+   КАТЕГОРИЯ «ВЫПЕЧКА»
    ============================================================ */
 .menu-item.category-bakery {
   border-left-color: var(--color-bakery);
@@ -2551,7 +2555,7 @@ body.dark-theme .recipes-toolbar .btn-secondary:hover {
 }
 
 /* ============================================================
-   КНОПКА ✎ В СПИСКЕ МЕНЮ (нижний блок)
+   КНОПКА ✎ В СПИСКЕ МЕНЮ
    ============================================================ */
 .menu-item .menu-item-actions {
   display: inline-flex;
@@ -2819,7 +2823,7 @@ body.dark-theme .modal-dish .recipe-chip:hover {
 }
 
 /* ============================================================
-   ГРУППА D — список покупок: переработка визуала
+   ГРУППА D — список покупок
    ============================================================ */
 .shopping-dates-row {
   display: flex;
@@ -3511,11 +3515,11 @@ body.dark-theme .recipe-category-header:hover {
 
 /* ============================================================
    МЕНЮ-ГАМБУРГЕР В ШАПКЕ
-   Три действия (справка, печать, тема) спрятаны в выпадающее меню.
    ============================================================ */
 .more-menu-wrap {
   position: relative;
   display: inline-block;
+  flex: 0 0 auto;
 }
 
 .more-btn {
