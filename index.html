@@ -8,7 +8,7 @@
 </head>
 <body>
 
-<div class="app">
+<div class="app" data-active-tab="menu">
   <!-- ШАПКА -->
   <header class="app-header">
     <div class="logo">
@@ -45,80 +45,122 @@
     </div>
   </header>
 
-  <!-- КНОПКИ ДЕЙСТВИЙ -->
-  <section class="actions">
-    <!-- Первая строка: Что приготовить? + Добавить блюдо -->
-    <div class="btn-row">
-      <button class="btn btn-primary" id="suggestBtn">🤔 Что приготовить?</button>
-      <button class="btn btn-done" id="addDishBtn">➕ Добавить блюдо</button>
+  <!-- ============ ТАБ: СЕГОДНЯ (заготовка) ============ -->
+  <div class="tab-view" data-tab-view="today">
+    <div class="tab-placeholder">
+      <span class="tab-placeholder-icon" aria-hidden="true">📅</span>
+      <div class="tab-placeholder-title">Меню на сегодня</div>
+      <p class="tab-placeholder-text">
+        Здесь скоро появится меню на сегодня — завтрак, обед и ужин.<br>
+        Пока можно открыть календарь и посмотреть меню вручную.
+      </p>
+      <button class="tab-placeholder-btn" id="goToMenuFromToday" type="button">Перейти к календарю</button>
     </div>
-    <!-- Вторая строка: Мои рецепты + Список покупок -->
-    <div class="btn-row">
-      <button class="btn btn-secondary" id="recipesBtn">📖 Мои рецепты</button>
-      <button class="btn btn-secondary" id="shoppingListBtn">🛒 Список покупок</button>
-    </div>
-  </section>
+  </div>
 
-  <!-- КАЛЕНДАРЬ -->
-  <section class="calendar-wrap" id="calendarWrap">
-    <div class="calendar-header">
-      <div class="month-nav-wrapper">
-        <div class="month-nav">
-          <button id="prevMonth" aria-label="Предыдущий месяц">‹</button>
-          <button id="nextMonth" aria-label="Следующий месяц">›</button>
-        </div>
-        <h2 id="monthTitle">Август 2026</h2>
+  <!-- ============ ТАБ: МЕНЮ (весь текущий контент) ============ -->
+  <div class="tab-view" data-tab-view="menu">
+    <!-- КНОПКИ ДЕЙСТВИЙ -->
+    <section class="actions">
+      <!-- Первая строка: Что приготовить? + Добавить блюдо -->
+      <div class="btn-row">
+        <button class="btn btn-primary" id="suggestBtn">🤔 Что приготовить?</button>
+        <button class="btn btn-done" id="addDishBtn">➕ Добавить блюдо</button>
       </div>
-      <button class="today-btn" id="todayBtn">Сегодня</button>
-    </div>
-    <div class="weekdays" role="row">
-      <span role="columnheader">Пн</span>
-      <span role="columnheader">Вт</span>
-      <span role="columnheader">Ср</span>
-      <span role="columnheader">Чт</span>
-      <span role="columnheader">Пт</span>
-      <span role="columnheader">Сб</span>
-      <span role="columnheader">Вс</span>
-    </div>
-    <div id="calendarContent" role="grid"></div>
-  </section>
+      <!-- Вторая строка: Мои рецепты + Список покупок -->
+      <div class="btn-row">
+        <button class="btn btn-secondary" id="recipesBtn">📖 Мои рецепты</button>
+        <button class="btn btn-secondary" id="shoppingListBtn">🛒 Список покупок</button>
+      </div>
+    </section>
 
-  <!-- ПОИСК И ФИЛЬТРЫ -->
-  <section class="search-filter-wrap">
-    <input type="text" id="searchInput" placeholder="🔍 Поиск блюда..." aria-label="Поиск по названию блюда">
-    <select id="statusFilter" aria-label="Фильтр по статусу">
-      <option value="all">Все статусы</option>
-      <option value="done">✅ Приготовлено</option>
-      <option value="planned">📅 Планирую</option>
-    </select>
-    <select id="categoryFilter" aria-label="Фильтр по категории">
-      <option value="all">Все категории</option>
-      <option value="soup">Супы</option>
-      <option value="salad">Салаты</option>
-      <option value="main">Основные</option>
-      <option value="bakery">Выпечка</option>
-      <option value="other">Другое</option>
-    </select>
-  </section>
+    <!-- КАЛЕНДАРЬ -->
+    <section class="calendar-wrap" id="calendarWrap">
+      <div class="calendar-header">
+        <div class="month-nav-wrapper">
+          <div class="month-nav">
+            <button id="prevMonth" aria-label="Предыдущий месяц">‹</button>
+            <button id="nextMonth" aria-label="Следующий месяц">›</button>
+          </div>
+          <h2 id="monthTitle">Август 2026</h2>
+        </div>
+        <button class="today-btn" id="todayBtn">Сегодня</button>
+      </div>
+      <div class="weekdays" role="row">
+        <span role="columnheader">Пн</span>
+        <span role="columnheader">Вт</span>
+        <span role="columnheader">Ср</span>
+        <span role="columnheader">Чт</span>
+        <span role="columnheader">Пт</span>
+        <span role="columnheader">Сб</span>
+        <span role="columnheader">Вс</span>
+      </div>
+      <div id="calendarContent" role="grid"></div>
+    </section>
 
-  <!-- СПИСОК МЕНЮ -->
-  <section class="menu-list" id="menuList">
-    <h3>📋 Меню на <span id="menuPeriod">месяц</span></h3>
-    <div id="menuContent"></div>
-  </section>
+    <!-- ПОИСК И ФИЛЬТРЫ -->
+    <section class="search-filter-wrap">
+      <input type="text" id="searchInput" placeholder="🔍 Поиск блюда..." aria-label="Поиск по названию блюда">
+      <select id="statusFilter" aria-label="Фильтр по статусу">
+        <option value="all">Все статусы</option>
+        <option value="done">✅ Приготовлено</option>
+        <option value="planned">📅 Планирую</option>
+      </select>
+      <select id="categoryFilter" aria-label="Фильтр по категории">
+        <option value="all">Все категории</option>
+        <option value="soup">Супы</option>
+        <option value="salad">Салаты</option>
+        <option value="main">Основные</option>
+        <option value="bakery">Выпечка</option>
+        <option value="other">Другое</option>
+      </select>
+    </section>
 
-  <!-- ЭКСПОРТ / ИМПОРТ (ПЕРЕНЕСЕНЫ ВНИЗ) -->
-  <section class="backup-section">
-    <div class="backup-row">
-      <button class="btn btn-export" id="exportBtn">📤 Экспорт</button>
-      <button class="btn btn-import" id="importBtn">📥 Импорт</button>
+    <!-- СПИСОК МЕНЮ -->
+    <section class="menu-list" id="menuList">
+      <h3>📋 Меню на <span id="menuPeriod">месяц</span></h3>
+      <div id="menuContent"></div>
+    </section>
+
+    <!-- ЭКСПОРТ / ИМПОРТ (ПЕРЕНЕСЕНЫ ВНИЗ) -->
+    <section class="backup-section">
+      <div class="backup-row">
+        <button class="btn btn-export" id="exportBtn">📤 Экспорт</button>
+        <button class="btn btn-import" id="importBtn">📥 Импорт</button>
+      </div>
+      <div class="backup-hint">
+        📌 Не забывайте делать резервную копию, выберите для этого формат <strong>JSON</strong>.
+        Если сохраняете «для себя» — лучше выбрать формат <strong>CSV</strong> или <strong>TXT</strong>.
+      </div>
+      <input type="file" id="importFileInput" class="import-hidden" accept=".json" aria-label="Загрузить файл резервной копии">
+    </section>
+  </div>
+
+  <!-- ============ ТАБ: РЕЦЕПТЫ (заготовка) ============ -->
+  <div class="tab-view" data-tab-view="recipes">
+    <div class="tab-placeholder">
+      <span class="tab-placeholder-icon" aria-hidden="true">📖</span>
+      <div class="tab-placeholder-title">Мои рецепты</div>
+      <p class="tab-placeholder-text">
+        Здесь появится список рецептов с поиском и фильтрами.<br>
+        Пока они открываются в модальном окне.
+      </p>
+      <button class="tab-placeholder-btn" id="goToRecipesFromTab" type="button">Открыть мои рецепты</button>
     </div>
-    <div class="backup-hint">
-      📌 Не забывайте делать резервную копию, выберите для этого формат <strong>JSON</strong>.
-      Если сохраняете «для себя» — лучше выбрать формат <strong>CSV</strong> или <strong>TXT</strong>.
+  </div>
+
+  <!-- ============ ТАБ: ПОКУПКИ (заготовка) ============ -->
+  <div class="tab-view" data-tab-view="shopping">
+    <div class="tab-placeholder">
+      <span class="tab-placeholder-icon" aria-hidden="true">🛒</span>
+      <div class="tab-placeholder-title">Список покупок</div>
+      <p class="tab-placeholder-text">
+        Здесь появится список покупок с группировкой по отделам магазина.<br>
+        Пока он открывается в модальном окне.
+      </p>
+      <button class="tab-placeholder-btn" id="goToShoppingFromTab" type="button">Открыть список покупок</button>
     </div>
-    <input type="file" id="importFileInput" class="import-hidden" accept=".json" aria-label="Загрузить файл резервной копии">
-  </section>
+  </div>
 </div>
 
 <!-- ===== МОДАЛЬНЫЕ ОКНА ===== -->
