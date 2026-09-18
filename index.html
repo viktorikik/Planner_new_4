@@ -14,12 +14,26 @@
     <div class="logo">
       <h1>🍽️ Меню и рецепты</h1>
     </div>
+    <!-- ← изменено: три иконки спрятаны в меню «⋯» -->
     <div class="controls">
-      <!-- ← новое: кнопка справки -->
-      <button class="help-btn" id="onboardingHelpBtn" aria-label="Показать справку">❓</button>
-      <!-- ← новое: кнопка печати -->
-      <button class="print-btn" id="printBtn" aria-label="Печать меню на неделю">🖨️</button>
-      <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему">🌓</button>
+      <!-- Меню «⋯» — справка, печать, тема -->
+      <div class="more-menu-wrap">
+        <button class="more-btn" id="moreMenuBtn" aria-label="Дополнительные действия" aria-haspopup="true" aria-expanded="false">⋯</button>
+        <div class="more-menu" id="moreMenu" role="menu" hidden>
+          <button class="more-menu-item" id="onboardingHelpBtn" role="menuitem" type="button">
+            <span class="more-menu-icon">❓</span>
+            <span>Справка</span>
+          </button>
+          <button class="more-menu-item" id="printBtn" role="menuitem" type="button">
+            <span class="more-menu-icon">🖨️</span>
+            <span>Печать меню на неделю</span>
+          </button>
+          <button class="more-menu-item" id="themeToggle" role="menuitem" type="button">
+            <span class="more-menu-icon">🌓</span>
+            <span>Сменить тему</span>
+          </button>
+        </div>
+      </div>
       <div class="view-toggle" id="viewToggle" role="group" aria-label="Переключение вида календаря">
         <button class="active" data-view="month" aria-pressed="true">Месяц</button>
         <button data-view="week" aria-pressed="false">Неделя</button>
