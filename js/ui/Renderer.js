@@ -12,6 +12,10 @@ export const Renderer = (function() {
   let searchQuery = '', statusFilter = 'all', categoryFilter = 'all';
   let currentModalDate = null;
 
+  // Флаг активного touch-драга. Раньше жил в window.__touchDragActive —
+  // вынесен в замыкание, чтобы не загрязнять глобальную область.
+  let touchDragActive = false;
+
   const els = {};
   for (const key in CONSTANTS.SELECTORS) {
     if (typeof CONSTANTS.SELECTORS[key] === 'string' && !CONSTANTS.SELECTORS[key].startsWith('#')) {
@@ -524,7 +528,7 @@ export const Renderer = (function() {
             if (!touchDragData) return;
             touchDragData.chip.classList.add('dragging');
             document.body.style.overflow = 'hidden';
-            window.__touchDragActive = true;
+            touchDragActive = true;
             if (longPressTimer) clearTimeout(longPressTimer);
           };
 
@@ -533,7 +537,7 @@ export const Renderer = (function() {
             const touch = e.changedTouches[0];
             const dx = Math.abs(touch.clientX - startX);
             const dy = Math.abs(touch.clientY - startY);
-            if (!window.__touchDragActive && (dx > 10 || dy > 10)) {
+            if (!touchDragActive && (dx > 10 || dy > 10)) {
               if (dx > dy && dx > 10) {
                 if (longPressTimer) clearTimeout(longPressTimer);
                 activateTouchDrag(e);
@@ -543,7 +547,7 @@ export const Renderer = (function() {
                 return;
               }
             }
-            if (window.__touchDragActive && touchDragData) {
+            if (touchDragActive && touchDragData) {
               e.preventDefault();
               const element = document.elementFromPoint(touch.clientX, touch.clientY);
               const targetRow = element ? element.closest('.week-row') : null;
@@ -555,7 +559,7 @@ export const Renderer = (function() {
 
           chip.addEventListener('touchend', (e) => {
             if (longPressTimer) clearTimeout(longPressTimer);
-            if (window.__touchDragActive && touchDragData) {
+            if (touchDragActive && touchDragData) {
               e.preventDefault();
               const targetRow = touchDragData.targetRow;
               if (targetRow && targetRow.dataset.date && targetRow.dataset.date !== touchDragData.fromDate) {
@@ -563,7 +567,7 @@ export const Renderer = (function() {
                 wasTouchDragged = true;
               }
               document.body.style.overflow = '';
-              window.__touchDragActive = false;
+              touchDragActive = false;
               touchDragData.chip.classList.remove('dragging');
               document.querySelectorAll('.week-row').forEach(r => r.classList.remove('drag-over'));
               touchDragData = null;
