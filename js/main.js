@@ -29,6 +29,44 @@ import { printWeeklyMenu } from './features/Print.js';
   RecipeStore.init();
   DishStore.init();
 
+  // ---------- Bottom navigation + hash routing (v4.0) ----------
+  // Табы переключают только hash. Контент по экранам пока НЕ разносим —
+  // это следующий коммит. Здесь только UI-состояние панели.
+  const TABS = ['today', 'menu', 'recipes', 'shopping'];
+  const DEFAULT_TAB = 'today';
+
+  function getTabFromHash() {
+    const raw = (window.location.hash || '').replace('#', '');
+    return TABS.includes(raw) ? raw : DEFAULT_TAB;
+  }
+
+  function setActiveTab(tab) {
+    const buttons = document.querySelectorAll(CONSTANTS.SELECTORS.bottomNavButtons);
+    buttons.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+  }
+
+  function handleHashChange() {
+    setActiveTab(getTabFromHash());
+  }
+
+  if (!window.location.hash) {
+    window.location.hash = DEFAULT_TAB;
+  } else {
+    handleHashChange();
+  }
+
+  window.addEventListener('hashchange', handleHashChange);
+
+  document.querySelectorAll(CONSTANTS.SELECTORS.bottomNavButtons).forEach(btn => {
+    btn.addEventListener('click', function() {
+      const tab = this.dataset.tab;
+      if (window.location.hash === `#${tab}`) return;
+      window.location.hash = tab;
+    });
+  });
+
   // ---------- Приветственное окно ----------
   function showWelcome() {
     const overlay = document.getElementById(CONSTANTS.SELECTORS.welcomeOverlay);
@@ -318,7 +356,7 @@ import { printWeeklyMenu } from './features/Print.js';
     Renderer.showCategorySelection();
   });
 
-  // «✨ На твой вкус» — теперь открывает выбор категории, а не confirm()
+  // «✨ На твой вкус» — открывает выбор категории
   document.getElementById(CONSTANTS.SELECTORS.choiceFromTaste).addEventListener('click', function() {
     const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
     overlay.classList.remove('active');
