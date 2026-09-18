@@ -1350,6 +1350,7 @@ export const Renderer = (function() {
       }
       overlay.remove();
     };
+    overlay._closeFn = close;
     closeButton.addEventListener('click', close);
     closeButton2.addEventListener('click', close);
     overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
