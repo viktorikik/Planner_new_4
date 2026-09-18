@@ -28,10 +28,14 @@ export const DishStore = (function() {
     { name: 'Паста Болоньезе', status: STATUSES.PLANNED, date: '2026-09-12', category: CATEGORIES.MAIN, note: 'сделать с фаршем индейки' },
   ];
 
+  // «На твой вкус» — подборка по категориям. Используется функцией
+  // getRandomDishFromTaste(category).
   const TASTE_DISHES = {
-    [CATEGORIES.SOUP]: ['Борщ', 'Солянка', 'Уха', 'Щи', 'Сырный суп', 'Гороховый суп', 'Рассольник', 'Окрошка'],
-    [CATEGORIES.MAIN]: ['Картофельное пюре с котлетой', 'Пельмени', 'Манты', 'Гречка с мясом', 'Голубцы', 'Жаркое', 'Макароны по-флотски', 'Плов'],
-    [CATEGORIES.SALAD]: ['Селедка под шубой', 'Оливье', 'Крабовый', 'Цезарь с курицей', 'Мимоза', 'Винегрет', 'Греческий салат', 'Салат из свежих овощей']
+    [CATEGORIES.SOUP]:   ['Борщ', 'Солянка', 'Уха', 'Щи', 'Сырный суп', 'Гороховый суп', 'Рассольник', 'Окрошка'],
+    [CATEGORIES.SALAD]:  ['Селедка под шубой', 'Оливье', 'Крабовый', 'Цезарь с курицей', 'Мимоза', 'Винегрет', 'Греческий салат', 'Салат из свежих овощей'],
+    [CATEGORIES.MAIN]:   ['Картофельное пюре с котлетой', 'Пельмени', 'Манты', 'Гречка с мясом', 'Голубцы', 'Жаркое', 'Макароны по-флотски', 'Плов'],
+    [CATEGORIES.BAKERY]: ['Блины', 'Оладьи', 'Сырники', 'Пирог с яблоками', 'Ватрушки', 'Пирожки'],
+    [CATEGORIES.OTHER]:  ['Пицца', 'Шаурма', 'Сэндвичи', 'Омлет', 'Яичница с беконом']
   };
 
   function generateId() {
@@ -206,9 +210,15 @@ export const DishStore = (function() {
     dishes = newDishes.map(normalizeDish);
     save();
   }
-  function getRandomDishFromTaste() {
-    const categories = [CATEGORIES.SOUP, CATEGORIES.MAIN, CATEGORIES.SALAD];
-    const cat = categories[Math.floor(Math.random() * categories.length)];
+
+  // Случайное блюдо из категории.
+  // Без аргумента (category = null) — случайная категория из TASTE_DISHES
+  // (обратная совместимость со старым вызовом без параметров).
+  // С аргументом — строго из указанной категории.
+  function getRandomDishFromTaste(category = null) {
+    const available = Object.keys(TASTE_DISHES);
+    const pool = (category && TASTE_DISHES[category]) ? [category] : available;
+    const cat = pool[Math.floor(Math.random() * pool.length)];
     const list = TASTE_DISHES[cat];
     const name = list[Math.floor(Math.random() * list.length)];
     return { name, category: cat, categoryLabel: CATEGORY_LABELS[cat] };
