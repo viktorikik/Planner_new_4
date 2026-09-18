@@ -20,7 +20,7 @@ import {
   initShoppingListHandlers
 } from './features/ShoppingList.js';
 import { Onboarding } from './features/Onboarding.js';
-import { printWeeklyMenu } from './features/Print.js'; // ← новое
+import { printWeeklyMenu } from './features/Print.js';
 
 // ============================================================
 // ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ
@@ -67,6 +67,51 @@ import { printWeeklyMenu } from './features/Print.js'; // ← новое
   document.getElementById(CONSTANTS.SELECTORS.themeToggle).addEventListener('click', function() {
     document.body.classList.toggle('dark-theme');
     localStorage.setItem(CONSTANTS.STORAGE_KEYS.THEME, document.body.classList.contains('dark-theme') ? 'dark' : 'light');
+  });
+
+  // ---------- Меню «⋯» в шапке ----------
+  const moreMenuBtn = document.getElementById('moreMenuBtn');
+  const moreMenu = document.getElementById('moreMenu');
+
+  function openMoreMenu() {
+    moreMenu.hidden = false;
+    moreMenuBtn.setAttribute('aria-expanded', 'true');
+  }
+  function closeMoreMenu() {
+    moreMenu.hidden = true;
+    moreMenuBtn.setAttribute('aria-expanded', 'false');
+  }
+  function toggleMoreMenu() {
+    if (moreMenu.hidden) openMoreMenu();
+    else closeMoreMenu();
+  }
+
+  moreMenuBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    toggleMoreMenu();
+  });
+
+  // Клик по любому пункту меню → сначала закрываем меню, потом отработает
+  // собственный обработчик пункта (тема / печать / справка).
+  moreMenu.querySelectorAll('.more-menu-item').forEach(item => {
+    item.addEventListener('click', function() {
+      closeMoreMenu();
+    });
+  });
+
+  // Клик вне меню → закрыть
+  document.addEventListener('click', function(e) {
+    if (moreMenu.hidden) return;
+    if (!moreMenu.contains(e.target) && e.target !== moreMenuBtn) {
+      closeMoreMenu();
+    }
+  });
+
+  // Escape → закрыть меню (если открыто)
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && !moreMenu.hidden) {
+      closeMoreMenu();
+    }
   });
 
   // ---------- Поиск и фильтры ----------
@@ -304,7 +349,7 @@ import { printWeeklyMenu } from './features/Print.js'; // ← новое
   document.getElementById(CONSTANTS.SELECTORS.recipesBtn).addEventListener('click', openRecipesModal);
   document.getElementById(CONSTANTS.SELECTORS.shoppingListBtn).addEventListener('click', openShoppingList);
 
-  // ← новое: печать меню на неделю
+  // Печать меню на неделю
   document.getElementById('printBtn').addEventListener('click', printWeeklyMenu);
 
   // ---------- Глобальная модалка добавления блюда ----------
