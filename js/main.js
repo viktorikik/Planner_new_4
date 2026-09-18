@@ -424,5 +424,5 @@ import { Onboarding } from './features/Onboarding.js';
     }
   }, { passive: true });
 
-  console.log('✅ Планировщик меню готов!');
+
 })();
