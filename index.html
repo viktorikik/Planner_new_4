@@ -14,11 +14,14 @@
     <div class="logo">
       <h1>🍽️ Меню и рецепты</h1>
     </div>
-    <!-- ← изменено: три иконки спрятаны в меню «⋯» -->
     <div class="controls">
-      <!-- Меню «⋯» — справка, печать, тема -->
+      <!-- Меню-гамбургер — справка, печать, тема -->
       <div class="more-menu-wrap">
-        <button class="more-btn" id="moreMenuBtn" aria-label="Дополнительные действия" aria-haspopup="true" aria-expanded="false">⋯</button>
+        <button class="more-btn" id="moreMenuBtn" aria-label="Дополнительные действия" aria-haspopup="true" aria-expanded="false">
+          <span class="more-btn-lines" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </span>
+        </button>
         <div class="more-menu" id="moreMenu" role="menu" hidden>
           <button class="more-menu-item" id="onboardingHelpBtn" role="menuitem" type="button">
             <span class="more-menu-icon">❓</span>
