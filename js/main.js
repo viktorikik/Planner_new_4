@@ -367,6 +367,8 @@ import { printWeeklyMenu } from './features/Print.js';
     Renderer.showTasteCategorySelection();
   });
 
+  // «📖 Из моих рецептов» — открываем модалку рецептов в режиме «из выбора».
+  // В этом режиме появляется кнопка «← Назад» и закрытие возвращает в choiceOverlay.
   document.getElementById(CONSTANTS.SELECTORS.choiceFromRecipes).addEventListener('click', function() {
     const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
     overlay.classList.remove('active');
@@ -374,8 +376,9 @@ import { printWeeklyMenu } from './features/Print.js';
       overlay._trapFocusCleanup();
       delete overlay._trapFocusCleanup;
     }
-    openRecipesModal();
+    openRecipesModal(true);
   });
+
   document.getElementById(CONSTANTS.SELECTORS.choiceFromFavorites).addEventListener('click', function() {
     const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
     overlay.classList.remove('active');
