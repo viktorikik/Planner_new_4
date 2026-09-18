@@ -343,9 +343,17 @@ import { printWeeklyMenu } from './features/Print.js';
     }
     openRecipesModal();
   });
+  document.getElementById(CONSTANTS.SELECTORS.choiceFromFavorites).addEventListener('click', function() {
+    const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
+    overlay.classList.remove('active');
+    if (overlay._trapFocusCleanup) {
+      overlay._trapFocusCleanup();
+      delete overlay._trapFocusCleanup;
+    }
+    Renderer.openFavorites();
+  });
 
   // ---------- Кнопки в шапке ----------
-  document.getElementById(CONSTANTS.SELECTORS.favoritesBtn).addEventListener('click', Renderer.openFavorites);
   document.getElementById(CONSTANTS.SELECTORS.recipesBtn).addEventListener('click', openRecipesModal);
   document.getElementById(CONSTANTS.SELECTORS.shoppingListBtn).addEventListener('click', openShoppingList);
 
