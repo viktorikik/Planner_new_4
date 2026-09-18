@@ -3728,3 +3728,71 @@ body.dark-theme .more-menu {
 body.dark-theme .rec-taste-result {
   box-shadow: 0 2px 12px rgba(255, 107, 53, 0.25);
 }
+
+/* ============================================================
+   BOTTOM NAVIGATION (v4.0)
+   ============================================================ */
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: space-around;
+  background: var(--bg-app);
+  border-top: 1px solid var(--bg-app-border);
+  padding: 6px 0 calc(6px + env(safe-area-inset-bottom, 0px));
+  z-index: 900;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.bottom-nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  padding: 6px 4px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-fast);
+  min-height: 48px;
+  appearance: none;
+}
+
+.bottom-nav-btn:hover {
+  color: var(--text-secondary);
+}
+
+.bottom-nav-btn.active {
+  color: var(--accent-color);
+}
+
+.bottom-nav-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.bottom-nav-label {
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+body.dark-theme .bottom-nav {
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* Отступ снизу, чтобы контент не уходил под панель */
+body {
+  padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 700px) {
+  /* На десктопе можно скрыть панель или оставить — по вкусу. Пока оставляем. */
+}
