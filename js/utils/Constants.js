@@ -182,7 +182,8 @@ export const CONSTANTS = {
     calendarWrap: 'calendarWrap',
     viewToggleButtons: '#viewToggle button',
     exportOptions: '.export-option',
-
+bottomNav: 'bottomNav',
+bottomNavButtons: '.bottom-nav-btn',
     // ---- Обучающий тур ----
     onboardingHelpBtn: 'onboardingHelpBtn',
     onboardingOverlay: 'onboardingOverlay',
@@ -192,5 +193,6 @@ export const CONSTANTS = {
     onboardingNext: 'onboardingNext',
     onboardingSkip: 'onboardingSkip',
     onboardingClose: 'onboardingClose'
+    
   }
 };
