@@ -14,29 +14,30 @@
     <div class="logo">
       <h1>🍽️ Меню и рецепты</h1>
     </div>
-    <div class="controls">
-      <!-- Меню-гамбургер — справка, печать, тема -->
-      <div class="more-menu-wrap">
-        <button class="more-btn" id="moreMenuBtn" aria-label="Дополнительные действия" aria-haspopup="true" aria-expanded="false">
-          <span class="more-btn-lines" aria-hidden="true">
-            <span></span><span></span><span></span>
-          </span>
+    <!-- Меню-гамбургер — справка, печать, тема. Прямой ребёнок .app-header,
+         чтобы на мобильном прижиматься к правому верхнему углу. -->
+    <div class="more-menu-wrap">
+      <button class="more-btn" id="moreMenuBtn" aria-label="Дополнительные действия" aria-haspopup="true" aria-expanded="false">
+        <span class="more-btn-lines" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </span>
+      </button>
+      <div class="more-menu" id="moreMenu" role="menu" hidden>
+        <button class="more-menu-item" id="onboardingHelpBtn" role="menuitem" type="button">
+          <span class="more-menu-icon">❓</span>
+          <span>Справка</span>
         </button>
-        <div class="more-menu" id="moreMenu" role="menu" hidden>
-          <button class="more-menu-item" id="onboardingHelpBtn" role="menuitem" type="button">
-            <span class="more-menu-icon">❓</span>
-            <span>Справка</span>
-          </button>
-          <button class="more-menu-item" id="printBtn" role="menuitem" type="button">
-            <span class="more-menu-icon">🖨️</span>
-            <span>Печать меню на неделю</span>
-          </button>
-          <button class="more-menu-item" id="themeToggle" role="menuitem" type="button">
-            <span class="more-menu-icon">🌓</span>
-            <span>Сменить тему</span>
-          </button>
-        </div>
+        <button class="more-menu-item" id="printBtn" role="menuitem" type="button">
+          <span class="more-menu-icon">🖨️</span>
+          <span>Печать меню на неделю</span>
+        </button>
+        <button class="more-menu-item" id="themeToggle" role="menuitem" type="button">
+          <span class="more-menu-icon">🌓</span>
+          <span>Сменить тему</span>
+        </button>
       </div>
+    </div>
+    <div class="controls">
       <div class="view-toggle" id="viewToggle" role="group" aria-label="Переключение вида календаря">
         <button class="active" data-view="month" aria-pressed="true">Месяц</button>
         <button data-view="week" aria-pressed="false">Неделя</button>
