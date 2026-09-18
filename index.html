@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
-  <title>Планировщик меню · Календарь</title>
+  <title>Меню и рецепты · Календарь</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
   <!-- ШАПКА -->
   <header class="app-header">
     <div class="logo">
-      <h1>🍽️ Планировщик меню</h1>
+      <h1>🍽️ Меню и рецепты</h1>
     </div>
     <div class="controls">
       <!-- ← новое: кнопка справки -->
@@ -297,7 +297,7 @@
 <div class="welcome-overlay" id="welcomeOverlay" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
   <div class="welcome-modal">
     <span class="welcome-icon">🍽️</span>
-    <h2 id="welcomeTitle">Планировщик меню</h2>
+    <h2 id="welcomeTitle">Меню и рецепты</h2>
     <div class="welcome-text">
       <p><strong>Привет!</strong> Это ваш личный помощник для планирования питания. Храните рецепты, составляйте меню на неделю и создавайте списки покупок – всё в одном месте.</p>
       <p style="margin-top: 8px;"><strong>Что вы можете делать:</strong></p>
@@ -324,7 +324,7 @@
       <section class="onboarding-slide active">
         <span class="onboarding-icon" aria-hidden="true">👋</span>
         <h2 class="onboarding-title">Добро пожаловать!</h2>
-        <p class="onboarding-text">Планировщик меню — личный помощник для планирования питания. Храните рецепты, составляйте меню и создавайте списки покупок — всё в одном месте.</p>
+        <p class="onboarding-text">Меню и рецепты — личный помощник для планирования питания. Храните рецепты, составляйте меню и создавайте списки покупок — всё в одном месте.</p>
         <p class="onboarding-text">Далее — краткий обзор основных возможностей. Это займёт меньше минуты.</p>
       </section>
 
@@ -488,8 +488,7 @@
 <!-- Live region для объявления динамических сообщений -->
 <div id="liveRegion" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
-<!-- ← новое: печатная область. Скрыта на экране, видна только при печати.
-     Содержимое формируется из js/features/Print.js -->
+<!-- Печатная область. Скрыта на экране, видна только при печати. -->
 <div id="printArea" aria-hidden="true"></div>
 
 <script type="module" src="js/main.js"></script>
