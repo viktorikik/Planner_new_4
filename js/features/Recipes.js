@@ -11,6 +11,11 @@ import { exportRecipesAsJson, exportRecipesAsTxt, importRecipesOnly } from './Ex
 let recipesSearchQuery = '';
 let recipesCategoryFilter = 'all';
 
+// ---------- Контекст открытия модалки ----------
+// true — модалка открыта из «Что приготовить?» → «Из моих рецептов».
+// В этом случае кнопка «Назад» ведёт обратно в choiceOverlay, а не на главный экран.
+let openedFromChoice = false;
+
 // ---------- Состояние свёрнутых категорий ----------
 // { soup: true, salad: false, ... }
 let collapsedCategories = loadCollapsedState();
@@ -46,9 +51,16 @@ function updateRecipesTitle(total, found, isFiltered) {
   }
 }
 
-export function openRecipesModal() {
+export function openRecipesModal(fromChoice = false) {
+  openedFromChoice = !!fromChoice;
+
   const overlay = document.getElementById(CONSTANTS.SELECTORS.recipesOverlay);
   overlay.classList.add('active');
+
+  // Кнопка «Назад» видна только когда пришли из «Что приготовить?»
+  const backBtn = document.getElementById(CONSTANTS.SELECTORS.recipesBackBtn);
+  if (backBtn) backBtn.hidden = !openedFromChoice;
+
   // Сбрасываем фильтры при каждом открытии
   recipesSearchQuery = '';
   recipesCategoryFilter = 'all';
@@ -67,6 +79,18 @@ export function closeRecipesModal() {
   if (overlay._trapFocusCleanup) {
     overlay._trapFocusCleanup();
     delete overlay._trapFocusCleanup;
+  }
+
+  // Скрываем кнопку «Назад» для следующего открытия
+  const backBtn = document.getElementById(CONSTANTS.SELECTORS.recipesBackBtn);
+  if (backBtn) backBtn.hidden = true;
+
+  // Запоминаем контекст ДО сброса флага и при необходимости возвращаемся в «Что приготовить?»
+  const wasFromChoice = openedFromChoice;
+  openedFromChoice = false;
+
+  if (wasFromChoice) {
+    Renderer.returnToChoice();
   }
 }
 
@@ -318,6 +342,13 @@ function closeRecipeExportModal() {
 // ИНИЦИАЛИЗАЦИЯ ОБРАБОТЧИКОВ МОДАЛКИ «МОИ РЕЦЕПТЫ»
 // ============================================================
 export function initRecipesHandlers() {
+  // Кнопка «← Назад» — видна только при открытии из «Что приготовить?».
+  // closeRecipesModal сам решает, вернуться в choiceOverlay или просто закрыться.
+  const backBtn = document.getElementById(CONSTANTS.SELECTORS.recipesBackBtn);
+  if (backBtn) {
+    backBtn.addEventListener('click', closeRecipesModal);
+  }
+
   // «➕ Добавить» — открыть пустую форму
   document.getElementById(CONSTANTS.SELECTORS.addRecipeBtn).addEventListener('click', function() {
     openRecipeForm(null);
