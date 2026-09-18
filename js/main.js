@@ -20,6 +20,7 @@ import {
   initShoppingListHandlers
 } from './features/ShoppingList.js';
 import { Onboarding } from './features/Onboarding.js';
+import { printWeeklyMenu } from './features/Print.js'; // ← новое
 
 // ============================================================
 // ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ
@@ -302,6 +303,9 @@ import { Onboarding } from './features/Onboarding.js';
   document.getElementById(CONSTANTS.SELECTORS.favoritesBtn).addEventListener('click', Renderer.openFavorites);
   document.getElementById(CONSTANTS.SELECTORS.recipesBtn).addEventListener('click', openRecipesModal);
   document.getElementById(CONSTANTS.SELECTORS.shoppingListBtn).addEventListener('click', openShoppingList);
+
+  // ← новое: печать меню на неделю
+  document.getElementById('printBtn').addEventListener('click', printWeeklyMenu);
 
   // ---------- Глобальная модалка добавления блюда ----------
   document.getElementById(CONSTANTS.SELECTORS.addDishBtn).addEventListener('click', Renderer.openAddModal);
