@@ -3669,3 +3669,126 @@ body.dark-theme .recipe-category-header:hover {
     color: #666;
   }
 }
+
+/* ============================================================
+   МЕНЮ «⋯» В ШАПКЕ
+   Три действия (справка, печать, тема) спрятаны в выпадающее меню.
+   ============================================================ */
+.more-menu-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.more-btn {
+  background: var(--cell-bg);
+  border: 1px solid var(--cell-border);
+  border-radius: var(--radius-md);
+  padding: 6px var(--spacing-md);
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--text-primary);
+  transition: var(--transition-fast);
+  min-height: 40px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  appearance: none;
+  letter-spacing: 2px;
+}
+.more-btn:hover {
+  background: var(--day-hover);
+  transform: scale(1.05);
+}
+.more-btn:active {
+  transform: scale(0.96);
+}
+.more-btn[aria-expanded="true"] {
+  background: var(--accent-light);
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+/* Выпадающее меню */
+.more-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 220px;
+  background: var(--modal-bg);
+  border: 1px solid var(--cell-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+  padding: 6px;
+  z-index: 1500;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: moreMenuFadeIn 0.15s ease;
+}
+.more-menu[hidden] {
+  display: none;
+}
+
+@keyframes moreMenuFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.more-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  appearance: none;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.more-menu-item:hover,
+.more-menu-item:focus-visible {
+  background: var(--day-hover);
+  outline: none;
+}
+.more-menu-item:focus-visible {
+  box-shadow: 0 0 0 2px var(--accent-color) inset;
+}
+
+.more-menu-icon {
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+  width: 22px;
+  text-align: center;
+}
+
+/* Мобильные — меню прижимается к правому краю */
+@media (max-width: 480px) {
+  .more-menu {
+    min-width: 200px;
+  }
+  .more-menu-item {
+    font-size: 13px;
+    padding: 9px 10px;
+  }
+}
+
+/* Тёмная тема — усиленная тень */
+body.dark-theme .more-menu {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+}
+
+/* Старые стили .help-btn и .print-btn больше не нужны в шапке,
+   но оставляю их на случай, если пригодятся в других местах.
+   Класс .theme-toggle тоже остался (используется внутри меню по ID). */
