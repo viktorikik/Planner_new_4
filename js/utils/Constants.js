@@ -132,6 +132,7 @@ export const CONSTANTS = {
     welcomeStartBtn: 'welcomeStartBtn',
     recipesOverlay: 'recipesOverlay',
     recipesClose: 'recipesClose',
+    recipesBackBtn: 'recipesBackBtn',
     recipesTitle: 'recipesTitle',
     recipesList: 'recipesList',
     addRecipeBtn: 'addRecipeBtn',
@@ -182,8 +183,11 @@ export const CONSTANTS = {
     calendarWrap: 'calendarWrap',
     viewToggleButtons: '#viewToggle button',
     exportOptions: '.export-option',
-bottomNav: 'bottomNav',
-bottomNavButtons: '.bottom-nav-btn',
+
+    // ---- Bottom navigation (v4.0) ----
+    bottomNav: 'bottomNav',
+    bottomNavButtons: '.bottom-nav-btn',
+
     // ---- Обучающий тур ----
     onboardingHelpBtn: 'onboardingHelpBtn',
     onboardingOverlay: 'onboardingOverlay',
@@ -193,6 +197,5 @@ bottomNavButtons: '.bottom-nav-btn',
     onboardingNext: 'onboardingNext',
     onboardingSkip: 'onboardingSkip',
     onboardingClose: 'onboardingClose'
-    
   }
 };
