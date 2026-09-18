@@ -3520,3 +3520,152 @@ body.dark-theme .recipe-category-header:hover {
     scroll-behavior: auto !important;
   }
 }
+/* ============================================================
+   КНОПКА ПЕЧАТИ «🖨️» В ШАПКЕ
+   ============================================================ */
+.print-btn {
+  background: var(--cell-bg);
+  border: 1px solid var(--cell-border);
+  border-radius: var(--radius-md);
+  padding: 6px var(--spacing-md);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1.4;
+  color: var(--text-primary);
+  transition: var(--transition-fast);
+  min-height: 40px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  appearance: none;
+}
+.print-btn:hover {
+  background: var(--day-hover);
+  transform: scale(1.05);
+}
+.print-btn:active {
+  transform: scale(0.96);
+}
+
+/* ============================================================
+   ПЕЧАТНАЯ ОБЛАСТЬ
+   На экране скрыта. При печати показывается, всё остальное —
+   скрывается.
+   ============================================================ */
+#printArea {
+  display: none;
+}
+
+/* ============================================================
+   СТИЛИ ДЛЯ ПЕЧАТИ
+   ============================================================ */
+@media print {
+  /* Скрываем всё, что не относится к печати */
+  body > *:not(#printArea) {
+    display: none !important;
+  }
+
+  /* Печатная область — единственное видимое */
+  #printArea {
+    display: block !important;
+    font-family: Georgia, 'Times New Roman', serif;
+    color: #000;
+    background: #fff;
+    padding: 0;
+    margin: 0;
+  }
+
+  /* Общие настройки страницы */
+  @page {
+    size: A4 portrait;
+    margin: 15mm 12mm;
+  }
+
+  html, body {
+    background: #fff !important;
+    color: #000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Заголовок печатной страницы */
+  #printArea .print-header {
+    text-align: center;
+    border-bottom: 2px solid #000;
+    padding-bottom: 8px;
+    margin-bottom: 14px;
+  }
+  #printArea .print-title {
+    font-size: 22pt;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+    letter-spacing: -0.5px;
+  }
+  #printArea .print-subtitle {
+    font-size: 11pt;
+    color: #333;
+    margin: 0;
+  }
+
+  /* День */
+  #printArea .print-day {
+    margin-bottom: 12px;
+    page-break-inside: avoid;
+  }
+  #printArea .print-day-header {
+    font-size: 13pt;
+    font-weight: 700;
+    border-bottom: 1px solid #888;
+    padding-bottom: 3px;
+    margin-bottom: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  #printArea .print-day-date {
+    color: #333;
+    font-size: 11pt;
+    font-weight: normal;
+  }
+
+  /* Список блюд дня */
+  #printArea .print-dishes {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 0 6px;
+  }
+  #printArea .print-dishes li {
+    font-size: 11pt;
+    line-height: 1.5;
+    padding: 1px 0;
+  }
+  #printArea .print-dish-mark {
+    display: inline-block;
+    width: 16px;
+    color: #666;
+  }
+  #printArea .print-dish-status {
+    color: #666;
+    font-size: 9pt;
+    margin-left: 4px;
+  }
+
+  /* Пустой день */
+  #printArea .print-day-empty {
+    font-size: 10pt;
+    font-style: italic;
+    color: #888;
+    padding-left: 6px;
+  }
+
+  /* Подвал */
+  #printArea .print-footer {
+    margin-top: 16px;
+    padding-top: 8px;
+    border-top: 1px solid #888;
+    text-align: center;
+    font-size: 9pt;
+    color: #666;
+  }
+}
