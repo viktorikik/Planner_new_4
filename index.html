@@ -17,6 +17,8 @@
     <div class="controls">
       <!-- ← новое: кнопка справки -->
       <button class="help-btn" id="onboardingHelpBtn" aria-label="Показать справку">❓</button>
+      <!-- ← новое: кнопка печати -->
+      <button class="print-btn" id="printBtn" aria-label="Печать меню на неделю">🖨️</button>
       <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему">🌓</button>
       <div class="view-toggle" id="viewToggle" role="group" aria-label="Переключение вида календаря">
         <button class="active" data-view="month" aria-pressed="true">Месяц</button>
@@ -312,7 +314,7 @@
   </div>
 </div>
 
-<!-- ← новое: Обучающий тур (слайды). Открывается после welcome и по кнопке «❓» -->
+<!-- Обучающий тур (слайды). Открывается после welcome и по кнопке «❓» -->
 <div class="onboarding-overlay" id="onboardingOverlay" role="dialog" aria-modal="true" aria-label="Обучение по использованию приложения">
   <div class="onboarding-modal">
     <button class="onboarding-close" id="onboardingClose" aria-label="Закрыть обучение">✕</button>
@@ -485,6 +487,10 @@
 
 <!-- Live region для объявления динамических сообщений -->
 <div id="liveRegion" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+<!-- ← новое: печатная область. Скрыта на экране, видна только при печати.
+     Содержимое формируется из js/features/Print.js -->
+<div id="printArea" aria-hidden="true"></div>
 
 <script type="module" src="js/main.js"></script>
 </body>
