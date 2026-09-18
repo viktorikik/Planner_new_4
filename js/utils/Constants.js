@@ -68,7 +68,7 @@ export const CONSTANTS = {
     DISHES: 'smartMenuDishes_v5',
     THEME: 'mealPlannerTheme',
     ONBOARDING_SHOWN: 'smartMenuOnboardingShown_v1',
-    RECIPES_COLLAPSED: 'smartMenuRecipesCollapsed_v1' // ← новое
+    RECIPES_COLLAPSED: 'smartMenuRecipesCollapsed_v1'
   },
   EVENTS: {
     DISHES_CHANGED: 'dishes:changed',
@@ -127,6 +127,7 @@ export const CONSTANTS = {
     choiceFromMenu: 'choiceFromMenu',
     choiceFromTaste: 'choiceFromTaste',
     choiceFromRecipes: 'choiceFromRecipes',
+    choiceFromFavorites: 'choiceFromFavorites',
     welcomeOverlay: 'welcomeOverlay',
     welcomeStartBtn: 'welcomeStartBtn',
     recipesOverlay: 'recipesOverlay',
@@ -172,7 +173,6 @@ export const CONSTANTS = {
     importBtn: 'importBtn',
     exportBtn: 'exportBtn',
     suggestBtn: 'suggestBtn',
-    favoritesBtn: 'favoritesBtn',
     recipesBtn: 'recipesBtn',
     shoppingListBtn: 'shoppingListBtn',
     addDishBtn: 'addDishBtn',
