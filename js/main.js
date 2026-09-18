@@ -318,6 +318,97 @@ import { printWeeklyMenu } from './features/Print.js';
     });
   });
 
+  // ---------- History integration для модалок (Android hardware back) ----------
+  // Когда открыта модалка — pushState. При закрытии через UI — history.back().
+  // Если пользователь нажимает аппаратную «Назад» при открытой модалке —
+  // закрываем её, а не переключаем таб. Работает через MutationObserver:
+  // следим за .active-классами оверлеев, чтобы не трогать 15 разных мест,
+  // где модалки открываются и закрываются.
+  let historyEntryPushed = false;
+  let closingViaHistory = false;
+
+  function hasActiveModal() {
+    return !!document.querySelector(
+      '.modal-overlay.active, .choice-overlay.active, .welcome-overlay.active, .onboarding-overlay.active'
+    );
+  }
+
+  function syncModalHistory() {
+    const hasModal = hasActiveModal();
+
+    if (hasModal && !historyEntryPushed) {
+      history.pushState({ modal: true }, '');
+      historyEntryPushed = true;
+    } else if (!hasModal && historyEntryPushed && !closingViaHistory) {
+      closingViaHistory = true;
+      history.back();
+    }
+  }
+
+  const modalObserver = new MutationObserver(syncModalHistory);
+  modalObserver.observe(document.body, {
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['class']
+  });
+
+  window.addEventListener('popstate', function() {
+    if (closingViaHistory) {
+      // Это наш собственный history.back() — просто сброс флагов
+      closingViaHistory = false;
+      historyEntryPushed = false;
+      return;
+    }
+
+    if (historyEntryPushed && hasActiveModal()) {
+      // Пользователь нажал hardware back. Браузер уже откатил entry,
+      // поэтому просто закрываем верхнюю модалку.
+      historyEntryPushed = false;
+      closeTopActiveModal();
+    }
+  });
+
+  function closeTopActiveModal() {
+    const overlays = document.querySelectorAll(
+      '.modal-overlay.active, .choice-overlay.active, .welcome-overlay.active, .onboarding-overlay.active'
+    );
+    if (overlays.length === 0) return;
+
+    // Находим верхнюю по z-index (последняя в DOM ≠ всегда верхняя)
+    let top = overlays[0];
+    let topZ = parseInt(getComputedStyle(top).zIndex, 10) || 0;
+    for (let i = 1; i < overlays.length; i++) {
+      const z = parseInt(getComputedStyle(overlays[i]).zIndex, 10) || 0;
+      if (z > topZ) { top = overlays[i]; topZ = z; }
+    }
+
+    // Ищем close в массиве modals
+    const entry = modals.find(m => m.overlay === top);
+    if (entry) {
+      entry.close();
+      return;
+    }
+
+    // Onboarding — особый случай, он не в массиве modals
+    if (top.id === CONSTANTS.SELECTORS.onboardingOverlay) {
+      Onboarding.close(true);
+      return;
+    }
+
+    // Динамические оверлеи (например, карточка рецепта) — свой _closeFn
+    if (typeof top._closeFn === 'function') {
+      top._closeFn();
+      return;
+    }
+
+    // Fallback: снять класс и почистить trapFocus
+    top.classList.remove('active');
+    if (top._trapFocusCleanup) {
+      top._trapFocusCleanup();
+      delete top._trapFocusCleanup;
+    }
+  }
+
   // ---------- Глобальный Escape (по массиву modals, без дублирующих if/else) ----------
   document.addEventListener('keydown', function(e) {
     if (e.key !== 'Escape') return;
