@@ -920,7 +920,7 @@ export const Renderer = (function() {
     const backBtn = document.createElement('button');
     backBtn.className = 'rec-back-btn';
     backBtn.textContent = '← Назад';
-    backBtn.addEventListener('click', () => recOverlay.classList.remove('active'));
+    backBtn.addEventListener('click', returnToChoice);
     container.appendChild(backBtn);
 
     recContent.appendChild(container);
@@ -1096,6 +1096,13 @@ export const Renderer = (function() {
       hint.textContent = '👆 Кликните по блюду (кроме крестика), чтобы добавить его в план на завтра. Нажмите ✕, чтобы убрать оценку.';
       recContent.appendChild(hint);
     }
+
+    const backBtn = document.createElement('button');
+    backBtn.className = 'rec-back-btn';
+    backBtn.textContent = '← Назад';
+    backBtn.addEventListener('click', returnToChoice);
+    recContent.appendChild(backBtn);
+
     recOverlay.classList.add('active');
     trapFocus(recOverlay, closeRecModal);
   }
@@ -1106,6 +1113,23 @@ export const Renderer = (function() {
       recOverlay._trapFocusCleanup();
       delete recOverlay._trapFocusCleanup;
     }
+  }
+
+  // Возврат из recOverlay в модалку «Что приготовить?».
+  // Закрываем рекомендации и снова открываем choiceOverlay с trapFocus,
+  // чтобы навигация «шаг назад» работала корректно.
+  function returnToChoice() {
+    closeRecModal();
+    const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
+    if (!overlay) return;
+    overlay.classList.add('active');
+    trapFocus(overlay, () => {
+      overlay.classList.remove('active');
+      if (overlay._trapFocusCleanup) {
+        overlay._trapFocusCleanup();
+        delete overlay._trapFocusCleanup;
+      }
+    });
   }
 
   function openAddModal() {
