@@ -1132,6 +1132,100 @@ export const Renderer = (function() {
     });
   }
 
+  // «✨ На твой вкус»: сначала выбор категории — по аналогии с «Из моего меню».
+  // Опция «🎲 Все категории» сохраняет старое поведение (случайное блюдо из
+  // любой категории).
+  function showTasteCategorySelection() {
+    recTitle.textContent = '✨ На твой вкус';
+    recContent.innerHTML = '';
+
+    const container = document.createElement('div');
+    container.className = 'rec-category-selection';
+
+    const desc = document.createElement('p');
+    desc.textContent = 'Выберите категорию — или доверьтесь случаю:';
+    desc.className = 'rec-category-desc';
+    container.appendChild(desc);
+
+    const allBtn = document.createElement('button');
+    allBtn.className = 'category-choice-btn';
+    allBtn.textContent = '🎲 Все категории';
+    allBtn.addEventListener('click', () => showRandomTasteDish(null));
+    container.appendChild(allBtn);
+
+    const categories = [
+      { key: CATEGORIES.SOUP,   label: '🍲 Супы' },
+      { key: CATEGORIES.SALAD,  label: '🥗 Салаты' },
+      { key: CATEGORIES.MAIN,   label: '🍖 Основные блюда' },
+      { key: CATEGORIES.BAKERY, label: '🥐 Выпечка' },
+      { key: CATEGORIES.OTHER,  label: '🍽️ Другое' }
+    ];
+
+    categories.forEach(cat => {
+      const btn = document.createElement('button');
+      btn.className = 'category-choice-btn';
+      btn.textContent = cat.label;
+      btn.addEventListener('click', () => showRandomTasteDish(cat.key));
+      container.appendChild(btn);
+    });
+
+    const backBtn = document.createElement('button');
+    backBtn.className = 'rec-back-btn';
+    backBtn.textContent = '← Назад';
+    backBtn.addEventListener('click', returnToChoice);
+    container.appendChild(backBtn);
+
+    recContent.appendChild(container);
+    recOverlay.classList.add('active');
+    trapFocus(recOverlay, closeRecModal);
+  }
+
+  // Показывает случайное блюдо из выбранной категории (или из любой, если
+  // category = null) + действия. Перебрасывание (reroll) — повторный вызов
+  // с той же категорией.
+  function showRandomTasteDish(category) {
+    const random = DishStore.getRandomDishFromTaste(category);
+    recTitle.textContent = `✨ ${random.categoryLabel}`;
+    recContent.innerHTML = '';
+
+    const section = document.createElement('div');
+    section.className = 'rec-section';
+
+    const dishBox = document.createElement('div');
+    dishBox.className = 'rec-taste-result';
+    dishBox.textContent = random.name;
+    section.appendChild(dishBox);
+
+    recContent.appendChild(section);
+
+    const actionsRow = document.createElement('div');
+    actionsRow.className = 'rec-taste-actions';
+
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'rec-taste-add';
+    addBtn.textContent = '➕ В план на завтра';
+    addBtn.addEventListener('click', () => {
+      addDishToTomorrow(random.name, null, () => recOverlay.classList.remove('active'));
+    });
+    actionsRow.appendChild(addBtn);
+
+    const rerollBtn = document.createElement('button');
+    rerollBtn.type = 'button';
+    rerollBtn.className = 'rec-taste-reroll';
+    rerollBtn.textContent = '🔄 Другое блюдо';
+    rerollBtn.addEventListener('click', () => showRandomTasteDish(category));
+    actionsRow.appendChild(rerollBtn);
+
+    recContent.appendChild(actionsRow);
+
+    const backBtn = document.createElement('button');
+    backBtn.className = 'rec-back-btn';
+    backBtn.textContent = '← Назад к категориям';
+    backBtn.addEventListener('click', showTasteCategorySelection);
+    recContent.appendChild(backBtn);
+  }
+
   function openAddModal() {
     const defaultDate = new Date();
     defaultDate.setDate(defaultDate.getDate() + 1);
@@ -1312,6 +1406,7 @@ export const Renderer = (function() {
     setCurrentView: (v) => { currentView = v; },
     showRecipeCard,
     showCategorySelection,
+    showTasteCategorySelection,
     closeEditDishModal,
     closeRepeatMenuModal
   };
