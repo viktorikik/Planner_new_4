@@ -1941,10 +1941,6 @@ body.dark-theme #savedListsContainer h4 {
     min-height: 40px;
     min-width: 40px;
   }
-
-  .btn-row.center-row .btn {
-    max-width: 200px;
-  }
 }
 
 @media (min-width: 1000px) {
