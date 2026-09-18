@@ -317,6 +317,8 @@ import { printWeeklyMenu } from './features/Print.js';
     }
     Renderer.showCategorySelection();
   });
+
+  // «✨ На твой вкус» — теперь открывает выбор категории, а не confirm()
   document.getElementById(CONSTANTS.SELECTORS.choiceFromTaste).addEventListener('click', function() {
     const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
     overlay.classList.remove('active');
@@ -324,16 +326,9 @@ import { printWeeklyMenu } from './features/Print.js';
       overlay._trapFocusCleanup();
       delete overlay._trapFocusCleanup;
     }
-    const random = DishStore.getRandomDishFromTaste();
-    const answer = `🍽️ ${random.categoryLabel}\n\n${random.name}\n\nХотите добавить его в план на завтра?`;
-    if (confirm(answer)) {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const dateStr = Utils.formatDateLocal(tomorrow);
-      DishStore.addDish(random.name, STATUSES.PLANNED, dateStr, random.category, false, '');
-      showMessage(`✅ Блюдо "${random.name}" добавлено в план на завтра (${Utils.formatDate(tomorrow)})`);
-    }
+    Renderer.showTasteCategorySelection();
   });
+
   document.getElementById(CONSTANTS.SELECTORS.choiceFromRecipes).addEventListener('click', function() {
     const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
     overlay.classList.remove('active');
