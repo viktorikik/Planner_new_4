@@ -1956,15 +1956,14 @@ body.dark-theme #savedListsContainer h4 {
     max-width: calc(50% - 10px);
   }
 }
+
 /* ===== ДОПОЛНИТЕЛЬНЫЕ КЛАССЫ ДЛЯ УДАЛЕНИЯ INLINE-СТИЛЕЙ ===== */
 
-/* Рекомендации: описание */
 .rec-category-desc {
   margin-bottom: 16px;
   color: var(--text-secondary);
 }
 
-/* Рекомендации: кнопки категорий (уже есть, но продублируем для надёжности) */
 .category-choice-btn {
   display: block;
   width: 100%;
@@ -1984,7 +1983,6 @@ body.dark-theme #savedListsContainer h4 {
   transform: translateX(4px);
 }
 
-/* Кнопка назад в рекомендациях */
 .rec-back-btn {
   margin-top: 12px;
   background: transparent;
@@ -1994,7 +1992,6 @@ body.dark-theme #savedListsContainer h4 {
   font-size: 14px;
 }
 
-/* Заголовок категории в списке рецептов */
 .recipe-category-header {
   font-size: 16px;
   font-weight: 700;
@@ -2006,14 +2003,12 @@ body.dark-theme #savedListsContainer h4 {
   border-left: 4px solid var(--accent-color);
 }
 
-/* Список рецептов */
 .recipe-list {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
-/* Элемент списка рецептов */
 .recipe-list-item {
   display: flex;
   justify-content: space-between;
@@ -2029,13 +2024,11 @@ body.dark-theme #savedListsContainer h4 {
   background: var(--day-hover);
 }
 
-/* Кликабельное название рецепта */
 .recipe-name-clickable {
   cursor: pointer;
   flex: 1;
 }
 
-/* Кнопка редактирования рецепта */
 .recipe-edit-btn {
   background: none;
   border: none;
@@ -2050,7 +2043,6 @@ body.dark-theme #savedListsContainer h4 {
   color: var(--text-primary);
 }
 
-/* Карточка рецепта (просмотр) */
 .recipe-view-modal {
   max-width: 500px;
 }
@@ -2086,25 +2078,22 @@ body.dark-theme #savedListsContainer h4 {
   margin-top: 12px;
 }
 
-/* Заголовок списка покупок */
 .shopping-list-header {
   margin-bottom: 8px;
   font-size: 14px;
   color: var(--text-secondary);
 }
 
-/* Подсказка "Выбрать из меню" */
 .suggest-title {
   margin-top: 12px;
 }
 
 .meal-chip {
-  touch-action: none; /* отключаем стандартное поведение браузера для чипов */
+  touch-action: none;
 }
 
 /* ============================================================
    ФИНАЛЬНОЕ ИСПРАВЛЕНИЕ КНОПОК В КАРТОЧКЕ РЕЦЕПТА
-   (с !important, чтобы перебить любые конфликты)
    ============================================================ */
 .recipe-view-modal .recipe-card-buttons .btn-primary {
   background: var(--accent-color) !important;
@@ -2144,14 +2133,11 @@ body.dark-theme #savedListsContainer h4 {
   transform: translateY(-2px) !important;
 }
 
-/* На мобильных — кнопки одна под другой */
 @media (max-width: 480px) {
   .recipe-view-modal .recipe-card-buttons {
     flex-direction: column !important;
   }
 }
-
-
 
 /* ============================================================
    КАТЕГОРИЯ «ВЫПЕЧКА» — цветовая метка
@@ -2160,12 +2146,10 @@ body.dark-theme #savedListsContainer h4 {
   border-left-color: var(--color-bakery);
 }
 
-/* Переменная в :root (светлая тема) */
 :root {
   --color-bakery: #d97706;
 }
 
-/* Переменная в тёмной теме */
 body.dark-theme {
   --color-bakery: #fbbf24;
 }
@@ -2202,7 +2186,6 @@ body.dark-theme {
   line-height: 1.2;
 }
 
-/* Кнопка «Добавить» — главная, акцентная */
 .recipes-toolbar .btn-done {
   background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
   color: var(--accent-text);
@@ -2218,7 +2201,6 @@ body.dark-theme {
   box-shadow: 0 2px 6px rgba(255, 107, 53, 0.25);
 }
 
-/* Кнопки «Экспорт» и «Импорт» — нейтральные с рамкой */
 .recipes-toolbar .btn-secondary {
   background: var(--card-bg);
   border: 1.5px solid var(--cell-border);
@@ -2236,7 +2218,6 @@ body.dark-theme {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
-/* Мобильные: «Добавить» на всю строку, Экспорт/Импорт — по половине */
 @media (max-width: 480px) {
   .recipes-toolbar button {
     flex: 1 1 calc(50% - 4px);
@@ -2250,7 +2231,6 @@ body.dark-theme {
   }
 }
 
-/* Тёмная тема — небольшая корректировка теней */
 body.dark-theme .recipes-toolbar button {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
@@ -2260,7 +2240,6 @@ body.dark-theme .recipes-toolbar .btn-done {
 body.dark-theme .recipes-toolbar .btn-secondary:hover {
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
 }
-
 
 /* ============================================================
    ФИНАЛЬНАЯ ПАНЕЛЬ КНОПОК В МОДАЛКЕ «МОИ РЕЦЕПТЫ»
@@ -2293,7 +2272,6 @@ body.dark-theme .recipes-toolbar .btn-secondary:hover {
   box-sizing: border-box !important;
 }
 
-/* Кнопка «Добавить» */
 .recipes-toolbar > .btn-done {
   background: linear-gradient(135deg, #ff6b35, #e55a2b) !important;
   color: #ffffff !important;
@@ -2309,7 +2287,6 @@ body.dark-theme .recipes-toolbar .btn-secondary:hover {
   transform: translateY(0) !important;
 }
 
-/* Кнопки «Экспорт» и «Импорт» */
 .recipes-toolbar > .btn-secondary {
   background: var(--card-bg) !important;
   color: var(--text-primary) !important;
@@ -2326,7 +2303,6 @@ body.dark-theme .recipes-toolbar .btn-secondary:hover {
   transform: translateY(0) !important;
 }
 
-/* Мобильные */
 @media (max-width: 480px) {
   .recipes-toolbar > button {
     flex: 1 1 calc(50% - 4px) !important;
@@ -2393,7 +2369,6 @@ body.dark-theme .recipes-toolbar .btn-secondary:hover {
   box-shadow: 0 0 0 3px var(--accent-light);
 }
 
-/* Мобильные — фильтры во всю ширину */
 @media (max-width: 480px) {
   .recipes-filters input,
   .recipes-filters select {
@@ -2403,7 +2378,6 @@ body.dark-theme .recipes-toolbar .btn-secondary:hover {
 
 /* ============================================================
    КАРТОЧКА РЕЦЕПТА — ФИНАЛЬНАЯ СТИЛИЗАЦИЯ
-   (перекрывает более ранние правила, размещено в конце файла)
    ============================================================ */
 .recipe-view-modal {
   max-width: 520px;
@@ -2437,7 +2411,6 @@ body.dark-theme .recipes-toolbar .btn-secondary:hover {
   margin-top: -4px;
 }
 
-/* Бейдж категории */
 .recipe-category-badge {
   display: inline-block;
   align-self: flex-start;
@@ -2457,7 +2430,6 @@ body.dark-theme .recipes-toolbar .btn-secondary:hover {
 .recipe-category-badge.category-bakery { color: var(--color-bakery); border-color: var(--color-bakery); }
 .recipe-category-badge.category-other  { color: var(--text-secondary); }
 
-/* Секции карточки */
 .recipe-view-modal .recipe-section {
   margin-bottom: 16px;
   padding-bottom: 14px;
@@ -2479,7 +2451,6 @@ body.dark-theme .recipes-toolbar .btn-secondary:hover {
   letter-spacing: 0.2px;
 }
 
-/* Ингредиенты — аккуратные буллиты */
 .recipe-view-modal .recipe-ingredients-list {
   list-style: none;
   padding: 0;
@@ -2508,7 +2479,6 @@ body.dark-theme .recipes-toolbar .btn-secondary:hover {
   background: var(--accent-color);
 }
 
-/* Инструкция — «карточка» с фоном */
 .recipe-view-modal .recipe-instructions-text {
   white-space: pre-wrap;
   font-family: inherit;
@@ -2524,12 +2494,10 @@ body.dark-theme .recipes-toolbar .btn-secondary:hover {
   overflow-wrap: anywhere;
 }
 
-/* Кнопки — чуть больше отступ сверху, чтобы не слипалось с секцией */
 .recipe-view-modal .recipe-card-buttons {
   margin-top: 16px;
 }
 
-/* Мобильные тонкости */
 @media (max-width: 480px) {
   .recipe-view-titlerow h3 {
     font-size: 19px;
@@ -2543,11 +2511,8 @@ body.dark-theme .recipes-toolbar .btn-secondary:hover {
   }
 }
 
-
 /* ============================================================
    КНОПКИ ВЫБОРА ФОРМАТА В МОДАЛКЕ ЭКСПОРТА РЕЦЕПТОВ
-   (по образцу .export-option, но с собственным классом,
-    чтобы не конфликтовать с глобальным обработчиком в main.js)
    ============================================================ */
 .export-modal .recipe-export-option {
   display: block;
@@ -2580,8 +2545,6 @@ body.dark-theme .recipes-toolbar .btn-secondary:hover {
 
 /* ============================================================
    МОДАЛКА ЭКСПОРТА РЕЦЕПТОВ — ПОВЕРХ МОДАЛКИ «МОИ РЕЦЕПТЫ»
-   (равный z-index не помогает, т.к. recipesOverlay идёт позже
-   в DOM — поднимаем явно)
    ============================================================ */
 #recipeExportOverlay {
   z-index: 1100;
@@ -2617,12 +2580,9 @@ body.dark-theme .recipes-toolbar .btn-secondary:hover {
   outline-offset: 2px;
 }
 
-
 /* ============================================================
    ГРУППА A — стили для кликов и книжки рецепта
    ============================================================ */
-
-/* Название блюда — кликабельно (открывает редактирование) */
 .modal-dish .dish-name {
   cursor: pointer;
 }
@@ -2635,7 +2595,6 @@ body.dark-theme .recipes-toolbar .btn-secondary:hover {
   border-radius: 6px;
 }
 
-/* Чип «📖 Рецепт» */
 .modal-dish .recipe-chip {
   display: inline-flex;
   align-items: center;
@@ -2665,7 +2624,6 @@ body.dark-theme .recipes-toolbar .btn-secondary:hover {
   outline-offset: 2px;
 }
 
-/* Статус — кликабельная кнопка-плашка */
 .modal-dish .dish-status {
   cursor: pointer;
   background: none;
@@ -2689,7 +2647,6 @@ body.dark-theme .recipes-toolbar .btn-secondary:hover {
   outline-offset: 2px;
 }
 
-/* Название в списке меню — кликабельно */
 .menu-item .menu-item-name {
   cursor: pointer;
   flex: 1;
@@ -2707,7 +2664,6 @@ body.dark-theme .recipes-toolbar .btn-secondary:hover {
   border-radius: 4px;
 }
 
-/* Чип рецепта в тёмной теме */
 body.dark-theme .modal-dish .recipe-chip {
   background: rgba(255, 107, 53, 0.18);
 }
@@ -2716,12 +2672,9 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   color: #1a1a1a;
 }
 
-
 /* ============================================================
    ГРУППА C — 👍/👎 и «Повторить меню»
    ============================================================ */
-
-/* Кнопки 👍 / 👎 в модалке дня */
 .modal-dish .thumb-btn {
   background: none;
   border: none;
@@ -2750,7 +2703,6 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   border-radius: 4px;
 }
 
-/* Бордер блюда с 👍 — зелёный (вместо красного) */
 .modal-dish.liked {
   border-left-color: var(--done-color);
 }
@@ -2759,7 +2711,6 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   background: rgba(16, 185, 129, 0.08);
 }
 
-/* Кнопка «Повторить меню» */
 .repeat-menu-btn {
   display: block;
   width: 100%;
@@ -2787,7 +2738,6 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   outline-offset: 2px;
 }
 
-/* Описание в модалках (универсальное) */
 .modal-desc {
   color: var(--text-secondary);
   font-size: 14px;
@@ -2795,7 +2745,6 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   line-height: 1.5;
 }
 
-/* Стилизация даты в модалке повтора */
 #repeatMenuDate {
   width: 100%;
   padding: 10px 14px;
@@ -2816,8 +2765,6 @@ body.dark-theme .modal-dish .recipe-chip:hover {
 
 /* ============================================================
    ИСПРАВЛЕНИЕ РАСКЛАДКИ БЛЮДА В МОДАЛКЕ ДНЯ
-   Название — отдельная строка, действия (статус, 👍, 👎, 🗑️) —
-   всегда строго под названием, а не справа.
    ============================================================ */
 .modal-dish {
   display: flex !important;
@@ -2827,7 +2774,6 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   flex-wrap: nowrap !important;
 }
 
-/* Первая строка: название блюда + чип «📖 Рецепт» (если есть) */
 .modal-dish .dish-name {
   width: 100% !important;
   flex: 0 0 auto !important;
@@ -2838,14 +2784,12 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   cursor: pointer;
 }
 
-/* Название — переносится, если длинное */
 .modal-dish .dish-name .dish-name-text {
   word-break: break-word;
   overflow-wrap: anywhere;
   line-height: 1.35;
 }
 
-/* Вторая строка: статус + 👍 + 👎 + 🗑️ */
 .modal-dish .dish-actions {
   margin-left: 0 !important;
   justify-content: flex-start !important;
@@ -2854,12 +2798,10 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   align-items: center;
 }
 
-/* Статус — плашка фиксированной высоты, чтобы строка не «прыгала» */
 .modal-dish .dish-status {
   line-height: 1.4;
 }
 
-/* Кнопки 👍/👎/🗑️ — одного размера, ровно */
 .modal-dish .thumb-btn,
 .modal-dish .action-btn {
   display: inline-flex;
@@ -2870,7 +2812,6 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   line-height: 1;
 }
 
-/* Заметка — на всю ширину, как и была */
 .modal-dish .dish-note {
   flex: 0 0 auto !important;
   width: 100%;
@@ -2880,8 +2821,6 @@ body.dark-theme .modal-dish .recipe-chip:hover {
 /* ============================================================
    ГРУППА D — список покупок: переработка визуала
    ============================================================ */
-
-/* Строка с датами */
 .shopping-dates-row {
   display: flex;
   flex-wrap: wrap;
@@ -2912,7 +2851,6 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   box-shadow: 0 0 0 3px var(--accent-light);
 }
 
-/* Кнопка «Собрать список» */
 .shopping-generate-btn {
   width: 100%;
   padding: 10px 20px;
@@ -2936,7 +2874,6 @@ body.dark-theme .modal-dish .recipe-chip:hover {
 }
 .shopping-generate-btn:active { transform: translateY(0); }
 
-/* Блок «Сохранённые списки» */
 .shopping-saved-block {
   margin-top: 8px;
 }
@@ -2947,7 +2884,6 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   margin-bottom: 10px;
 }
 
-/* Кнопка «Назад к спискам» */
 .shopping-back-btn {
   display: inline-block;
   padding: 6px 14px;
@@ -2967,7 +2903,6 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   border-color: var(--text-primary);
 }
 
-/* HTML-вид списка */
 .shopping-list-view {
   background: rgba(128, 128, 140, 0.05);
   border-radius: var(--radius-md);
@@ -3042,7 +2977,6 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   font-size: 14px;
 }
 
-/* Textarea для ручного редактирования */
 #shoppingListResult {
   display: none;
   width: 100%;
@@ -3065,7 +2999,6 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   outline: none;
 }
 
-/* Нижняя панель кнопок */
 .shopping-actions-row {
   display: flex;
   flex-wrap: wrap;
@@ -3090,7 +3023,6 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   gap: 5px;
 }
 
-/* Стили для кнопок внутри панели (переиспользуем btn-done / btn-secondary) */
 .shopping-actions-row .btn-done {
   background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
   color: var(--accent-text);
@@ -3112,7 +3044,6 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   transform: translateY(-2px);
 }
 
-/* Мобильные — кнопки в 2 ряда */
 @media (max-width: 480px) {
   .shopping-actions-row button {
     flex: 1 1 calc(50% - 4px);
@@ -3121,38 +3052,9 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   }
 }
 
-/* Сохранённые списки — стилизация заголовка */
 .saved-list-item .list-date {
   font-weight: 500;
   color: var(--text-primary);
-}
-
-/* ============================================================
-   КНОПКА СПРАВКИ «❓» В ШАПКЕ
-   ============================================================ */
-.help-btn {
-  background: var(--cell-bg);
-  border: 1px solid var(--cell-border);
-  border-radius: var(--radius-md);
-  padding: 6px var(--spacing-md);
-  cursor: pointer;
-  font-size: 18px;
-  line-height: 1.4;
-  color: var(--text-primary);
-  transition: var(--transition-fast);
-  min-height: 40px;
-  min-width: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  appearance: none;
-}
-.help-btn:hover {
-  background: var(--day-hover);
-  transform: scale(1.05);
-}
-.help-btn:active {
-  transform: scale(0.96);
 }
 
 /* ============================================================
@@ -3367,12 +3269,10 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   transform: none;
 }
 
-/* Тёмная тема: слегка усиленные тени */
 body.dark-theme .onboarding-modal {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
 }
 
-/* Мобильные */
 @media (max-width: 480px) {
   .onboarding-modal {
     padding: var(--spacing-md) var(--spacing-md) var(--spacing-xs);
@@ -3406,11 +3306,10 @@ body.dark-theme .onboarding-modal {
   }
   .onboarding-dots { padding: var(--spacing-sm) 0 var(--spacing-xs); }
 }
+
 /* ============================================================
    СВОРАЧИВАНИЕ КАТЕГОРИЙ В МОДАЛКЕ «МОИ РЕЦЕПТЫ»
    ============================================================ */
-
-/* Заголовок-кнопка категории */
 .recipe-category-header {
   display: flex !important;
   align-items: center;
@@ -3445,7 +3344,6 @@ body.dark-theme .onboarding-modal {
   transform: scale(0.995);
 }
 
-/* Стрелка-индикатор */
 .recipe-category-arrow {
   display: inline-flex;
   align-items: center;
@@ -3455,20 +3353,18 @@ body.dark-theme .onboarding-modal {
   color: var(--accent-color);
   flex-shrink: 0;
   transition: transform var(--transition-fast);
-  transform: rotate(90deg); /* развёрнута — стрелка вниз */
+  transform: rotate(90deg);
 }
 .recipe-category-section.collapsed .recipe-category-arrow {
-  transform: rotate(0deg); /* свёрнута — стрелка вправо */
+  transform: rotate(0deg);
 }
 
-/* Название категории — занимает всё свободное место */
 .recipe-category-title {
   flex: 1;
   min-width: 0;
   word-break: break-word;
 }
 
-/* Счётчик рецептов */
 .recipe-category-count {
   font-size: 13px;
   font-weight: 500;
@@ -3476,12 +3372,10 @@ body.dark-theme .onboarding-modal {
   flex-shrink: 0;
 }
 
-/* Свёрнутое состояние: список скрыт */
 .recipe-category-section.collapsed .recipe-list {
   display: none;
 }
 
-/* В тёмной теме заголовок чуть контрастнее */
 body.dark-theme .recipe-category-header {
   background: rgba(255, 255, 255, 0.04);
 }
@@ -3491,9 +3385,6 @@ body.dark-theme .recipe-category-header:hover {
 
 /* ============================================================
    УВАЖЕНИЕ К НАСТРОЙКЕ «УМЕНЬШИТЬ ДВИЖЕНИЕ»
-   Отключает анимации и transition для пользователей, которые
-   включили prefers-reduced-motion в системе (эпилепсия,
-   вестибулярные расстройства).
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -3504,54 +3395,10 @@ body.dark-theme .recipe-category-header:hover {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-}
-
-/* ============================================================
-   УВАЖЕНИЕ К НАСТРОЙКЕ «УМЕНЬШИТЬ ДВИЖЕНИЕ»
-   Отключает анимации для пользователей с prefers-reduced-motion.
-   ============================================================ */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-/* ============================================================
-   КНОПКА ПЕЧАТИ «🖨️» В ШАПКЕ
-   ============================================================ */
-.print-btn {
-  background: var(--cell-bg);
-  border: 1px solid var(--cell-border);
-  border-radius: var(--radius-md);
-  padding: 6px var(--spacing-md);
-  cursor: pointer;
-  font-size: 18px;
-  line-height: 1.4;
-  color: var(--text-primary);
-  transition: var(--transition-fast);
-  min-height: 40px;
-  min-width: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  appearance: none;
-}
-.print-btn:hover {
-  background: var(--day-hover);
-  transform: scale(1.05);
-}
-.print-btn:active {
-  transform: scale(0.96);
 }
 
 /* ============================================================
    ПЕЧАТНАЯ ОБЛАСТЬ
-   На экране скрыта. При печати показывается, всё остальное —
-   скрывается.
    ============================================================ */
 #printArea {
   display: none;
@@ -3561,12 +3408,10 @@ body.dark-theme .recipe-category-header:hover {
    СТИЛИ ДЛЯ ПЕЧАТИ
    ============================================================ */
 @media print {
-  /* Скрываем всё, что не относится к печати */
   body > *:not(#printArea) {
     display: none !important;
   }
 
-  /* Печатная область — единственное видимое */
   #printArea {
     display: block !important;
     font-family: Georgia, 'Times New Roman', serif;
@@ -3576,7 +3421,6 @@ body.dark-theme .recipe-category-header:hover {
     margin: 0;
   }
 
-  /* Общие настройки страницы */
   @page {
     size: A4 portrait;
     margin: 15mm 12mm;
@@ -3589,7 +3433,6 @@ body.dark-theme .recipe-category-header:hover {
     margin: 0 !important;
   }
 
-  /* Заголовок печатной страницы */
   #printArea .print-header {
     text-align: center;
     border-bottom: 2px solid #000;
@@ -3608,7 +3451,6 @@ body.dark-theme .recipe-category-header:hover {
     margin: 0;
   }
 
-  /* День */
   #printArea .print-day {
     margin-bottom: 12px;
     page-break-inside: avoid;
@@ -3629,7 +3471,6 @@ body.dark-theme .recipe-category-header:hover {
     font-weight: normal;
   }
 
-  /* Список блюд дня */
   #printArea .print-dishes {
     list-style: none;
     padding: 0;
@@ -3651,7 +3492,6 @@ body.dark-theme .recipe-category-header:hover {
     margin-left: 4px;
   }
 
-  /* Пустой день */
   #printArea .print-day-empty {
     font-size: 10pt;
     font-style: italic;
@@ -3659,7 +3499,6 @@ body.dark-theme .recipe-category-header:hover {
     padding-left: 6px;
   }
 
-  /* Подвал */
   #printArea .print-footer {
     margin-top: 16px;
     padding-top: 8px;
@@ -3671,7 +3510,7 @@ body.dark-theme .recipe-category-header:hover {
 }
 
 /* ============================================================
-   МЕНЮ «⋯» В ШАПКЕ
+   МЕНЮ-ГАМБУРГЕР В ШАПКЕ
    Три действия (справка, печать, тема) спрятаны в выпадающее меню.
    ============================================================ */
 .more-menu-wrap {
@@ -3685,9 +3524,6 @@ body.dark-theme .recipe-category-header:hover {
   border-radius: var(--radius-md);
   padding: 6px var(--spacing-md);
   cursor: pointer;
-  font-size: 22px;
-  line-height: 1;
-  font-weight: 700;
   color: var(--text-primary);
   transition: var(--transition-fast);
   min-height: 40px;
@@ -3696,8 +3532,27 @@ body.dark-theme .recipe-category-header:hover {
   align-items: center;
   justify-content: center;
   appearance: none;
-  letter-spacing: 2px;
 }
+
+/* Три полоски-гамбургер */
+.more-btn-lines {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  width: 20px;
+  height: 16px;
+}
+
+.more-btn-lines > span {
+  display: block;
+  height: 2px;
+  width: 100%;
+  background: currentColor;
+  border-radius: 2px;
+  transition: var(--transition-fast);
+}
+
 .more-btn:hover {
   background: var(--day-hover);
   transform: scale(1.05);
@@ -3773,7 +3628,6 @@ body.dark-theme .recipe-category-header:hover {
   text-align: center;
 }
 
-/* Мобильные — меню прижимается к правому краю */
 @media (max-width: 480px) {
   .more-menu {
     min-width: 200px;
@@ -3784,11 +3638,6 @@ body.dark-theme .recipe-category-header:hover {
   }
 }
 
-/* Тёмная тема — усиленная тень */
 body.dark-theme .more-menu {
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
 }
-
-/* Старые стили .help-btn и .print-btn больше не нужны в шапке,
-   но оставляю их на случай, если пригодятся в других местах.
-   Класс .theme-toggle тоже остался (используется внутри меню по ID). */
