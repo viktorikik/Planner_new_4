@@ -49,12 +49,6 @@
         </button>
       </div>
     </div>
-    <div class="controls">
-      <div class="view-toggle" id="viewToggle" role="group" aria-label="Переключение вида календаря">
-        <button data-view="month" aria-pressed="false">Месяц</button>
-        <button class="active" data-view="week" aria-pressed="true">Неделя</button>
-      </div>
-    </div>
   </header>
 
   <!-- ============ ТАБ: СЕГОДНЯ ============ -->
@@ -80,6 +74,13 @@
 
     <!-- КАЛЕНДАРЬ -->
     <section class="calendar-wrap" id="calendarWrap">
+      <!-- Переключатель «Неделя · Месяц» — часть блока календаря (v4.0) -->
+      <div class="calendar-view-switch">
+        <div class="view-toggle" id="viewToggle" role="group" aria-label="Переключение вида календаря">
+          <button class="active" data-view="week" aria-pressed="true">Неделя</button>
+          <button data-view="month" aria-pressed="false">Месяц</button>
+        </div>
+      </div>
       <div class="calendar-header">
         <div class="month-nav-wrapper">
           <div class="month-nav">
