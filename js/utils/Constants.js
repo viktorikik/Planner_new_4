@@ -117,6 +117,7 @@ export const CONSTANTS = {
     newDishStatus: 'newDishStatus',
     newDishCategory: 'newDishCategory',
     newDishMealType: 'newDishMealType',
+    newDishRecipe: 'newDishRecipe',
     addModalSave: 'addModalSave',
     // ---- Модалка редактирования блюда ----
     editDishOverlay: 'editDishOverlay',
