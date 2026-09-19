@@ -1,4 +1,4 @@
-import { STATUSES, CATEGORIES, CATEGORY_LABELS, CONSTANTS } from '../utils/Constants.js';
+import { STATUSES, CATEGORIES, CATEGORY_LABELS, MEAL_TYPES, MEAL_TYPE_LABELS, CONSTANTS } from '../utils/Constants.js';
 import { Utils } from '../utils/Utils.js';
 import { EventBus } from '../utils/EventBus.js';
 import { DishStore } from '../stores/DishStore.js';
@@ -40,6 +40,15 @@ export const Renderer = (function() {
     { val: CATEGORIES.MAIN,   label: '🍖 Основное' },
     { val: CATEGORIES.BAKERY, label: '🥐 Выпечка' },
     { val: CATEGORIES.OTHER,  label: '🍽️ Другое' }
+  ];
+
+  // Опции для селекта «Приём пищи» (первая — пустая, «Не указан»)
+  const MEAL_TYPE_OPTIONS = [
+    { val: '',                           label: '— Не указан —' },
+    { val: MEAL_TYPES.BREAKFAST,         label: MEAL_TYPE_LABELS[MEAL_TYPES.BREAKFAST] },
+    { val: MEAL_TYPES.LUNCH,             label: MEAL_TYPE_LABELS[MEAL_TYPES.LUNCH] },
+    { val: MEAL_TYPES.DINNER,            label: MEAL_TYPE_LABELS[MEAL_TYPES.DINNER] },
+    { val: MEAL_TYPES.SNACK,             label: MEAL_TYPE_LABELS[MEAL_TYPES.SNACK] }
   ];
 
   const CATEGORY_EMOJI = {
@@ -223,6 +232,18 @@ export const Renderer = (function() {
     });
     addForm.appendChild(categorySelect);
 
+    // ---- Приём пищи (v4.0) ----
+    const mealTypeSelect = document.createElement('select');
+    mealTypeSelect.id = 'modalNewDishMealType';
+    mealTypeSelect.className = 'modal-field-select field-half';
+    MEAL_TYPE_OPTIONS.forEach(opt => {
+      const o = document.createElement('option');
+      o.value = opt.val;
+      o.textContent = opt.label;
+      mealTypeSelect.appendChild(o);
+    });
+    addForm.appendChild(mealTypeSelect);
+
     const recipeSelect = document.createElement('select');
     recipeSelect.id = 'modalNewDishRecipe';
     recipeSelect.className = 'modal-field-select field-half';
@@ -336,7 +357,9 @@ export const Renderer = (function() {
             const existing = DishStore.getAll().find(d => d.name === name);
             const category = existing ? existing.category : Utils.guessCategory(name);
             const recipeId = existing ? existing.recipeId : null;
-            DishStore.addDish(name, STATUSES.PLANNED, dateStr, category, false, '', recipeId);
+            // Переносим mealType из существующей записи, если она есть
+            const mealType = existing && existing.mealType ? existing.mealType : null;
+            DishStore.addDish(name, STATUSES.PLANNED, dateStr, category, false, '', recipeId, mealType);
           };
           suggestItem.addEventListener('click', handleSelect);
           suggestItem.addEventListener('keydown', (e) => {
@@ -367,10 +390,14 @@ export const Renderer = (function() {
       const category = categorySelect.value;
       const note = document.getElementById('modalNewDishNote').value.trim();
       const recipeId = recipeSelect.value ? Number(recipeSelect.value) : null;
-      DishStore.addDish(name, status, dateStr, category, false, note, recipeId);
+      // ---- Приём пищи (v4.0) ----
+      const mealTypeValue = mealTypeSelect.value;
+      const mealType = mealTypeValue ? mealTypeValue : null;
+      DishStore.addDish(name, status, dateStr, category, false, note, recipeId, mealType);
       nameInput.value = '';
       document.getElementById('modalNewDishNote').value = '';
       recipeSelect.value = '';
+      mealTypeSelect.value = '';
     });
 
     return addSection;
@@ -844,6 +871,9 @@ export const Renderer = (function() {
     document.getElementById(CONSTANTS.SELECTORS.editDishStatus).value = dish.status;
     document.getElementById(CONSTANTS.SELECTORS.editDishCategory).value = dish.category || CATEGORIES.OTHER;
 
+    // ---- Приём пищи (v4.0) ----
+    document.getElementById(CONSTANTS.SELECTORS.editDishMealType).value = dish.mealType || '';
+
     const recipeSelect = document.getElementById(CONSTANTS.SELECTORS.editDishRecipe);
     recipeSelect.innerHTML = '';
     const defaultOpt = document.createElement('option');
@@ -883,10 +913,13 @@ export const Renderer = (function() {
     const category = document.getElementById(CONSTANTS.SELECTORS.editDishCategory).value;
     const recipeValue = document.getElementById(CONSTANTS.SELECTORS.editDishRecipe).value;
     const recipeId = recipeValue ? Number(recipeValue) : null;
+    // ---- Приём пищи (v4.0) ----
+    const mealTypeValue = document.getElementById(CONSTANTS.SELECTORS.editDishMealType).value;
+    const mealType = mealTypeValue ? mealTypeValue : null;
 
     if (!name) { showMessage('Введите название блюда', 'error'); return; }
 
-    DishStore.updateDish(id, { name, status, category, note, recipeId });
+    DishStore.updateDish(id, { name, status, category, note, recipeId, mealType });
     closeEditDishModal();
     showMessage(`✅ Блюдо "${name}" обновлено`);
   }
@@ -935,6 +968,7 @@ export const Renderer = (function() {
 
     let added = 0;
     sourceDishes.forEach(dish => {
+      // При копировании переносим и mealType, если он был задан
       DishStore.addDish(
         dish.name,
         STATUSES.PLANNED,
@@ -942,7 +976,8 @@ export const Renderer = (function() {
         dish.category,
         false,
         dish.note || '',
-        dish.recipeId || null
+        dish.recipeId || null,
+        dish.mealType || null
       );
       added++;
     });
@@ -959,6 +994,7 @@ export const Renderer = (function() {
 
     let category = null;
     let finalRecipeId = recipeId;
+    let mealType = null;
 
     if (finalRecipeId !== null) {
       const recipe = RecipeStore.getById(finalRecipeId);
@@ -972,9 +1008,10 @@ export const Renderer = (function() {
       const existing = DishStore.getAll().find(d => d.name === name);
       category = existing ? existing.category : Utils.guessCategory(name);
       finalRecipeId = existing && existing.recipeId ? existing.recipeId : null;
+      mealType = existing && existing.mealType ? existing.mealType : null;
     }
 
-    DishStore.addDish(name, STATUSES.PLANNED, dateStr, category, false, '', finalRecipeId);
+    DishStore.addDish(name, STATUSES.PLANNED, dateStr, category, false, '', finalRecipeId, mealType);
     if (typeof closeModalCallback === 'function') closeModalCallback();
     showMessage(`✅ Блюдо "${name}" добавлено в план на завтра (${Utils.formatDate(tomorrow)})`);
   }
@@ -1206,10 +1243,6 @@ export const Renderer = (function() {
   }
 
   // Возврат из recOverlay в модалку «Что приготовить?».
-  // Используется кнопками «← Назад» во всех внутренних экранах:
-  // выбор категории, рекомендации, «на твой вкус», «любимые».
-  // Также вызывается из Recipes.closeRecipesModal, когда модалка «Мои рецепты»
-  // была открыта из «Что приготовить?».
   function returnToChoice() {
     closeRecModal();
     const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
@@ -1224,9 +1257,6 @@ export const Renderer = (function() {
     });
   }
 
-  // «✨ На твой вкус»: сначала выбор категории — по аналогии с «Из моего меню».
-  // Опция «🎲 Все категории» сохраняет старое поведение (случайное блюдо из
-  // любой категории).
   function showTasteCategorySelection() {
     recTitle.textContent = '✨ На твой вкус';
     recContent.innerHTML = '';
@@ -1272,9 +1302,6 @@ export const Renderer = (function() {
     trapFocus(recOverlay, closeRecModal);
   }
 
-  // Показывает случайное блюдо из выбранной категории (или из любой, если
-  // category = null) + действия. Перебрасывание (reroll) — повторный вызов
-  // с той же категорией.
   function showRandomTasteDish(category) {
     const random = DishStore.getRandomDishFromTaste(category);
     recTitle.textContent = `✨ ${random.categoryLabel}`;
@@ -1318,9 +1345,6 @@ export const Renderer = (function() {
     recContent.appendChild(backBtn);
   }
 
-  // Открытие модалки добавления блюда.
-  // Без аргумента — дата по умолчанию «завтра» (как раньше).
-  // С аргументом dateStr — конкретная дата (используется на экране «Сегодня»).
   function openAddModal(dateStr = null) {
     let defaultDate;
     if (dateStr) {
@@ -1334,6 +1358,7 @@ export const Renderer = (function() {
     document.getElementById(CONSTANTS.SELECTORS.newDishNote).value = '';
     document.getElementById(CONSTANTS.SELECTORS.newDishStatus).value = STATUSES.PLANNED;
     document.getElementById(CONSTANTS.SELECTORS.newDishCategory).value = CATEGORIES.MAIN;
+    document.getElementById(CONSTANTS.SELECTORS.newDishMealType).value = '';
     const overlay = document.getElementById(CONSTANTS.SELECTORS.addModalOverlay);
     overlay.classList.add('active');
     trapFocus(overlay, closeAddModal);
