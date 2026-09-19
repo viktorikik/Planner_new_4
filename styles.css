@@ -3828,3 +3828,117 @@ body {
     font-size: 18px;
   }
 }
+
+
+
+/* ============================================================
+   ЭКРАН «СЕГОДНЯ» (v4.0)
+   Заменяет заглушку на табе data-tab-view="today".
+   ============================================================ */
+.today-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--cell-border);
+}
+.today-date {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+}
+.today-count {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.today-dishes {
+  margin-bottom: 16px;
+}
+
+.today-empty {
+  text-align: center;
+  padding: 32px 16px;
+  background: var(--card-bg);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--cell-border);
+  margin-bottom: 16px;
+}
+.today-empty-icon {
+  font-size: 48px;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.today-empty-text {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.today-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+.today-action-btn {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: var(--radius-lg);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  appearance: none;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.today-action-btn:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.today-action-add {
+  background: var(--accent-color);
+  color: var(--accent-text);
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.25);
+}
+.today-action-add:hover {
+  filter: brightness(1.05);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(255, 107, 53, 0.3);
+}
+.today-action-add:active {
+  transform: translateY(0);
+}
+
+.today-action-suggest {
+  background: transparent;
+  border: 1.5px solid var(--text-muted);
+  color: var(--text-primary);
+}
+.today-action-suggest:hover {
+  background: var(--cell-bg);
+  border-color: var(--text-primary);
+  transform: translateY(-2px);
+}
+.today-action-suggest:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 480px) {
+  .today-date { font-size: 18px; }
+  .today-empty { padding: 24px 12px; }
+  .today-empty-icon { font-size: 40px; }
+  .today-action-btn { font-size: 14px; padding: 11px 14px; }
+}
