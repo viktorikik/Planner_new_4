@@ -195,14 +195,7 @@ textarea:focus-visible {
 }
 
 /* ← изменено: flex 1 1 100% — на мобильном toggle уходит на вторую строку */
-.controls {
-  display: flex;
-  gap: var(--spacing-sm);
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  flex: 1 1 100%;
-}
+
 
 .theme-toggle {
   background: var(--cell-bg);
@@ -339,6 +332,17 @@ textarea:focus-visible {
 .import-hidden {
   display: none;
 }
+
+/* ============================================================
+   ПЕРЕКЛЮЧАТЕЛЬ «НЕДЕЛЯ · МЕСЯЦ» В БЛОКЕ КАЛЕНДАРЯ (v4.0)
+   ============================================================ */
+.calendar-view-switch {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+  padding: 0 4px;
+}
+
 
 .calendar-wrap {
   background: rgba(128, 128, 140, 0.04);
@@ -1855,11 +1859,7 @@ body.dark-theme #savedListsContainer h4 {
     padding: var(--spacing-xl) var(--spacing-xl);
     border-radius: var(--radius-lg);
   }
-  /* ← новое: на десктопе toggle возвращается в общую строку с гамбургером */
-  .controls {
-    flex: 0 0 auto;
-    justify-content: flex-end;
-  }
+
   .day-cell {
     min-height: 72px;
     padding: 8px 4px;
@@ -3753,10 +3753,7 @@ body {
   display: block;
 }
 
-/* Переключатель «Месяц/Неделя» имеет смысл только на вкладке «Меню» */
-.app:not([data-active-tab="menu"]) .controls {
-  display: none;
-}
+
 
 /* ============================================================
    ЗАГОТОВКИ ЭКРАНОВ-ТАБОВ (v4.0)
