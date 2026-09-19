@@ -690,6 +690,96 @@ export const Renderer = (function() {
     });
   }
 
+  // Экран «Сегодня» — меню на текущую дату одним взглядом.
+  // Рендерится в контейнер #todayContent (таб data-tab-view="today").
+  function renderToday() {
+    const container = document.getElementById(CONSTANTS.SELECTORS.todayContent);
+    if (!container) return;
+    container.innerHTML = '';
+
+    const today = new Date();
+    const dateStr = Utils.formatDateLocal(today);
+    const dayDishes = DishStore.getForDate(dateStr);
+
+    // ----- Заголовок с датой и счётчиком -----
+    const header = document.createElement('div');
+    header.className = 'today-header';
+
+    const dateEl = document.createElement('div');
+    dateEl.className = 'today-date';
+    dateEl.textContent = Utils.formatDate(today);
+    header.appendChild(dateEl);
+
+    const countEl = document.createElement('div');
+    countEl.className = 'today-count';
+    if (dayDishes.length === 0) {
+      countEl.textContent = 'Ничего не запланировано';
+    } else {
+      const word = pluralizeRu(dayDishes.length, 'блюдо', 'блюда', 'блюд');
+      countEl.textContent = `${dayDishes.length} ${word}`;
+    }
+    header.appendChild(countEl);
+
+    container.appendChild(header);
+
+    // ----- Список блюд или пустое состояние -----
+    if (dayDishes.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'today-empty';
+
+      const icon = document.createElement('div');
+      icon.className = 'today-empty-icon';
+      icon.textContent = '🍽️';
+      icon.setAttribute('aria-hidden', 'true');
+      empty.appendChild(icon);
+
+      const text = document.createElement('p');
+      text.className = 'today-empty-text';
+      text.textContent = 'На сегодня пока ничего не запланировано.';
+      empty.appendChild(text);
+
+      container.appendChild(empty);
+    } else {
+      const list = document.createElement('div');
+      list.className = 'today-dishes';
+      dayDishes.forEach(dish => {
+        list.appendChild(buildDishElement(dish, dateStr));
+      });
+      container.appendChild(list);
+    }
+
+    // ----- Кнопки быстрых действий -----
+    const actions = document.createElement('div');
+    actions.className = 'today-actions';
+
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'today-action-btn today-action-add';
+    addBtn.textContent = '➕ Добавить блюдо';
+    addBtn.addEventListener('click', () => openAddModal(dateStr));
+    actions.appendChild(addBtn);
+
+    const suggestBtn = document.createElement('button');
+    suggestBtn.type = 'button';
+    suggestBtn.className = 'today-action-btn today-action-suggest';
+    suggestBtn.textContent = '🤔 Что приготовить на ужин?';
+    suggestBtn.addEventListener('click', () => {
+      const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
+      if (!overlay) return;
+      overlay.classList.add('active');
+      trapFocus(overlay, () => {
+        overlay.classList.remove('active');
+        if (overlay._trapFocusCleanup) {
+          overlay._trapFocusCleanup();
+          delete overlay._trapFocusCleanup;
+        }
+      });
+    });
+    actions.appendChild(suggestBtn);
+
+    container.appendChild(actions);
+  }
+
   function openModal(dateStr) {
     currentModalDate = dateStr;
     const d = new Date(dateStr);
@@ -1228,9 +1318,17 @@ export const Renderer = (function() {
     recContent.appendChild(backBtn);
   }
 
-  function openAddModal() {
-    const defaultDate = new Date();
-    defaultDate.setDate(defaultDate.getDate() + 1);
+  // Открытие модалки добавления блюда.
+  // Без аргумента — дата по умолчанию «завтра» (как раньше).
+  // С аргументом dateStr — конкретная дата (используется на экране «Сегодня»).
+  function openAddModal(dateStr = null) {
+    let defaultDate;
+    if (dateStr) {
+      defaultDate = new Date(dateStr);
+    } else {
+      defaultDate = new Date();
+      defaultDate.setDate(defaultDate.getDate() + 1);
+    }
     document.getElementById(CONSTANTS.SELECTORS.newDishDate).value = Utils.formatDateLocal(defaultDate);
     document.getElementById(CONSTANTS.SELECTORS.newDishName).value = '';
     document.getElementById(CONSTANTS.SELECTORS.newDishNote).value = '';
@@ -1367,6 +1465,7 @@ export const Renderer = (function() {
       if (modalOverlay.classList.contains('active') && currentModalDate) {
         openModal(currentModalDate);
       }
+      renderToday();
     });
 
     const editOverlay = document.getElementById(CONSTANTS.SELECTORS.editDishOverlay);
@@ -1400,7 +1499,7 @@ export const Renderer = (function() {
   initEventListeners();
 
   return {
-    renderCalendar, renderMenu, openModal, closeModal, openFavorites,
+    renderCalendar, renderMenu, renderToday, openModal, closeModal, openFavorites,
     closeRecModal, openAddModal, closeAddModal,
     setSearchQuery, setStatusFilter, setCategoryFilter,
     getCurrentDate: () => currentDate,
