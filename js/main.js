@@ -233,10 +233,11 @@ import { printWeeklyMenu } from './features/Print.js';
   });
 
   // ---------- Первичная отрисовка календаря ----------
+  // ---------- Первичная отрисовка календаря ----------
   const now = new Date();
   Renderer.setCurrentDate(now);
-  Renderer.setCurrentView('month');
-  Renderer.renderCalendar('month', now);
+  Renderer.setCurrentView('week');
+  Renderer.renderCalendar('week', now);
 
   // ---------- Навигация по календарю ----------
   document.getElementById(CONSTANTS.SELECTORS.prevMonth).addEventListener('click', function() {
