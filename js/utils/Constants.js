@@ -132,6 +132,7 @@ export const CONSTANTS = {
     welcomeStartBtn: 'welcomeStartBtn',
     recipesOverlay: 'recipesOverlay',
     recipesClose: 'recipesClose',
+    todayContent: 'todayContent',
     recipesBackBtn: 'recipesBackBtn',
     recipesTitle: 'recipesTitle',
     recipesList: 'recipesList',
