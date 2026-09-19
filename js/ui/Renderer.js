@@ -1528,6 +1528,17 @@ export const Renderer = (function() {
       });
     }
 
+        // ---- Поле «Рецепт» в глобальной модалке добавления (v4.0, добавлено) ----
+    const addRecipeSelect = document.getElementById(CONSTANTS.SELECTORS.newDishRecipe);
+    if (addRecipeSelect) {
+      addRecipeSelect.addEventListener('change', function() {
+        if (!this.value) return;
+        const recipe = RecipeStore.getById(Number(this.value));
+        if (recipe) {
+          document.getElementById(CONSTANTS.SELECTORS.newDishName).value = recipe.name;
+        }
+      });
+    }
     const repeatOverlay = document.getElementById(CONSTANTS.SELECTORS.repeatMenuOverlay);
     if (repeatOverlay) {
       document.getElementById(CONSTANTS.SELECTORS.repeatMenuClose).addEventListener('click', closeRepeatMenuModal);
