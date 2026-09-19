@@ -616,5 +616,16 @@ import { printWeeklyMenu } from './features/Print.js';
     }
   }, { passive: true });
 
+  // ---------- Service Worker (PWA) ----------
+  // Регистрация отложена до события load, чтобы не тормозить первый рендер.
+  // Если регистрация не удалась — приложение продолжает работать как раньше,
+  // просто без офлайн-доступа и без установки на домашний экран.
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('./sw.js').catch(function() {
+        // Тихо игнорируем — офлайн-режим не критичен для работы приложения.
+      });
+    });
+  }
 
 })();
