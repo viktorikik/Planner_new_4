@@ -7,7 +7,7 @@ import { showMessage } from '../utils/notifications.js';
 import { trapFocus } from '../utils/focusTrap.js';
 
 export const Renderer = (function() {
-  let currentView = 'month';
+  let currentView = 'week';
   let currentDate = new Date();
   let searchQuery = '', statusFilter = 'all', categoryFilter = 'all';
   let currentModalDate = null;
