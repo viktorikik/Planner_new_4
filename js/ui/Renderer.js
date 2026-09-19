@@ -1345,7 +1345,7 @@ export const Renderer = (function() {
     recContent.appendChild(backBtn);
   }
 
-  function openAddModal(dateStr = null) {
+    function openAddModal(dateStr = null) {
     let defaultDate;
     if (dateStr) {
       defaultDate = new Date(dateStr);
@@ -1359,6 +1359,24 @@ export const Renderer = (function() {
     document.getElementById(CONSTANTS.SELECTORS.newDishStatus).value = STATUSES.PLANNED;
     document.getElementById(CONSTANTS.SELECTORS.newDishCategory).value = CATEGORIES.MAIN;
     document.getElementById(CONSTANTS.SELECTORS.newDishMealType).value = '';
+
+    // ---- Заполняем список рецептов (v4.0, добавлено) ----
+    const recipeSelect = document.getElementById(CONSTANTS.SELECTORS.newDishRecipe);
+    if (recipeSelect) {
+      recipeSelect.innerHTML = '';
+      const defaultOpt = document.createElement('option');
+      defaultOpt.value = '';
+      defaultOpt.textContent = 'Без рецепта';
+      recipeSelect.appendChild(defaultOpt);
+      RecipeStore.getAll().forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r.id;
+        opt.textContent = r.name;
+        recipeSelect.appendChild(opt);
+      });
+      recipeSelect.value = '';
+    }
+
     const overlay = document.getElementById(CONSTANTS.SELECTORS.addModalOverlay);
     overlay.classList.add('active');
     trapFocus(overlay, closeAddModal);
