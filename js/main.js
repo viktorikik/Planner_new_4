@@ -51,6 +51,11 @@ import { printWeeklyMenu } from './features/Print.js';
     // Переключение видимого экрана
     const app = document.querySelector('.app');
     if (app) app.setAttribute('data-active-tab', tab);
+
+    // При переключении на «Сегодня» — перерисовываем экран
+    if (tab === 'today') {
+      Renderer.renderToday();
+    }
   }
 
   function handleHashChange() {
@@ -73,14 +78,7 @@ import { printWeeklyMenu } from './features/Print.js';
     });
   });
 
-  // ---------- Кнопки-заглушки на табах «Сегодня», «Рецепты», «Покупки» ----------
-  const goToMenuFromToday = document.getElementById('goToMenuFromToday');
-  if (goToMenuFromToday) {
-    goToMenuFromToday.addEventListener('click', function() {
-      window.location.hash = 'menu';
-    });
-  }
-
+  // ---------- Кнопки-заглушки на табах «Рецепты» и «Покупки» ----------
   const goToRecipesFromTab = document.getElementById('goToRecipesFromTab');
   if (goToRecipesFromTab) {
     goToRecipesFromTab.addEventListener('click', function() {
