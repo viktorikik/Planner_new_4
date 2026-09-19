@@ -49,6 +49,8 @@ export const DishStore = (function() {
     if (dish.disliked === undefined) dish.disliked = false;
     if (!dish.id) dish.id = generateId();
     if (dish.recipeId === undefined) dish.recipeId = null;
+    // mealType: null по умолчанию, старые блюда не мигрируем
+    if (dish.mealType === undefined) dish.mealType = null;
     return dish;
   }
 
@@ -81,7 +83,7 @@ export const DishStore = (function() {
 
   function init() {
     if (!load()) {
-      const result = DEFAULT_DISHES.map((d, i) => ({ ...d, id: generateId() + i, liked: false, disliked: false, recipeId: null }));
+      const result = DEFAULT_DISHES.map((d, i) => ({ ...d, id: generateId() + i, liked: false, disliked: false, recipeId: null, mealType: null }));
       const noDate = [
         { name: 'Салат с морской капустой и крабовым мясом', category: CATEGORIES.SALAD, note: '' },
         { name: 'Гречка и салат из свежей капусты как в столовой', category: CATEGORIES.MAIN, note: '' },
@@ -100,7 +102,8 @@ export const DishStore = (function() {
           liked: false,
           disliked: false,
           note: item.note || '',
-          recipeId: null
+          recipeId: null,
+          mealType: null
         });
       });
       dishes = result;
@@ -113,10 +116,12 @@ export const DishStore = (function() {
   function getAll() { return dishes.slice(); }
   function getForDate(dateStr) { return dishes.filter(d => d.date === dateStr); }
 
-  function addDish(name, status, date, category, liked = false, note = '', recipeId = null) {
+  // mealType — опциональный последний параметр.
+  // Старые вызовы без него продолжат работать, mealType = null.
+  function addDish(name, status, date, category, liked = false, note = '', recipeId = null, mealType = null) {
     if (!name || !status || !date || !category) return false;
     const id = generateId();
-    dishes.push({ id, name, status, date, category, liked, disliked: false, note, recipeId });
+    dishes.push({ id, name, status, date, category, liked, disliked: false, note, recipeId, mealType });
     save();
     return true;
   }
@@ -254,6 +259,7 @@ export const DishStore = (function() {
     if (fields.recipeId !== undefined) dish.recipeId = fields.recipeId;
     if (fields.liked !== undefined) dish.liked = fields.liked;
     if (fields.disliked !== undefined) dish.disliked = fields.disliked;
+    if (fields.mealType !== undefined) dish.mealType = fields.mealType;
     save();
     return true;
   }
