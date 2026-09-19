@@ -506,7 +506,13 @@ import { printWeeklyMenu } from './features/Print.js';
   });
 
   // ---------- Кнопки в шапке ----------
-  document.getElementById(CONSTANTS.SELECTORS.recipesBtn).addEventListener('click', openRecipesModal);
+  // ВАЖНО: openRecipesModal принимает аргумент fromChoice (boolean).
+  // Если повесить её напрямую в addEventListener — первым аргументом
+  // придёт объект события, и `!!event === true` включит режим "из choice".
+  // Поэтому оборачиваем в анонимную функцию и вызываем без аргумента.
+  document.getElementById(CONSTANTS.SELECTORS.recipesBtn).addEventListener('click', function() {
+    openRecipesModal();
+  });
   document.getElementById(CONSTANTS.SELECTORS.shoppingListBtn).addEventListener('click', openShoppingList);
 
   // Печать меню на неделю
