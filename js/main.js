@@ -520,6 +520,7 @@ import { printWeeklyMenu } from './features/Print.js';
     const dateInput = document.getElementById(CONSTANTS.SELECTORS.newDishDate);
     const statusSelect = document.getElementById(CONSTANTS.SELECTORS.newDishStatus);
     const categorySelect = document.getElementById(CONSTANTS.SELECTORS.newDishCategory);
+    const mealTypeSelect = document.getElementById(CONSTANTS.SELECTORS.newDishMealType);
     const name = nameInput.value.trim();
     if (!name) { showMessage('Введи название блюда', 'error'); return; }
     let date = dateInput.value;
@@ -529,10 +530,13 @@ import { printWeeklyMenu } from './features/Print.js';
       date = Utils.formatDateLocal(d);
     }
     const note = noteInput.value.trim();
-    DishStore.addDish(name, statusSelect.value, date, categorySelect.value, false, note);
+    const mealTypeValue = mealTypeSelect ? mealTypeSelect.value : '';
+    const mealType = mealTypeValue ? mealTypeValue : null;
+    DishStore.addDish(name, statusSelect.value, date, categorySelect.value, false, note, null, mealType);
     Renderer.closeAddModal();
     nameInput.value = '';
     noteInput.value = '';
+    if (mealTypeSelect) mealTypeSelect.value = '';
   });
 
   // ---------- Экспорт данных ----------
