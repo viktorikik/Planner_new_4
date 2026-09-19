@@ -21,6 +21,22 @@ export const CATEGORY_LABELS = {
   [CATEGORIES.OTHER]: '🍽️ Другое'
 };
 
+// Приёмы пищи (v4.0)
+// null = не указан. Старые блюда остаются null без миграции.
+export const MEAL_TYPES = {
+  BREAKFAST: 'breakfast',
+  LUNCH: 'lunch',
+  DINNER: 'dinner',
+  SNACK: 'snack'
+};
+
+export const MEAL_TYPE_LABELS = {
+  [MEAL_TYPES.BREAKFAST]: '🌅 Завтрак',
+  [MEAL_TYPES.LUNCH]: '☀️ Обед',
+  [MEAL_TYPES.DINNER]: '🌙 Ужин',
+  [MEAL_TYPES.SNACK]: '🍎 Перекус'
+};
+
 // Список продуктов для распознавания ингредиентов
 export const PRODUCT_WORDS = [
   'лук', 'морковь', 'картофель', 'капуста', 'свекла', 'редис', 'репа',
@@ -100,6 +116,7 @@ export const CONSTANTS = {
     newDishDate: 'newDishDate',
     newDishStatus: 'newDishStatus',
     newDishCategory: 'newDishCategory',
+    newDishMealType: 'newDishMealType',
     addModalSave: 'addModalSave',
     // ---- Модалка редактирования блюда ----
     editDishOverlay: 'editDishOverlay',
@@ -109,6 +126,7 @@ export const CONSTANTS = {
     editDishNote: 'editDishNote',
     editDishStatus: 'editDishStatus',
     editDishCategory: 'editDishCategory',
+    editDishMealType: 'editDishMealType',
     editDishRecipe: 'editDishRecipe',
     editDishCancel: 'editDishCancel',
     editDishSave: 'editDishSave',
