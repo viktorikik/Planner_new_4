@@ -233,7 +233,6 @@ import { printWeeklyMenu } from './features/Print.js';
   });
 
   // ---------- Первичная отрисовка календаря ----------
-  // ---------- Первичная отрисовка календаря ----------
   const now = new Date();
   Renderer.setCurrentDate(now);
   Renderer.setCurrentView('week');
@@ -522,6 +521,7 @@ import { printWeeklyMenu } from './features/Print.js';
     const statusSelect = document.getElementById(CONSTANTS.SELECTORS.newDishStatus);
     const categorySelect = document.getElementById(CONSTANTS.SELECTORS.newDishCategory);
     const mealTypeSelect = document.getElementById(CONSTANTS.SELECTORS.newDishMealType);
+    const recipeSelect = document.getElementById(CONSTANTS.SELECTORS.newDishRecipe);
     const name = nameInput.value.trim();
     if (!name) { showMessage('Введи название блюда', 'error'); return; }
     let date = dateInput.value;
@@ -533,11 +533,14 @@ import { printWeeklyMenu } from './features/Print.js';
     const note = noteInput.value.trim();
     const mealTypeValue = mealTypeSelect ? mealTypeSelect.value : '';
     const mealType = mealTypeValue ? mealTypeValue : null;
-    DishStore.addDish(name, statusSelect.value, date, categorySelect.value, false, note, null, mealType);
+    const recipeValue = recipeSelect ? recipeSelect.value : '';
+    const recipeId = recipeValue ? Number(recipeValue) : null;
+    DishStore.addDish(name, statusSelect.value, date, categorySelect.value, false, note, recipeId, mealType);
     Renderer.closeAddModal();
     nameInput.value = '';
     noteInput.value = '';
     if (mealTypeSelect) mealTypeSelect.value = '';
+    if (recipeSelect) recipeSelect.value = '';
   });
 
   // ---------- Экспорт данных ----------
