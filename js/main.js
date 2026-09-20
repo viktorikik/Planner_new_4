@@ -5,7 +5,15 @@ import { showMessage } from './utils/notifications.js';
 import { trapFocus } from './utils/focusTrap.js';
 import { DishStore } from './stores/DishStore.js';
 import { RecipeStore } from './stores/RecipeStore.js';
-import { Renderer } from './ui/Renderer.js';
+import {
+  Renderer,
+  openChoiceScreen,
+  closeChoiceModal,
+  setChoiceMealType,
+  setChoiceCategory,
+  setChoiceOnlyFavorites,
+  rerollChoiceDish
+} from './ui/Renderer.js';
 import { exportData, importData } from './features/ExportImport.js';
 import {
   openRecipesModal,
@@ -30,10 +38,6 @@ import { printWeeklyMenu } from './features/Print.js';
   DishStore.init();
 
   // ---------- Bottom navigation + hash routing (v4.0) ----------
-  // Табы переключают hash и видимый экран. Контент каждого таба живёт
-  // в <div class="tab-view" data-tab-view="..."> внутри .app.
-  // Активный таб задаётся атрибутом data-active-tab на .app — CSS
-  // показывает только нужный .tab-view.
   const TABS = ['today', 'menu', 'recipes', 'shopping'];
   const DEFAULT_TAB = 'menu';
 
@@ -43,16 +47,13 @@ import { printWeeklyMenu } from './features/Print.js';
   }
 
   function setActiveTab(tab) {
-    // Подсветка кнопок нижней навигации
     const buttons = document.querySelectorAll(CONSTANTS.SELECTORS.bottomNavButtons);
     buttons.forEach(btn => {
       btn.classList.toggle('active', btn.dataset.tab === tab);
     });
-    // Переключение видимого экрана
     const app = document.querySelector('.app');
     if (app) app.setAttribute('data-active-tab', tab);
 
-    // При переключении на «Сегодня» — перерисовываем экран
     if (tab === 'today') {
       Renderer.renderToday();
     }
@@ -155,15 +156,12 @@ import { printWeeklyMenu } from './features/Print.js';
     toggleMoreMenu();
   });
 
-  // Клик по любому пункту меню → сначала закрываем меню, потом отработает
-  // собственный обработчик пункта (тема / печать / справка).
   moreMenu.querySelectorAll('.more-menu-item').forEach(item => {
     item.addEventListener('click', function() {
       closeMoreMenu();
     });
   });
 
-  // Клик вне меню → закрыть
   document.addEventListener('click', function(e) {
     if (moreMenu.hidden) return;
     if (!moreMenu.contains(e.target) && e.target !== moreMenuBtn) {
@@ -171,7 +169,6 @@ import { printWeeklyMenu } from './features/Print.js';
     }
   });
 
-  // Escape → закрыть меню (если открыто)
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape' && !moreMenu.hidden) {
       closeMoreMenu();
@@ -291,15 +288,7 @@ import { printWeeklyMenu } from './features/Print.js';
         }
       }
     },
-    { overlay: document.getElementById(CONSTANTS.SELECTORS.choiceOverlay), close: () => {
-        const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
-        overlay.classList.remove('active');
-        if (overlay._trapFocusCleanup) {
-          overlay._trapFocusCleanup();
-          delete overlay._trapFocusCleanup;
-        }
-      }
-    },
+    { overlay: document.getElementById(CONSTANTS.SELECTORS.choiceOverlay), close: closeChoiceModal },
     { overlay: document.getElementById(CONSTANTS.SELECTORS.welcomeOverlay), close: hideWelcome },
     { overlay: document.getElementById(CONSTANTS.SELECTORS.recipesOverlay), close: closeRecipesModal },
     { overlay: document.getElementById(CONSTANTS.SELECTORS.recipeFormOverlay), close: closeRecipeForm },
@@ -317,11 +306,6 @@ import { printWeeklyMenu } from './features/Print.js';
   });
 
   // ---------- History integration для модалок (Android hardware back) ----------
-  // Когда открыта модалка — pushState. При закрытии через UI — history.back().
-  // Если пользователь нажимает аппаратную «Назад» при открытой модалке —
-  // закрываем её, а не переключаем таб. Работает через MutationObserver:
-  // следим за .active-классами оверлеев, чтобы не трогать 15 разных мест,
-  // где модалки открываются и закрываются.
   let historyEntryPushed = false;
   let closingViaHistory = false;
 
@@ -352,15 +336,12 @@ import { printWeeklyMenu } from './features/Print.js';
 
   window.addEventListener('popstate', function() {
     if (closingViaHistory) {
-      // Это наш собственный history.back() — просто сброс флагов
       closingViaHistory = false;
       historyEntryPushed = false;
       return;
     }
 
     if (historyEntryPushed && hasActiveModal()) {
-      // Пользователь нажал hardware back. Браузер уже откатил entry,
-      // поэтому просто закрываем верхнюю модалку.
       historyEntryPushed = false;
       closeTopActiveModal();
     }
@@ -372,7 +353,6 @@ import { printWeeklyMenu } from './features/Print.js';
     );
     if (overlays.length === 0) return;
 
-    // Находим верхнюю по z-index (последняя в DOM ≠ всегда верхняя)
     let top = overlays[0];
     let topZ = parseInt(getComputedStyle(top).zIndex, 10) || 0;
     for (let i = 1; i < overlays.length; i++) {
@@ -380,26 +360,22 @@ import { printWeeklyMenu } from './features/Print.js';
       if (z > topZ) { top = overlays[i]; topZ = z; }
     }
 
-    // Ищем close в массиве modals
     const entry = modals.find(m => m.overlay === top);
     if (entry) {
       entry.close();
       return;
     }
 
-    // Onboarding — особый случай, он не в массиве modals
     if (top.id === CONSTANTS.SELECTORS.onboardingOverlay) {
       Onboarding.close(true);
       return;
     }
 
-    // Динамические оверлеи (например, карточка рецепта) — свой _closeFn
     if (typeof top._closeFn === 'function') {
       top._closeFn();
       return;
     }
 
-    // Fallback: снять класс и почистить trapFocus
     top.classList.remove('active');
     if (top._trapFocusCleanup) {
       top._trapFocusCleanup();
@@ -407,7 +383,6 @@ import { printWeeklyMenu } from './features/Print.js';
     }
   }
 
-  // ---------- Глобальный Escape (по массиву modals, без дублирующих if/else) ----------
   document.addEventListener('keydown', function(e) {
     if (e.key !== 'Escape') return;
 
@@ -416,7 +391,6 @@ import { printWeeklyMenu } from './features/Print.js';
     );
     if (!activeModal) return;
 
-    // Тур (onboarding) — особый случай: он не в массиве modals.
     if (activeModal.id === CONSTANTS.SELECTORS.onboardingOverlay) {
       Onboarding.close(true);
       return;
@@ -443,73 +417,65 @@ import { printWeeklyMenu } from './features/Print.js';
   document.getElementById(CONSTANTS.SELECTORS.recipeFormClose).addEventListener('click', closeRecipeForm);
   document.getElementById(CONSTANTS.SELECTORS.shoppingListClose).addEventListener('click', closeShoppingList);
 
-  // ---------- Модалка "Что приготовить?" ----------
+  // ---------- Экран «Что приготовить?» (v4.0) ----------
+  // Кнопка в шапке Меню — открывает с дефолтными фильтрами
   document.getElementById(CONSTANTS.SELECTORS.suggestBtn).addEventListener('click', function() {
-    const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
-    overlay.classList.add('active');
-    trapFocus(overlay, () => {
+    openChoiceScreen();
+  });
+
+  // Кнопка закрытия
+  document.getElementById(CONSTANTS.SELECTORS.choiceClose).addEventListener('click', closeChoiceModal);
+
+  // Чипы приёма пищи — одиночный выбор
+  const choiceChips = document.querySelectorAll('#choiceMealTypesChips .choice-chip');
+  choiceChips.forEach(chip => {
+    chip.addEventListener('click', function() {
+      const type = this.dataset.mealType || '';
+      setChoiceMealType(type);
+    });
+  });
+
+  // Селект категории
+  const choiceCategorySelect = document.getElementById('choiceCategorySelect');
+  if (choiceCategorySelect) {
+    choiceCategorySelect.addEventListener('change', function() {
+      setChoiceCategory(this.value);
+    });
+  }
+
+  // Чекбокс «Только любимые»
+  const choiceFavCb = document.getElementById('choiceOnlyFavorites');
+  if (choiceFavCb) {
+    choiceFavCb.addEventListener('change', function() {
+      setChoiceOnlyFavorites(this.checked);
+    });
+  }
+
+  // Кнопка «🎲 Другое» — случайное из текущего пула
+  const choiceRerollBtn = document.getElementById('choiceRerollBtn');
+  if (choiceRerollBtn) {
+    choiceRerollBtn.addEventListener('click', function() {
+      rerollChoiceDish();
+    });
+  }
+
+  // Кнопка «📖 Мои рецепты» — открывает модалку рецептов в режиме «из выбора»,
+  // чтобы кнопка «← Назад» вернула пользователя в текущий экран.
+  const choiceOpenRecipesBtn = document.getElementById('choiceOpenRecipesBtn');
+  if (choiceOpenRecipesBtn) {
+    choiceOpenRecipesBtn.addEventListener('click', function() {
+      // закрываем choiceOverlay — рецепты поверх
+      const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
       overlay.classList.remove('active');
       if (overlay._trapFocusCleanup) {
         overlay._trapFocusCleanup();
         delete overlay._trapFocusCleanup;
       }
+      openRecipesModal(true);
     });
-  });
-  document.getElementById(CONSTANTS.SELECTORS.choiceClose).addEventListener('click', function() {
-    const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
-    overlay.classList.remove('active');
-    if (overlay._trapFocusCleanup) {
-      overlay._trapFocusCleanup();
-      delete overlay._trapFocusCleanup;
-    }
-  });
-  document.getElementById(CONSTANTS.SELECTORS.choiceFromMenu).addEventListener('click', function() {
-    const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
-    overlay.classList.remove('active');
-    if (overlay._trapFocusCleanup) {
-      overlay._trapFocusCleanup();
-      delete overlay._trapFocusCleanup;
-    }
-    Renderer.showCategorySelection();
-  });
-
-  // «✨ На твой вкус» — открывает выбор категории
-  document.getElementById(CONSTANTS.SELECTORS.choiceFromTaste).addEventListener('click', function() {
-    const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
-    overlay.classList.remove('active');
-    if (overlay._trapFocusCleanup) {
-      overlay._trapFocusCleanup();
-      delete overlay._trapFocusCleanup;
-    }
-    Renderer.showTasteCategorySelection();
-  });
-
-  // «📖 Из моих рецептов» — открываем модалку рецептов в режиме «из выбора».
-  document.getElementById(CONSTANTS.SELECTORS.choiceFromRecipes).addEventListener('click', function() {
-    const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
-    overlay.classList.remove('active');
-    if (overlay._trapFocusCleanup) {
-      overlay._trapFocusCleanup();
-      delete overlay._trapFocusCleanup;
-    }
-    openRecipesModal(true);
-  });
-
-  document.getElementById(CONSTANTS.SELECTORS.choiceFromFavorites).addEventListener('click', function() {
-    const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
-    overlay.classList.remove('active');
-    if (overlay._trapFocusCleanup) {
-      overlay._trapFocusCleanup();
-      delete overlay._trapFocusCleanup;
-    }
-    Renderer.openFavorites();
-  });
+  }
 
   // ---------- Кнопки в шапке ----------
-  // ВАЖНО: openRecipesModal принимает аргумент fromChoice (boolean).
-  // Если повесить её напрямую в addEventListener — первым аргументом
-  // придёт объект события, и `!!event === true` включит режим "из choice".
-  // Поэтому оборачиваем в анонимную функцию и вызываем без аргумента.
   document.getElementById(CONSTANTS.SELECTORS.recipesBtn).addEventListener('click', function() {
     openRecipesModal();
   });
@@ -537,7 +503,6 @@ import { printWeeklyMenu } from './features/Print.js';
       date = Utils.formatDateLocal(d);
     }
     const note = noteInput.value.trim();
-    // ---- Приём пищи (v4.0): собираем массив из отмеченных чекбоксов ----
     let mealTypes = [];
     if (mealTypesGroup) {
       const checkedBoxes = mealTypesGroup.querySelectorAll('input[type=checkbox]:checked');
@@ -637,9 +602,6 @@ import { printWeeklyMenu } from './features/Print.js';
   }, { passive: true });
 
   // ---------- Service Worker (PWA) ----------
-  // Регистрация отложена до события load, чтобы не тормозить первый рендер.
-  // Если регистрация не удалась — приложение продолжает работать как раньше,
-  // просто без офлайн-доступа и без установки на домашний экран.
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
       navigator.serviceWorker.register('./sw.js').catch(function() {
