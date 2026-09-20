@@ -58,7 +58,7 @@
   --accent-color: #ff6b35;
   --accent-hover: #e55a2b;
   --accent-light: rgba(255, 107, 53, 0.12);
-  --accent-text: #1a1a1a; /* тёмный текст для контраста на акцентном фоне */
+  --accent-text: #1a1a1a;
 }
 
 body.dark-theme {
@@ -99,7 +99,7 @@ body.dark-theme {
   --card-bg: rgba(40, 40, 56, 0.7);
   --card-hover-bg: rgba(255, 255, 255, 0.05);
   --accent-light: rgba(255, 107, 53, 0.2);
-  --accent-text: #1a1a1a; /* сохраняем тёмный текст на акцентном фоне и в тёмной теме */
+  --accent-text: #1a1a1a;
 }
 
 * {
@@ -119,7 +119,6 @@ body {
   transition: background var(--transition-normal), color var(--transition-normal);
 }
 
-/* Улучшенный фокус для доступности */
 :focus {
   outline: 2px solid var(--accent-color);
   outline-offset: 2px;
@@ -133,7 +132,6 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
-/* Скрытый текст для скринридеров */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -160,7 +158,6 @@ textarea:focus-visible {
   margin: 0 auto;
 }
 
-/* ← изменено: убран justify-content, чтобы logo и гамбургер сами распределились */
 .app-header {
   display: flex;
   align-items: center;
@@ -169,7 +166,6 @@ textarea:focus-visible {
   margin-bottom: var(--spacing-lg);
 }
 
-/* ← новое: logo тянется, гамбургер прижимается вправо */
 .logo {
   flex: 1 1 auto;
   min-width: 0;
@@ -193,9 +189,6 @@ textarea:focus-visible {
   background: var(--accent-color);
   border-radius: 3px;
 }
-
-/* ← изменено: flex 1 1 100% — на мобильном toggle уходит на вторую строку */
-
 
 .theme-toggle {
   background: var(--cell-bg);
@@ -418,7 +411,6 @@ textarea:focus-visible {
   margin-bottom: 10px;
   padding: 0 4px;
 }
-
 
 .calendar-wrap {
   background: rgba(128, 128, 140, 0.04);
@@ -876,64 +868,71 @@ textarea:focus-visible {
   gap: var(--spacing-sm);
 }
 
+/* ============================================================
+   ГРУППЫ ДНЯ И КАРТОЧКА БЛЮДА В ТРИ КОЛОНКИ (v4.0)
+   Структура: приём пищи → статус → карточки блюд.
+   Карточка: [название] [рецепт] [👍 👎 🗑️].
+   Используется в модалке дня и на экране «Сегодня».
+   ============================================================ */
+.day-group {
+  margin-bottom: 16px;
+}
+.day-group:last-child {
+  margin-bottom: 0;
+}
+
+.day-group-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--accent-color);
+  margin-bottom: 2px;
+}
+
+.day-group-status-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin: 8px 0 2px;
+  letter-spacing: 0.2px;
+}
+
 .modal-dish {
-  padding: 12px 16px;
-  border-radius: 16px;
-  margin-bottom: var(--spacing-sm);
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 4px 10px;
   align-items: center;
-  background: var(--card-bg);
-  border-left: 4px solid var(--text-muted);
+  padding: 8px 4px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed var(--cell-border);
   color: var(--modal-text);
   font-size: 15px;
-  gap: var(--spacing-sm);
-  transition: var(--transition-fast);
 }
-.modal-dish:hover {
-  background: var(--card-hover-bg);
-}
-.modal-dish.done {
-  border-left-color: var(--done-color);
-}
-.modal-dish.planned {
-  border-left-color: var(--planned-color);
-}
-.modal-dish.liked {
-  border-left-color: var(--liked-color);
+.modal-dish:last-child {
+  border-bottom: none;
 }
 
 .modal-dish .dish-name {
-  flex: 1;
-  min-width: 80px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.modal-dish .dish-name .recipe-link {
-  font-size: 18px;
+  min-width: 0;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
   cursor: pointer;
-  opacity: 0.6;
-  transition: var(--transition-fast);
 }
-.modal-dish .dish-name .recipe-link:hover {
-  opacity: 1;
-  transform: scale(1.2);
+
+.modal-dish .dish-recipe {
+  display: inline-flex;
+  align-items: center;
 }
 
 .modal-dish .dish-actions {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: var(--spacing-xs);
-  flex-wrap: wrap;
-  margin-left: auto;
 }
-.modal-dish .dish-status {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-muted);
-  margin-right: var(--spacing-xs);
-}
+
 .modal-dish .action-btn {
   background: none;
   border: none;
@@ -1811,9 +1810,6 @@ body.dark-theme #savedListsContainer h4 {
     height: 22px;
   }
 
-  /* ← удалены блоки .app-header { flex-direction: column } и .controls { justify-content: center },
-       которые конфликтовали с новым расположением гамбургера */
-
   #monthTitle {
     font-size: 18px;
     min-width: 80px;
@@ -1868,7 +1864,14 @@ body.dark-theme #savedListsContainer h4 {
   }
   .modal-dish {
     font-size: 13px;
-    padding: var(--spacing-sm) 10px;
+    padding: 6px 2px;
+    gap: 2px 8px;
+  }
+  .day-group-title {
+    font-size: 12px;
+  }
+  .day-group-status-label {
+    font-size: 11px;
   }
   .modal-add-new .field-half {
     flex: 0 0 100%;
@@ -2659,9 +2662,6 @@ body.dark-theme .recipes-toolbar .btn-secondary:hover {
 /* ============================================================
    ГРУППА A — стили для кликов и книжки рецепта
    ============================================================ */
-.modal-dish .dish-name {
-  cursor: pointer;
-}
 .modal-dish .dish-name:hover .dish-name-text {
   color: var(--accent-color);
 }
@@ -2676,7 +2676,6 @@ body.dark-theme .recipes-toolbar .btn-secondary:hover {
   align-items: center;
   gap: 3px;
   padding: 2px 9px;
-  margin-left: 6px;
   border-radius: 999px;
   border: 1px solid var(--accent-color);
   background: var(--accent-light);
@@ -2696,29 +2695,6 @@ body.dark-theme .recipes-toolbar .btn-secondary:hover {
   transform: scale(1.04);
 }
 .modal-dish .recipe-chip:focus-visible {
-  outline: 2px solid var(--accent-color);
-  outline-offset: 2px;
-}
-
-.modal-dish .dish-status {
-  cursor: pointer;
-  background: none;
-  border: none;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-muted);
-  transition: var(--transition-fast);
-  appearance: none;
-  font-family: inherit;
-  white-space: nowrap;
-}
-.modal-dish .dish-status:hover {
-  background: var(--badge-bg);
-  color: var(--text-primary);
-}
-.modal-dish .dish-status:focus-visible {
   outline: 2px solid var(--accent-color);
   outline-offset: 2px;
 }
@@ -2779,9 +2755,12 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   border-radius: 4px;
 }
 
-.modal-dish.liked {
-  border-left-color: var(--done-color);
+/* Лёгкая подсветка карточки «любимого» блюда — без border-left,
+   потому что border-left убран при переходе на grid. */
+.modal-dish.liked .dish-name {
+  color: var(--liked-color);
 }
+
 .meal-chip.liked {
   border-left-color: var(--done-color);
   background: rgba(16, 185, 129, 0.08);
@@ -2837,61 +2816,6 @@ body.dark-theme .modal-dish .recipe-chip:hover {
 #repeatMenuDate:focus {
   border-color: var(--accent-color);
   box-shadow: 0 0 0 3px var(--accent-light);
-}
-
-/* ============================================================
-   ИСПРАВЛЕНИЕ РАСКЛАДКИ БЛЮДА В МОДАЛКЕ ДНЯ
-   ============================================================ */
-.modal-dish {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: stretch !important;
-  gap: 6px !important;
-  flex-wrap: nowrap !important;
-}
-
-.modal-dish .dish-name {
-  width: 100% !important;
-  flex: 0 0 auto !important;
-  min-width: 0 !important;
-  flex-wrap: wrap !important;
-  align-items: center !important;
-  gap: 6px !important;
-  cursor: pointer;
-}
-
-.modal-dish .dish-name .dish-name-text {
-  word-break: break-word;
-  overflow-wrap: anywhere;
-  line-height: 1.35;
-}
-
-.modal-dish .dish-actions {
-  margin-left: 0 !important;
-  justify-content: flex-start !important;
-  flex-wrap: wrap !important;
-  gap: 6px 10px !important;
-  align-items: center;
-}
-
-.modal-dish .dish-status {
-  line-height: 1.4;
-}
-
-.modal-dish .thumb-btn,
-.modal-dish .action-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 26px;
-  height: 26px;
-  line-height: 1;
-}
-
-.modal-dish .dish-note {
-  flex: 0 0 auto !important;
-  width: 100%;
-  margin-top: 4px;
 }
 
 /* ============================================================
@@ -3610,7 +3534,6 @@ body.dark-theme .recipe-category-header:hover {
   appearance: none;
 }
 
-/* Три полоски-гамбургер */
 .more-btn-lines {
   display: flex;
   flex-direction: column;
@@ -3642,7 +3565,6 @@ body.dark-theme .recipe-category-header:hover {
   color: var(--accent-color);
 }
 
-/* Выпадающее меню */
 .more-menu {
   position: absolute;
   top: calc(100% + 6px);
@@ -3777,14 +3699,12 @@ body.dark-theme .bottom-nav {
   box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.4);
 }
 
-/* Отступ снизу, чтобы контент не уходил под панель */
 body {
   padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
 }
 
 /* ============================================================
    КНОПКА «← НАЗАД» В МОДАЛКЕ «МОИ РЕЦЕПТЫ» (v4.0)
-   Показывается только когда модалка открыта из «Что приготовить?»
    ============================================================ */
 .recipes-back-btn {
   display: inline-block;
@@ -3813,11 +3733,8 @@ body {
   display: none;
 }
 
-
 /* ============================================================
    ПЕРЕКЛЮЧЕНИЕ КОНТЕНТА ПО ТАБАМ (v4.0)
-   Активный таб задаётся атрибутом data-active-tab на .app.
-   Показывается только соответствующий .tab-view.
    ============================================================ */
 .tab-view {
   display: none;
@@ -3829,12 +3746,8 @@ body {
   display: block;
 }
 
-
-
 /* ============================================================
    ЗАГОТОВКИ ЭКРАНОВ-ТАБОВ (v4.0)
-   Пока это простые заглушки: иконка, текст, одна кнопка.
-   Со временем заменятся настоящими экранами.
    ============================================================ */
 .tab-placeholder {
   padding: 40px 20px;
@@ -3902,11 +3815,8 @@ body {
   }
 }
 
-
-
 /* ============================================================
    ЭКРАН «СЕГОДНЯ» (v4.0)
-   Заменяет заглушку на табе data-tab-view="today".
    ============================================================ */
 .today-header {
   display: flex;
