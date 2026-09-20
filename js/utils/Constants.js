@@ -116,7 +116,7 @@ export const CONSTANTS = {
     newDishDate: 'newDishDate',
     newDishStatus: 'newDishStatus',
     newDishCategory: 'newDishCategory',
-    newDishMealType: 'newDishMealType',
+    newDishMealTypesGroup: 'newDishMealTypesGroup',
     newDishRecipe: 'newDishRecipe',
     addModalSave: 'addModalSave',
     // ---- Модалка редактирования блюда ----
@@ -127,7 +127,7 @@ export const CONSTANTS = {
     editDishNote: 'editDishNote',
     editDishStatus: 'editDishStatus',
     editDishCategory: 'editDishCategory',
-    editDishMealType: 'editDishMealType',
+    editDishMealTypesGroup: 'editDishMealTypesGroup',
     editDishRecipe: 'editDishRecipe',
     editDishCancel: 'editDishCancel',
     editDishSave: 'editDishSave',
