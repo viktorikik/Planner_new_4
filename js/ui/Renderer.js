@@ -16,6 +16,11 @@ export const Renderer = (function() {
   // вынесен в замыкание, чтобы не загрязнять глобальную область.
   let touchDragActive = false;
 
+  // ---- Состояние фильтров экрана «Что приготовить?» (v4.0) ----
+  let choiceFilterMealType = '';        // '' = все, иначе breakfast/lunch/dinner/snack
+  let choiceFilterCategory = 'all';     // 'all' или категория
+  let choiceFilterOnlyFavorites = false;
+
   const els = {};
   for (const key in CONSTANTS.SELECTORS) {
     if (typeof CONSTANTS.SELECTORS[key] === 'string' && !CONSTANTS.SELECTORS[key].startsWith('#')) {
@@ -77,9 +82,6 @@ export const Renderer = (function() {
   // ============================================================
   // ГРУППИРОВКА БЛЮД ПО ПРИЁМУ ПИЩИ И СТАТУСУ (v4.0)
   // ============================================================
-  // Группирует блюда по набору приёмов пищи (mealTypes).
-  // Блюдо с mealTypes = ['lunch', 'dinner'] попадает в одну группу
-  // с заголовком «ОБЕД, УЖИН». Блюда без типа — в конце, без заголовка.
   function groupDishesByMealType(dishes) {
     const ORDER = { breakfast: 0, lunch: 1, dinner: 2, snack: 3 };
     const NO_TYPE_KEY = '__none__';
@@ -107,8 +109,6 @@ export const Renderer = (function() {
     return sortedKeys.map(k => groups[k]);
   }
 
-  // Рендерит блюда как серию групп: приём пищи → статус → карточки.
-  // Используется в модалке дня и на экране «Сегодня».
   function renderDayGroups(container, dishes, dateStr) {
     const groups = groupDishesByMealType(dishes);
 
@@ -116,7 +116,6 @@ export const Renderer = (function() {
       const groupEl = document.createElement('div');
       groupEl.className = 'day-group';
 
-      // ---- Заголовок группы (капсом) — только если есть типы ----
       if (group.types.length > 0) {
         const title = document.createElement('div');
         title.className = 'day-group-title';
@@ -152,15 +151,12 @@ export const Renderer = (function() {
 
   // Карточка блюда в четырёхколоночной раскладке:
   //   [✅/📅] [название растёт, переносится] [📖 Рецепт] [👍 👎 🗑️]
-  // При наличии заметки — отдельная строка снизу на всю ширину.
   function buildDishElement(dish, dateStr) {
     const dishDiv = document.createElement('div');
     dishDiv.className = `modal-dish ${dish.status}`;
     if (dish.liked) dishDiv.classList.add('liked');
 
     // ---- Колонка 1: переключатель статуса ----
-    // Тап переключает done ↔ planned, блюдо переезжает в другую
-    // группу автоматически через dishes:changed.
     const statusToggle = document.createElement('button');
     statusToggle.type = 'button';
     statusToggle.className = 'status-toggle-btn';
@@ -257,7 +253,6 @@ export const Renderer = (function() {
 
     dishDiv.appendChild(actions);
 
-    // ---- Заметка (опционально, на всю ширину) ----
     if (dish.note) {
       const noteSpan = document.createElement('div');
       noteSpan.className = 'dish-note';
@@ -267,6 +262,206 @@ export const Renderer = (function() {
 
     return dishDiv;
   }
+
+  // ============================================================
+  // ЭКРАН «ЧТО ПРИГОТОВИТЬ?» (v4.0) — фильтры + результаты
+  // ============================================================
+
+  // Применяет фильтры к списку уникальных блюд.
+  // Правила:
+  //   - дизлайки исключены всегда;
+  //   - mealType: пустой массив у блюда = «подходит ко всему»;
+  //   - категория — точное совпадение;
+  //   - «только любимые» — блюдо когда-либо получало 👍.
+  function applyChoiceFilters(items) {
+    const allDishes = DishStore.getAll();
+    const result = [];
+
+    items.forEach(item => {
+      if (DishStore.isDishNameDisliked(item.name)) return;
+
+      const dish = allDishes.find(d => d.name === item.name);
+      if (!dish) return;
+
+      // Фильтр по mealType
+      if (choiceFilterMealType) {
+        const types = Array.isArray(dish.mealTypes) ? dish.mealTypes : [];
+        // Пустой массив = «подходит ко всему», оставляем.
+        if (types.length > 0 && !types.includes(choiceFilterMealType)) return;
+      }
+
+      // Фильтр по категории
+      const cat = dish.category || Utils.guessCategory(dish.name);
+      if (choiceFilterCategory !== 'all' && cat !== choiceFilterCategory) return;
+
+      // Только любимые
+      if (choiceFilterOnlyFavorites) {
+        const isLiked = allDishes.some(d => d.name === item.name && d.liked);
+        if (!isLiked) return;
+      }
+
+      result.push({
+        name: item.name,
+        lastDoneDate: item.lastDoneDate,
+        category: cat,
+        recipeId: dish.recipeId || null,
+        hasRecipe: !!dish.recipeId
+      });
+    });
+
+    return result;
+  }
+
+  function renderChoiceChips() {
+    const chips = document.querySelectorAll('#choiceMealTypesChips .choice-chip');
+    chips.forEach(chip => {
+      const isActive = (chip.dataset.mealType || '') === choiceFilterMealType;
+      chip.classList.toggle('active', isActive);
+      chip.setAttribute('aria-pressed', String(isActive));
+    });
+  }
+
+  function renderChoiceCategorySelect() {
+    const select = document.getElementById('choiceCategorySelect');
+    if (select) select.value = choiceFilterCategory;
+  }
+
+  function renderChoiceFavoritesCheckbox() {
+    const cb = document.getElementById('choiceOnlyFavorites');
+    if (cb) cb.checked = choiceFilterOnlyFavorites;
+  }
+
+  function renderChoiceResults() {
+    const container = document.getElementById('choiceResults');
+    const rerollBtn = document.getElementById('choiceRerollBtn');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    const allItems = DishStore.getAllUniqueWithLastDone();
+    const filtered = applyChoiceFilters(allItems);
+    const limited = filtered.slice(0, 10);
+
+    if (limited.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'choice-empty';
+      empty.textContent = '😌 Ничего не найдено. Попробуйте ослабить фильтры.';
+      container.appendChild(empty);
+      if (rerollBtn) rerollBtn.hidden = true;
+      return;
+    }
+
+    if (rerollBtn) rerollBtn.hidden = false;
+
+    limited.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'choice-result-item';
+      row.setAttribute('role', 'button');
+      row.setAttribute('tabindex', '0');
+      row.setAttribute('aria-label', `Добавить блюдо ${item.name} на завтра`);
+
+      const emoji = document.createElement('span');
+      emoji.className = 'choice-result-emoji';
+      emoji.textContent = CATEGORY_EMOJI[item.category] || '🍽️';
+      emoji.setAttribute('aria-hidden', 'true');
+      row.appendChild(emoji);
+
+      const nameWrap = document.createElement('span');
+      nameWrap.className = 'choice-result-name';
+      nameWrap.textContent = item.name;
+      if (item.hasRecipe) {
+        const recipeIcon = document.createElement('span');
+        recipeIcon.className = 'choice-result-recipe-icon';
+        recipeIcon.textContent = ' 📖';
+        recipeIcon.title = 'Есть рецепт';
+        recipeIcon.setAttribute('aria-label', 'Есть рецепт');
+        nameWrap.appendChild(recipeIcon);
+      }
+      row.appendChild(nameWrap);
+
+      const last = document.createElement('span');
+      last.className = 'choice-result-last';
+      last.textContent = item.lastDoneDate
+        ? Utils.daysAgo(item.lastDoneDate)
+        : 'ещё не готовили';
+      row.appendChild(last);
+
+      const handleSelect = () => {
+        addDishToTomorrow(item.name, item.recipeId, closeChoiceModal);
+      };
+      row.addEventListener('click', handleSelect);
+      row.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleSelect();
+        }
+      });
+
+      container.appendChild(row);
+    });
+  }
+
+  function renderChoiceScreenDom() {
+    renderChoiceChips();
+    renderChoiceCategorySelect();
+    renderChoiceFavoritesCheckbox();
+    renderChoiceResults();
+  }
+
+  // Открывает экран «Что приготовить?». Фильтры сбрасываются.
+  // mealTypePreset — если задан ('dinner' и т.п.), этот чип активен сразу.
+  function openChoiceScreen(mealTypePreset = null) {
+    choiceFilterMealType = mealTypePreset || '';
+    choiceFilterCategory = 'all';
+    choiceFilterOnlyFavorites = false;
+
+    renderChoiceScreenDom();
+
+    const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
+    if (!overlay) return;
+    overlay.classList.add('active');
+    trapFocus(overlay, closeChoiceModal);
+  }
+
+  function closeChoiceModal() {
+    const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
+    if (!overlay) return;
+    overlay.classList.remove('active');
+    if (overlay._trapFocusCleanup) {
+      overlay._trapFocusCleanup();
+      delete overlay._trapFocusCleanup;
+    }
+  }
+
+  function setChoiceMealType(type) {
+    choiceFilterMealType = type || '';
+    renderChoiceChips();
+    renderChoiceResults();
+  }
+
+  function setChoiceCategory(cat) {
+    choiceFilterCategory = cat || 'all';
+    renderChoiceResults();
+  }
+
+  function setChoiceOnlyFavorites(flag) {
+    choiceFilterOnlyFavorites = !!flag;
+    renderChoiceResults();
+  }
+
+  // «🎲 Другое» — случайное из текущего отфильтрованного пула.
+  // В итерации 2 станет «умным» (по scoring).
+  function rerollChoiceDish() {
+    const allItems = DishStore.getAllUniqueWithLastDone();
+    const filtered = applyChoiceFilters(allItems);
+    if (filtered.length === 0) return;
+    const random = filtered[Math.floor(Math.random() * filtered.length)];
+    addDishToTomorrow(random.name, random.recipeId, closeChoiceModal);
+  }
+
+  // ---- Старые функции экранов-«стратегий» оставлены как есть,
+  //      но больше не вызываются из choiceOverlay. Удалим во второй итерации,
+  //      когда убедимся, что новый экран покрывает все сценарии. ----
 
   function buildAddForm(dateStr) {
     const addSection = document.createElement('div');
@@ -315,7 +510,6 @@ export const Renderer = (function() {
     });
     addForm.appendChild(categorySelect);
 
-    // ---- Приём пищи (v4.0): мультивыбор через чекбоксы ----
     const mealTypesGroup = document.createElement('div');
     mealTypesGroup.className = 'meal-types-group';
     mealTypesGroup.id = 'modalNewDishMealTypesGroup';
@@ -446,7 +640,6 @@ export const Renderer = (function() {
             const existing = DishStore.getAll().find(d => d.name === name);
             const category = existing ? existing.category : Utils.guessCategory(name);
             const recipeId = existing ? existing.recipeId : null;
-            // Переносим mealTypes из существующей записи, если они есть
             const mealTypes = existing && Array.isArray(existing.mealTypes) ? existing.mealTypes : [];
             DishStore.addDish(name, STATUSES.PLANNED, dateStr, category, false, '', recipeId, mealTypes);
           };
@@ -479,7 +672,6 @@ export const Renderer = (function() {
       const category = categorySelect.value;
       const note = document.getElementById('modalNewDishNote').value.trim();
       const recipeId = recipeSelect.value ? Number(recipeSelect.value) : null;
-      // ---- Приём пищи (v4.0): собираем массив из отмеченных чекбоксов ----
       const checkedBoxes = mealTypesGroup.querySelectorAll('input[type=checkbox]:checked');
       const mealTypes = Array.from(checkedBoxes).map(cb => cb.dataset.mealType);
       DishStore.addDish(name, status, dateStr, category, false, note, recipeId, mealTypes);
@@ -806,8 +998,6 @@ export const Renderer = (function() {
     });
   }
 
-  // Экран «Сегодня» — меню на текущую дату одним взглядом.
-  // Рендерится в контейнер #todayContent (таб data-tab-view="today").
   function renderToday() {
     const container = document.getElementById(CONSTANTS.SELECTORS.todayContent);
     if (!container) return;
@@ -817,7 +1007,6 @@ export const Renderer = (function() {
     const dateStr = Utils.formatDateLocal(today);
     const dayDishes = DishStore.getForDate(dateStr);
 
-    // ----- Заголовок с датой и счётчиком -----
     const header = document.createElement('div');
     header.className = 'today-header';
 
@@ -838,7 +1027,6 @@ export const Renderer = (function() {
 
     container.appendChild(header);
 
-    // ----- Список блюд или пустое состояние -----
     if (dayDishes.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'today-empty';
@@ -862,7 +1050,6 @@ export const Renderer = (function() {
       container.appendChild(list);
     }
 
-    // ----- Кнопки быстрых действий -----
     const actions = document.createElement('div');
     actions.className = 'today-actions';
 
@@ -878,16 +1065,7 @@ export const Renderer = (function() {
     suggestBtn.className = 'today-action-btn today-action-suggest';
     suggestBtn.textContent = '🤔 Что приготовить на ужин?';
     suggestBtn.addEventListener('click', () => {
-      const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
-      if (!overlay) return;
-      overlay.classList.add('active');
-      trapFocus(overlay, () => {
-        overlay.classList.remove('active');
-        if (overlay._trapFocusCleanup) {
-          overlay._trapFocusCleanup();
-          delete overlay._trapFocusCleanup;
-        }
-      });
+      openChoiceScreen(MEAL_TYPES.DINNER);
     });
     actions.appendChild(suggestBtn);
 
@@ -956,7 +1134,6 @@ export const Renderer = (function() {
     document.getElementById(CONSTANTS.SELECTORS.editDishStatus).value = dish.status;
     document.getElementById(CONSTANTS.SELECTORS.editDishCategory).value = dish.category || CATEGORIES.OTHER;
 
-    // ---- Приём пищи (v4.0): проставляем чекбоксы ----
     const editMealTypesGroup = document.getElementById(CONSTANTS.SELECTORS.editDishMealTypesGroup);
     if (editMealTypesGroup) {
       const currentMealTypes = Array.isArray(dish.mealTypes) ? dish.mealTypes : [];
@@ -1005,7 +1182,6 @@ export const Renderer = (function() {
     const recipeValue = document.getElementById(CONSTANTS.SELECTORS.editDishRecipe).value;
     const recipeId = recipeValue ? Number(recipeValue) : null;
 
-    // ---- Приём пищи (v4.0): собираем массив из отмеченных чекбоксов ----
     const editMealTypesGroup = document.getElementById(CONSTANTS.SELECTORS.editDishMealTypesGroup);
     let mealTypes = [];
     if (editMealTypesGroup) {
@@ -1064,7 +1240,6 @@ export const Renderer = (function() {
 
     let added = 0;
     sourceDishes.forEach(dish => {
-      // При копировании переносим и mealTypes, если они заданы
       DishStore.addDish(
         dish.name,
         STATUSES.PLANNED,
@@ -1111,6 +1286,9 @@ export const Renderer = (function() {
     if (typeof closeModalCallback === 'function') closeModalCallback();
     showMessage(`✅ Блюдо "${name}" добавлено в план на завтра (${Utils.formatDate(tomorrow)})`);
   }
+
+  // ---- Старые экраны-стратегии (оставлены как есть, но больше
+  //      не вызываются из choiceOverlay). Удалим во второй итерации. ----
 
   function showCategorySelection() {
     recTitle.textContent = '🍽️ Выберите категорию';
@@ -1338,19 +1516,15 @@ export const Renderer = (function() {
     }
   }
 
-  // Возврат из recOverlay в модалку «Что приготовить?».
+  // Возврат из recOverlay в choiceOverlay.
+  // Фильтры НЕ сбрасываются — пользователь вернулся, должен видеть то же состояние.
   function returnToChoice() {
     closeRecModal();
     const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
     if (!overlay) return;
+    renderChoiceScreenDom();
     overlay.classList.add('active');
-    trapFocus(overlay, () => {
-      overlay.classList.remove('active');
-      if (overlay._trapFocusCleanup) {
-        overlay._trapFocusCleanup();
-        delete overlay._trapFocusCleanup;
-      }
-    });
+    trapFocus(overlay, closeChoiceModal);
   }
 
   function showTasteCategorySelection() {
@@ -1455,13 +1629,11 @@ export const Renderer = (function() {
     document.getElementById(CONSTANTS.SELECTORS.newDishStatus).value = STATUSES.PLANNED;
     document.getElementById(CONSTANTS.SELECTORS.newDishCategory).value = CATEGORIES.MAIN;
 
-    // ---- Приём пищи (v4.0): сбрасываем все чекбоксы ----
     const addMealTypesGroup = document.getElementById(CONSTANTS.SELECTORS.newDishMealTypesGroup);
     if (addMealTypesGroup) {
       addMealTypesGroup.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
     }
 
-    // ---- Заполняем список рецептов (v4.0, добавлено) ----
     const recipeSelect = document.getElementById(CONSTANTS.SELECTORS.newDishRecipe);
     if (recipeSelect) {
       recipeSelect.innerHTML = '';
@@ -1610,6 +1782,11 @@ export const Renderer = (function() {
         openModal(currentModalDate);
       }
       renderToday();
+      // Если экран «Что приготовить?» открыт — обновить список результатов
+      const choiceOverlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
+      if (choiceOverlay && choiceOverlay.classList.contains('active')) {
+        renderChoiceResults();
+      }
     });
 
     const editOverlay = document.getElementById(CONSTANTS.SELECTORS.editDishOverlay);
@@ -1629,7 +1806,6 @@ export const Renderer = (function() {
       });
     }
 
-    // ---- Поле «Рецепт» в глобальной модалке добавления (v4.0, добавлено) ----
     const addRecipeSelect = document.getElementById(CONSTANTS.SELECTORS.newDishRecipe);
     if (addRecipeSelect) {
       addRecipeSelect.addEventListener('change', function() {
@@ -1667,6 +1843,13 @@ export const Renderer = (function() {
     showTasteCategorySelection,
     returnToChoice,
     closeEditDishModal,
-    closeRepeatMenuModal
+    closeRepeatMenuModal,
+    // ---- Экран «Что приготовить?» (v4.0) ----
+    openChoiceScreen,
+    closeChoiceModal,
+    setChoiceMealType,
+    setChoiceCategory,
+    setChoiceOnlyFavorites,
+    rerollChoiceDish
   };
 })();
