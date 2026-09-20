@@ -74,34 +74,111 @@ export const Renderer = (function() {
     return many;
   }
 
+  // ============================================================
+  // ГРУППИРОВКА БЛЮД ПО ПРИЁМУ ПИЩИ И СТАТУСУ (v4.0)
+  // ============================================================
+  // Группирует блюда по набору приёмов пищи (mealTypes).
+  // Блюдо с mealTypes = ['lunch', 'dinner'] попадает в одну группу
+  // с заголовком «ОБЕД, УЖИН». Блюда без типа — в конце, без заголовка.
+  function groupDishesByMealType(dishes) {
+    const ORDER = { breakfast: 0, lunch: 1, dinner: 2, snack: 3 };
+    const NO_TYPE_KEY = '__none__';
+    const groups = {};
+
+    dishes.forEach(dish => {
+      const types = Array.isArray(dish.mealTypes) ? dish.mealTypes.slice() : [];
+      const sortedTypes = types.slice().sort((a, b) => ORDER[a] - ORDER[b]);
+      const key = sortedTypes.length === 0 ? NO_TYPE_KEY : sortedTypes.join(',');
+      if (!groups[key]) groups[key] = { types: sortedTypes, dishes: [] };
+      groups[key].dishes.push(dish);
+    });
+
+    const sortedKeys = Object.keys(groups).sort((a, b) => {
+      if (a === NO_TYPE_KEY) return 1;
+      if (b === NO_TYPE_KEY) return -1;
+      const aIdx = groups[a].types.map(t => ORDER[t]);
+      const bIdx = groups[b].types.map(t => ORDER[t]);
+      for (let i = 0; i < Math.min(aIdx.length, bIdx.length); i++) {
+        if (aIdx[i] !== bIdx[i]) return aIdx[i] - bIdx[i];
+      }
+      return aIdx.length - bIdx.length;
+    });
+
+    return sortedKeys.map(k => groups[k]);
+  }
+
+  // Рендерит блюда как серию групп: приём пищи → статус → карточки.
+  // Используется в модалке дня и на экране «Сегодня».
+  function renderDayGroups(container, dishes, dateStr) {
+    const groups = groupDishesByMealType(dishes);
+
+    groups.forEach(group => {
+      const groupEl = document.createElement('div');
+      groupEl.className = 'day-group';
+
+      // ---- Заголовок группы (капсом) — только если есть типы ----
+      if (group.types.length > 0) {
+        const title = document.createElement('div');
+        title.className = 'day-group-title';
+        title.textContent = group.types
+          .map(t => MEAL_TYPE_LABELS[t])
+          .filter(Boolean)
+          .join(', ');
+        groupEl.appendChild(title);
+      }
+
+      const done = group.dishes.filter(d => d.status === STATUSES.DONE);
+      const planned = group.dishes.filter(d => d.status === STATUSES.PLANNED);
+
+      if (done.length > 0) {
+        const label = document.createElement('div');
+        label.className = 'day-group-status-label';
+        label.textContent = 'Приготовлено';
+        groupEl.appendChild(label);
+        done.forEach(dish => groupEl.appendChild(buildDishElement(dish, dateStr)));
+      }
+
+      if (planned.length > 0) {
+        const label = document.createElement('div');
+        label.className = 'day-group-status-label';
+        label.textContent = 'Запланировано';
+        groupEl.appendChild(label);
+        planned.forEach(dish => groupEl.appendChild(buildDishElement(dish, dateStr)));
+      }
+
+      container.appendChild(groupEl);
+    });
+  }
+
+  // Карточка блюда в трёхколоночной раскладке:
+  //   [название (растёт, переносится)] [рецепт] [👍 👎 🗑️]
+  // При наличии заметки — отдельная строка снизу на всю ширину.
   function buildDishElement(dish, dateStr) {
     const dishDiv = document.createElement('div');
     dishDiv.className = `modal-dish ${dish.status}`;
     if (dish.liked) dishDiv.classList.add('liked');
 
+    // ---- Колонка 1: название ----
     const nameSpan = document.createElement('span');
     nameSpan.className = 'dish-name';
+    nameSpan.textContent = dish.name;
     nameSpan.setAttribute('role', 'button');
     nameSpan.setAttribute('tabindex', '0');
     nameSpan.setAttribute('aria-label', `Редактировать блюдо ${dish.name}`);
-
-    const nameText = document.createElement('span');
-    nameText.className = 'dish-name-text';
-    nameText.textContent = dish.name;
-    nameSpan.appendChild(nameText);
-
-    nameSpan.addEventListener('click', function(e) {
-      if (e.target.closest('.recipe-chip')) return;
+    nameSpan.addEventListener('click', function() {
       openEditDishModal(dish.id);
     });
     nameSpan.addEventListener('keydown', function(e) {
-      if (e.target.closest('.recipe-chip')) return;
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         openEditDishModal(dish.id);
       }
     });
+    dishDiv.appendChild(nameSpan);
 
+    // ---- Колонка 2: рецепт (пустая, если нет) ----
+    const recipeCol = document.createElement('div');
+    recipeCol.className = 'dish-recipe';
     if (dish.recipeId) {
       const recipeChip = document.createElement('button');
       recipeChip.type = 'button';
@@ -115,26 +192,13 @@ export const Renderer = (function() {
         if (recipe) showRecipeCard(recipe);
         else showMessage('Рецепт не найден', 'error');
       });
-      nameSpan.appendChild(recipeChip);
+      recipeCol.appendChild(recipeChip);
     }
-    dishDiv.appendChild(nameSpan);
+    dishDiv.appendChild(recipeCol);
 
+    // ---- Колонка 3: действия ----
     const actions = document.createElement('div');
     actions.className = 'dish-actions';
-
-    const statusBtn = document.createElement('button');
-    statusBtn.type = 'button';
-    statusBtn.className = 'dish-status';
-    statusBtn.textContent = dish.status === STATUSES.DONE ? '✅ Приготовлено' : '📅 Планирую';
-    statusBtn.title = 'Переключить статус';
-    statusBtn.setAttribute('aria-label', dish.status === STATUSES.DONE
-      ? 'Отметить как запланированное'
-      : 'Отметить как приготовленное');
-    statusBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      DishStore.toggleStatus(dish.id);
-    });
-    actions.appendChild(statusBtn);
 
     const upBtn = document.createElement('button');
     upBtn.type = 'button';
@@ -161,6 +225,7 @@ export const Renderer = (function() {
     actions.appendChild(downBtn);
 
     const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
     deleteBtn.className = 'action-btn delete-btn';
     deleteBtn.textContent = '🗑️';
     deleteBtn.title = 'Удалить';
@@ -175,6 +240,7 @@ export const Renderer = (function() {
 
     dishDiv.appendChild(actions);
 
+    // ---- Заметка (опционально, на всю ширину) ----
     if (dish.note) {
       const noteSpan = document.createElement('div');
       noteSpan.className = 'dish-note';
@@ -775,9 +841,7 @@ export const Renderer = (function() {
     } else {
       const list = document.createElement('div');
       list.className = 'today-dishes';
-      dayDishes.forEach(dish => {
-        list.appendChild(buildDishElement(dish, dateStr));
-      });
+      renderDayGroups(list, dayDishes, dateStr);
       container.appendChild(list);
     }
 
@@ -832,9 +896,7 @@ export const Renderer = (function() {
       empty.textContent = '😌 На этот день пока ничего нет';
       section.appendChild(empty);
     } else {
-      dayDishes.forEach(dish => {
-        section.appendChild(buildDishElement(dish, dateStr));
-      });
+      renderDayGroups(section, dayDishes, dateStr);
     }
     modalContent.appendChild(section);
 
