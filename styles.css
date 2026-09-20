@@ -867,9 +867,6 @@ textarea:focus-visible {
 
 /* ============================================================
    ГРУППЫ ДНЯ И КАРТОЧКА БЛЮДА В ЧЕТЫРЕ КОЛОНКИ (v4.0)
-   Структура: приём пищи → статус → карточки блюд.
-   Карточка: [✅/📅] [название] [📖 Рецепт] [👍 👎 🗑️].
-   Используется в модалке дня и на экране «Сегодня».
    ============================================================ */
 .day-group {
   margin-bottom: 16px;
@@ -1317,6 +1314,10 @@ textarea:focus-visible {
   margin-top: 2px;
 }
 
+/* ============================================================
+   ЭКРАН «ЧТО ПРИГОТОВИТЬ?» (v4.0)
+   Фильтры + список результатов + действия.
+   ============================================================ */
 .choice-overlay {
   display: none;
   position: fixed;
@@ -1329,72 +1330,313 @@ textarea:focus-visible {
   z-index: 2000;
   justify-content: center;
   align-items: center;
-  padding: var(--spacing-lg);
+  padding: var(--spacing-md);
 }
 .choice-overlay.active {
   display: flex;
   animation: modalFadeIn 0.25s ease forwards;
 }
+
 .choice-modal {
   background: var(--modal-bg);
-  border-radius: 32px;
-  padding: 32px var(--spacing-xl);
-  max-width: 400px;
+  border-radius: 24px;
+  padding: 24px 20px;
+  max-width: 500px;
   width: 100%;
+  max-height: 88vh;
+  overflow-y: auto;
   box-shadow: 0 40px 80px rgba(0, 0, 0, 0.4);
   border: 1px solid var(--cell-border);
-  text-align: center;
+  text-align: left;
 }
 .choice-modal h2 {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
   color: var(--modal-text);
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: 16px;
+  text-align: center;
 }
-.choice-modal .choice-btn {
-  display: block;
-  width: 100%;
-  padding: 14px var(--spacing-lg);
-  border: none;
-  border-radius: var(--radius-lg);
-  font-size: 18px;
+
+/* Фильтры */
+.choice-filter-group {
+  margin-bottom: 14px;
+}
+.choice-filter-label {
+  font-size: 12px;
   font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+/* Чипы приёма пищи */
+.choice-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.choice-chip {
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1.5px solid var(--cell-border);
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
   cursor: pointer;
   transition: var(--transition-fast);
-  margin-bottom: var(--spacing-md);
+  appearance: none;
+  white-space: nowrap;
+}
+.choice-chip:hover {
+  border-color: var(--accent-color);
+  background: var(--card-hover-bg);
+}
+.choice-chip.active {
+  background: var(--accent-color);
+  border-color: var(--accent-color);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+.choice-chip:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+/* Селект категории */
+.choice-category-select {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--cell-border);
+  background: var(--input-bg);
+  font-size: 14px;
+  color: var(--text-primary);
+  cursor: pointer;
+  appearance: none;
+  font-family: inherit;
+  outline: none;
+  transition: var(--transition-fast);
+}
+.choice-category-select:hover {
+  border-color: var(--accent-color);
+}
+.choice-category-select:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+/* Чекбокс «Только любимые» */
+.choice-favorite-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--cell-border);
+  border-radius: var(--radius-md);
+  background: var(--input-bg);
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-primary);
+  user-select: none;
+  transition: var(--transition-fast);
+  margin-bottom: 14px;
+  -webkit-tap-highlight-color: transparent;
+}
+.choice-favorite-toggle:hover {
+  border-color: var(--accent-color);
+  background: var(--card-hover-bg);
+}
+.choice-favorite-toggle input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  accent-color: var(--accent-color);
+  cursor: pointer;
+  flex-shrink: 0;
+  margin: 0;
+}
+.choice-favorite-toggle:has(input:checked) {
+  background: var(--accent-light);
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+  font-weight: 600;
+}
+
+/* Список результатов */
+.choice-results {
+  min-height: 80px;
+  max-height: 340px;
+  overflow-y: auto;
+  border-top: 1px solid var(--cell-border);
+  border-bottom: 1px solid var(--cell-border);
+  padding: 4px 0;
+  margin-bottom: 12px;
+}
+.choice-result-item {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 8px;
+  border-bottom: 1px dashed var(--cell-border);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  text-align: left;
+  border-radius: var(--radius-sm);
+}
+.choice-result-item:last-child {
+  border-bottom: none;
+}
+.choice-result-item:hover {
+  background: var(--day-hover);
+}
+.choice-result-item:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.choice-result-emoji {
+  font-size: 20px;
+  line-height: 1;
+  text-align: center;
+}
+.choice-result-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.3;
+}
+.choice-result-recipe-icon {
+  font-size: 12px;
+  opacity: 0.7;
+}
+.choice-result-last {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.choice-empty {
+  text-align: center;
+  padding: 28px 12px;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Действия */
+.choice-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.choice-action-btn {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: var(--radius-lg);
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.choice-action-btn:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.choice-action-reroll {
   background: var(--accent-color);
   color: var(--accent-text);
-  text-align: center;
-  appearance: none;
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.25);
 }
-.choice-modal .choice-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 16px rgba(255, 107, 53, 0.3);
+.choice-action-reroll:hover {
   filter: brightness(1.05);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(255, 107, 53, 0.3);
 }
-.choice-modal .choice-btn:active {
+.choice-action-reroll:active {
   transform: translateY(0);
 }
-.choice-modal .choice-btn.secondary {
+.choice-action-reroll[hidden] {
+  display: none;
+}
+
+.choice-action-recipes {
   background: transparent;
-  border: 2px solid var(--text-muted);
+  border: 1.5px solid var(--text-muted);
   color: var(--text-primary);
 }
-.choice-modal .choice-btn.secondary:hover {
+.choice-action-recipes:hover {
   background: var(--cell-bg);
+  border-color: var(--text-primary);
+  transform: translateY(-2px);
 }
+.choice-action-recipes:active {
+  transform: translateY(0);
+}
+
 .choice-modal .choice-close {
+  display: block;
+  margin: 0 auto;
   background: none;
   border: none;
   color: var(--text-muted);
   font-size: 14px;
   cursor: pointer;
-  margin-top: var(--spacing-sm);
   text-decoration: underline;
   transition: var(--transition-fast);
+  padding: 4px 8px;
+  font-family: inherit;
 }
 .choice-modal .choice-close:hover {
   color: var(--text-primary);
+}
+
+@media (max-width: 480px) {
+  .choice-modal {
+    padding: 20px 14px;
+    border-radius: 20px;
+    max-height: 92vh;
+  }
+  .choice-modal h2 {
+    font-size: 19px;
+    margin-bottom: 12px;
+  }
+  .choice-chip {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+  .choice-favorite-toggle {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+  .choice-result-item {
+    grid-template-columns: 24px minmax(0, 1fr) auto;
+    gap: 6px;
+    padding: 8px 4px;
+  }
+  .choice-result-name {
+    font-size: 14px;
+  }
+  .choice-result-last {
+    font-size: 11px;
+  }
+  .choice-action-btn {
+    font-size: 13px;
+    padding: 10px 12px;
+  }
 }
 
 .welcome-overlay {
@@ -1891,9 +2133,6 @@ body.dark-theme #savedListsContainer h4 {
   .rec-modal .rec-item {
     font-size: 13px;
     padding: 6px 10px;
-  }
-  .choice-modal h2 {
-    font-size: 20px;
   }
   .import-hint {
     font-size: 11px;
@@ -2729,8 +2968,6 @@ body.dark-theme .modal-dish .recipe-chip:hover {
 
 /* ============================================================
    ПЕРЕКЛЮЧАТЕЛЬ СТАТУСА — ПЕРВАЯ КОЛОНКА КАРТОЧКИ (v4.0)
-   Иконка ✅ (приготовлено) / 📅 (запланировано).
-   Тап переключает статус, блюдо переезжает в другую группу.
    ============================================================ */
 .modal-dish .status-toggle-btn {
   background: none;
@@ -2793,8 +3030,6 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   border-radius: 4px;
 }
 
-/* Лёгкая подсветка карточки «любимого» блюда — без border-left,
-   потому что border-left убран при переходе на grid. */
 .modal-dish.liked .dish-name {
   color: var(--liked-color);
 }
