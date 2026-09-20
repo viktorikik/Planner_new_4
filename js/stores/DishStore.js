@@ -42,6 +42,17 @@ export const DishStore = (function() {
     return Date.now() + Math.random() * 10000;
   }
 
+  // Приводит любое значение к массиву mealTypes.
+  // Принимает: массив строк, одну строку, null/undefined.
+  function normalizeMealTypes(value) {
+    if (!value) return [];
+    if (Array.isArray(value)) {
+      return value.filter(v => typeof v === 'string' && v);
+    }
+    if (typeof value === 'string') return [value];
+    return [];
+  }
+
   function normalizeDish(dish) {
     if (!dish.category) dish.category = Utils.guessCategory(dish.name);
     if (!dish.note) dish.note = '';
@@ -49,8 +60,23 @@ export const DishStore = (function() {
     if (dish.disliked === undefined) dish.disliked = false;
     if (!dish.id) dish.id = generateId();
     if (dish.recipeId === undefined) dish.recipeId = null;
-    // mealType: null по умолчанию, старые блюда не мигрируем
-    if (dish.mealType === undefined) dish.mealType = null;
+
+    // Миграция: старое поле mealType (строка|null) → mealTypes (массив).
+    // Работает один раз — после сохранения блюда поле mealType исчезает.
+    if (dish.mealTypes === undefined) {
+      if (dish.mealType) {
+        dish.mealTypes = [dish.mealType];
+      } else {
+        dish.mealTypes = [];
+      }
+    }
+    // Защита: mealTypes всегда массив
+    if (!Array.isArray(dish.mealTypes)) {
+      dish.mealTypes = dish.mealTypes ? [dish.mealTypes] : [];
+    }
+    // Удаляем старое поле, чтобы не путалось в модели
+    delete dish.mealType;
+
     return dish;
   }
 
@@ -83,7 +109,7 @@ export const DishStore = (function() {
 
   function init() {
     if (!load()) {
-      const result = DEFAULT_DISHES.map((d, i) => ({ ...d, id: generateId() + i, liked: false, disliked: false, recipeId: null, mealType: null }));
+      const result = DEFAULT_DISHES.map((d, i) => ({ ...d, id: generateId() + i, liked: false, disliked: false, recipeId: null, mealTypes: [] }));
       const noDate = [
         { name: 'Салат с морской капустой и крабовым мясом', category: CATEGORIES.SALAD, note: '' },
         { name: 'Гречка и салат из свежей капусты как в столовой', category: CATEGORIES.MAIN, note: '' },
@@ -103,7 +129,7 @@ export const DishStore = (function() {
           disliked: false,
           note: item.note || '',
           recipeId: null,
-          mealType: null
+          mealTypes: []
         });
       });
       dishes = result;
@@ -116,12 +142,13 @@ export const DishStore = (function() {
   function getAll() { return dishes.slice(); }
   function getForDate(dateStr) { return dishes.filter(d => d.date === dateStr); }
 
-  // mealType — опциональный последний параметр.
-  // Старые вызовы без него продолжат работать, mealType = null.
-  function addDish(name, status, date, category, liked = false, note = '', recipeId = null, mealType = null) {
+  // mealTypes — массив значений из MEAL_TYPES. Может быть пустым.
+  // Функция принимает массив, строку или null — нормализует внутри.
+  function addDish(name, status, date, category, liked = false, note = '', recipeId = null, mealTypes = []) {
     if (!name || !status || !date || !category) return false;
     const id = generateId();
-    dishes.push({ id, name, status, date, category, liked, disliked: false, note, recipeId, mealType });
+    const normalized = normalizeMealTypes(mealTypes);
+    dishes.push({ id, name, status, date, category, liked, disliked: false, note, recipeId, mealTypes: normalized });
     save();
     return true;
   }
@@ -259,7 +286,7 @@ export const DishStore = (function() {
     if (fields.recipeId !== undefined) dish.recipeId = fields.recipeId;
     if (fields.liked !== undefined) dish.liked = fields.liked;
     if (fields.disliked !== undefined) dish.disliked = fields.disliked;
-    if (fields.mealType !== undefined) dish.mealType = fields.mealType;
+    if (fields.mealTypes !== undefined) dish.mealTypes = normalizeMealTypes(fields.mealTypes);
     save();
     return true;
   }
