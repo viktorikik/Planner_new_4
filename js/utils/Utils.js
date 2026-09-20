@@ -56,7 +56,12 @@ export const Utils = {
 
   getWeekDays(baseDate) {
     const start = new Date(baseDate);
-    start.setDate(start.getDate() - start.getDay() + 1);
+    // getDay(): 0 = воскресенье, 1 = понедельник, ..., 6 = суббота.
+    // Начало недели — понедельник. Для воскресенья (0) он на 6 дней назад,
+    // для остальных дней — на (getDay() - 1) дней назад.
+    const day = start.getDay();
+    const offset = day === 0 ? -6 : 1 - day;
+    start.setDate(start.getDate() + offset);
     const week = [];
     for (let i = 0; i < 7; i++) {
       const d = new Date(start);
