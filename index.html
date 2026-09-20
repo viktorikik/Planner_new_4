@@ -26,8 +26,6 @@
     <div class="logo">
       <h1>🍽️ Меню и рецепты</h1>
     </div>
-    <!-- Меню-гамбургер — справка, печать, тема. Прямой ребёнок .app-header,
-         чтобы на мобильном прижиматься к правому верхнему углу. -->
     <div class="more-menu-wrap">
       <button class="more-btn" id="moreMenuBtn" aria-label="Дополнительные действия" aria-haspopup="true" aria-expanded="false">
         <span class="more-btn-lines" aria-hidden="true">
@@ -56,25 +54,20 @@
     <div id="todayContent"></div>
   </div>
 
-  <!-- ============ ТАБ: МЕНЮ (весь текущий контент) ============ -->
+  <!-- ============ ТАБ: МЕНЮ ============ -->
   <div class="tab-view" data-tab-view="menu">
-    <!-- КНОПКИ ДЕЙСТВИЙ -->
     <section class="actions">
-      <!-- Первая строка: Что приготовить? + Добавить блюдо -->
       <div class="btn-row">
         <button class="btn btn-primary" id="suggestBtn">🤔 Что приготовить?</button>
         <button class="btn btn-done" id="addDishBtn">➕ Добавить блюдо</button>
       </div>
-      <!-- Вторая строка: Мои рецепты + Список покупок -->
       <div class="btn-row">
         <button class="btn btn-secondary" id="recipesBtn">📖 Мои рецепты</button>
         <button class="btn btn-secondary" id="shoppingListBtn">🛒 Список покупок</button>
       </div>
     </section>
 
-    <!-- КАЛЕНДАРЬ -->
     <section class="calendar-wrap" id="calendarWrap">
-      <!-- Переключатель «Неделя · Месяц» — часть блока календаря (v4.0) -->
       <div class="calendar-view-switch">
         <div class="view-toggle" id="viewToggle" role="group" aria-label="Переключение вида календаря">
           <button class="active" data-view="week" aria-pressed="true">Неделя</button>
@@ -103,7 +96,6 @@
       <div id="calendarContent" role="grid"></div>
     </section>
 
-    <!-- ПОИСК И ФИЛЬТРЫ -->
     <section class="search-filter-wrap">
       <input type="text" id="searchInput" placeholder="🔍 Поиск блюда..." aria-label="Поиск по названию блюда">
       <select id="statusFilter" aria-label="Фильтр по статусу">
@@ -121,13 +113,11 @@
       </select>
     </section>
 
-    <!-- СПИСОК МЕНЮ -->
     <section class="menu-list" id="menuList">
       <h3>📋 Меню на <span id="menuPeriod">месяц</span></h3>
       <div id="menuContent"></div>
     </section>
 
-    <!-- ЭКСПОРТ / ИМПОРТ (ПЕРЕНЕСЕНЫ ВНИЗ) -->
     <section class="backup-section">
       <div class="backup-row">
         <button class="btn btn-export" id="exportBtn">📤 Экспорт</button>
@@ -349,7 +339,7 @@
   </div>
 </div>
 
-<!-- Модалка экспорта (добавлен TXT) -->
+<!-- Модалка экспорта -->
 <div class="modal-overlay export-modal" id="exportModalOverlay" role="dialog" aria-modal="true" aria-labelledby="exportModalTitle">
   <div class="modal">
     <div class="modal-header">
@@ -391,19 +381,59 @@
   </div>
 </div>
 
-<!-- Модалка выбора "Что приготовить?" -->
+<!-- ============ МОДАЛКА «ЧТО ПРИГОТОВИТЬ?» (v4.0, новая версия) ============ -->
+<!-- Вместо 4 кнопок-стратегий — фильтры (приём пищи, категория, любимые)
+     и список результатов. Дизлайки исключены всегда. Сортировка — «давно
+     не готовили». Кнопка «🎲 Другое» выбирает случайное из отфильтрованного. -->
 <div class="choice-overlay" id="choiceOverlay" role="dialog" aria-modal="true" aria-labelledby="choiceTitle">
   <div class="choice-modal">
     <h2 id="choiceTitle">🤔 Что приготовить?</h2>
-    <button class="choice-btn" id="choiceFromMenu">🍳 Из моего меню</button>
-    <button class="choice-btn secondary" id="choiceFromTaste">✨ На твой вкус</button>
-    <button class="choice-btn secondary" id="choiceFromRecipes">📖 Из моих рецептов</button>
-    <button class="choice-btn secondary" id="choiceFromFavorites">👍 Любимые</button>
-    <button class="choice-close" id="choiceClose">Закрыть</button>
+
+    <!-- Фильтр: приём пищи (одиночный выбор, чипы) -->
+    <div class="choice-filter-group">
+      <div class="choice-filter-label">Приём пищи</div>
+      <div class="choice-chips" id="choiceMealTypesChips" role="group" aria-label="Фильтр по приёму пищи">
+        <button type="button" class="choice-chip active" data-meal-type="">Все</button>
+        <button type="button" class="choice-chip" data-meal-type="breakfast">🌅 Завтрак</button>
+        <button type="button" class="choice-chip" data-meal-type="lunch">☀️ Обед</button>
+        <button type="button" class="choice-chip" data-meal-type="dinner">🌙 Ужин</button>
+        <button type="button" class="choice-chip" data-meal-type="snack">🍎 Перекус</button>
+      </div>
+    </div>
+
+    <!-- Фильтр: категория -->
+    <div class="choice-filter-group">
+      <div class="choice-filter-label">Категория</div>
+      <select id="choiceCategorySelect" class="choice-category-select" aria-label="Фильтр по категории">
+        <option value="all">Все категории</option>
+        <option value="soup">🍲 Супы</option>
+        <option value="salad">🥗 Салаты</option>
+        <option value="main">🍖 Основное</option>
+        <option value="bakery">🥐 Выпечка</option>
+        <option value="other">🍽️ Другое</option>
+      </select>
+    </div>
+
+    <!-- Фильтр: только любимые -->
+    <label class="choice-favorite-toggle">
+      <input type="checkbox" id="choiceOnlyFavorites">
+      <span>👍 Только любимые</span>
+    </label>
+
+    <!-- Список результатов -->
+    <div class="choice-results" id="choiceResults"></div>
+
+    <!-- Действия -->
+    <div class="choice-actions">
+      <button type="button" class="choice-action-btn choice-action-reroll" id="choiceRerollBtn">🎲 Другое</button>
+      <button type="button" class="choice-action-btn choice-action-recipes" id="choiceOpenRecipesBtn">📖 Мои рецепты</button>
+    </div>
+
+    <button class="choice-close" id="choiceClose" type="button">Закрыть</button>
   </div>
 </div>
 
-<!-- Приветственная модалка (сокращённая) -->
+<!-- Приветственная модалка -->
 <div class="welcome-overlay" id="welcomeOverlay" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
   <div class="welcome-modal">
     <span class="welcome-icon">🍽️</span>
@@ -424,7 +454,7 @@
   </div>
 </div>
 
-<!-- Обучающий тур (слайды). Открывается после welcome и по кнопке «❓» -->
+<!-- Обучающий тур -->
 <div class="onboarding-overlay" id="onboardingOverlay" role="dialog" aria-modal="true" aria-label="Обучение по использованию приложения">
   <div class="onboarding-modal">
     <button class="onboarding-close" id="onboardingClose" aria-label="Закрыть обучение">✕</button>
@@ -486,8 +516,6 @@
   </div>
 </div>
 
-<!-- ===== МОДАЛКИ ДЛЯ РЕЦЕПТОВ И СПИСКА ПОКУПОК ===== -->
-
 <!-- Модалка "Мои рецепты" -->
 <div class="modal-overlay rec-modal" id="recipesOverlay" role="dialog" aria-modal="true" aria-labelledby="recipesTitle">
   <div class="modal">
@@ -519,7 +547,7 @@
   </div>
 </div>
 
-<!-- Модалка добавления/редактирования рецепта (с категорией) -->
+<!-- Модалка добавления/редактирования рецепта -->
 <div class="modal-overlay add-modal" id="recipeFormOverlay" role="dialog" aria-modal="true" aria-labelledby="recipeFormTitle">
   <div class="modal">
     <div class="modal-header">
@@ -596,10 +624,10 @@
   </div>
 </div>
 
-<!-- Live region для объявления динамических сообщений -->
+<!-- Live region -->
 <div id="liveRegion" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
-<!-- Печатная область. Скрыта на экране, видна только при печати. -->
+<!-- Печатная область -->
 <div id="printArea" aria-hidden="true"></div>
 
 <!-- Нижняя навигация (v4.0) -->
