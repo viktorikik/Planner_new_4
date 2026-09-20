@@ -363,13 +363,22 @@ textarea:focus-visible {
   border-color: var(--accent-color);
 }
 
+/* Специфичный селектор, чтобы перебить общее правило
+   `.add-modal .form-group input` — иначе чекбокс растягивается
+   на всю ширину и превращается в белую полоску. */
+.add-modal .form-group .meal-types-group .meal-type-checkbox input[type="checkbox"],
 .meal-type-checkbox input[type="checkbox"] {
   width: 18px;
   height: 18px;
+  min-width: 18px;
+  padding: 0;
   margin: 0;
+  border-radius: 4px;
   accent-color: var(--accent-color);
   cursor: pointer;
   flex-shrink: 0;
+  appearance: auto;
+  -webkit-appearance: checkbox;
 }
 
 .meal-type-checkbox:has(input:checked) {
@@ -392,9 +401,11 @@ textarea:focus-visible {
     font-size: 13px;
     gap: 6px;
   }
+  .add-modal .form-group .meal-types-group .meal-type-checkbox input[type="checkbox"],
   .meal-type-checkbox input[type="checkbox"] {
     width: 16px;
     height: 16px;
+    min-width: 16px;
   }
 }
 
