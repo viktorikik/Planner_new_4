@@ -356,9 +356,6 @@ textarea:focus-visible {
   border-color: var(--accent-color);
 }
 
-/* Специфичный селектор, чтобы перебить общее правило
-   `.add-modal .form-group input` — иначе чекбокс растягивается
-   на всю ширину и превращается в белую полоску. */
 .add-modal .form-group .meal-types-group .meal-type-checkbox input[type="checkbox"],
 .meal-type-checkbox input[type="checkbox"] {
   width: 18px;
@@ -869,9 +866,9 @@ textarea:focus-visible {
 }
 
 /* ============================================================
-   ГРУППЫ ДНЯ И КАРТОЧКА БЛЮДА В ТРИ КОЛОНКИ (v4.0)
+   ГРУППЫ ДНЯ И КАРТОЧКА БЛЮДА В ЧЕТЫРЕ КОЛОНКИ (v4.0)
    Структура: приём пищи → статус → карточки блюд.
-   Карточка: [название] [рецепт] [👍 👎 🗑️].
+   Карточка: [✅/📅] [название] [📖 Рецепт] [👍 👎 🗑️].
    Используется в модалке дня и на экране «Сегодня».
    ============================================================ */
 .day-group {
@@ -882,33 +879,33 @@ textarea:focus-visible {
 }
 
 .day-group-title {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.6px;
   color: var(--accent-color);
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
 .day-group-status-label {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-muted);
-  margin: 8px 0 2px;
+  margin: 10px 0 4px;
   letter-spacing: 0.2px;
 }
 
 .modal-dish {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  gap: 4px 10px;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: 4px 12px;
   align-items: center;
-  padding: 8px 4px;
+  padding: 10px 4px;
   background: transparent;
   border: none;
   border-bottom: 1px dashed var(--cell-border);
   color: var(--modal-text);
-  font-size: 15px;
+  font-size: 16px;
 }
 .modal-dish:last-child {
   border-bottom: none;
@@ -1863,15 +1860,21 @@ body.dark-theme #savedListsContainer h4 {
     font-size: 18px;
   }
   .modal-dish {
-    font-size: 13px;
-    padding: 6px 2px;
-    gap: 2px 8px;
+    font-size: 15px;
+    padding: 8px 2px;
+    gap: 4px 8px;
   }
   .day-group-title {
-    font-size: 12px;
+    font-size: 14px;
   }
   .day-group-status-label {
-    font-size: 11px;
+    font-size: 12px;
+    margin: 8px 0 3px;
+  }
+  .modal-dish .status-toggle-btn {
+    font-size: 20px;
+    min-width: 28px;
+    min-height: 28px;
   }
   .modal-add-new .field-half {
     flex: 0 0 100%;
@@ -2722,6 +2725,41 @@ body.dark-theme .modal-dish .recipe-chip {
 body.dark-theme .modal-dish .recipe-chip:hover {
   background: var(--accent-color);
   color: #1a1a1a;
+}
+
+/* ============================================================
+   ПЕРЕКЛЮЧАТЕЛЬ СТАТУСА — ПЕРВАЯ КОЛОНКА КАРТОЧКИ (v4.0)
+   Иконка ✅ (приготовлено) / 📅 (запланировано).
+   Тап переключает статус, блюдо переезжает в другую группу.
+   ============================================================ */
+.modal-dish .status-toggle-btn {
+  background: none;
+  border: none;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+  opacity: 0.9;
+  transition: var(--transition-fast);
+  appearance: none;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+}
+.modal-dish .status-toggle-btn:hover {
+  opacity: 1;
+  transform: scale(1.15);
+}
+.modal-dish .status-toggle-btn:active {
+  transform: scale(0.95);
+}
+.modal-dish .status-toggle-btn:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+  border-radius: 6px;
 }
 
 /* ============================================================
