@@ -42,13 +42,13 @@ export const Renderer = (function() {
     { val: CATEGORIES.OTHER,  label: '🍽️ Другое' }
   ];
 
-  // Опции для селекта «Приём пищи» (первая — пустая, «Не указан»)
+  // Опции для чекбоксов «Приём пищи» (без пустого варианта — чекбоксы сами
+  // означают «отмечено / не отмечено»).
   const MEAL_TYPE_OPTIONS = [
-    { val: '',                           label: '— Не указан —' },
-    { val: MEAL_TYPES.BREAKFAST,         label: MEAL_TYPE_LABELS[MEAL_TYPES.BREAKFAST] },
-    { val: MEAL_TYPES.LUNCH,             label: MEAL_TYPE_LABELS[MEAL_TYPES.LUNCH] },
-    { val: MEAL_TYPES.DINNER,            label: MEAL_TYPE_LABELS[MEAL_TYPES.DINNER] },
-    { val: MEAL_TYPES.SNACK,             label: MEAL_TYPE_LABELS[MEAL_TYPES.SNACK] }
+    { val: MEAL_TYPES.BREAKFAST, label: MEAL_TYPE_LABELS[MEAL_TYPES.BREAKFAST] },
+    { val: MEAL_TYPES.LUNCH,     label: MEAL_TYPE_LABELS[MEAL_TYPES.LUNCH] },
+    { val: MEAL_TYPES.DINNER,    label: MEAL_TYPE_LABELS[MEAL_TYPES.DINNER] },
+    { val: MEAL_TYPES.SNACK,     label: MEAL_TYPE_LABELS[MEAL_TYPES.SNACK] }
   ];
 
   const CATEGORY_EMOJI = {
@@ -232,17 +232,23 @@ export const Renderer = (function() {
     });
     addForm.appendChild(categorySelect);
 
-    // ---- Приём пищи (v4.0) ----
-    const mealTypeSelect = document.createElement('select');
-    mealTypeSelect.id = 'modalNewDishMealType';
-    mealTypeSelect.className = 'modal-field-select field-half';
+    // ---- Приём пищи (v4.0): мультивыбор через чекбоксы ----
+    const mealTypesGroup = document.createElement('div');
+    mealTypesGroup.className = 'meal-types-group';
+    mealTypesGroup.id = 'modalNewDishMealTypesGroup';
     MEAL_TYPE_OPTIONS.forEach(opt => {
-      const o = document.createElement('option');
-      o.value = opt.val;
-      o.textContent = opt.label;
-      mealTypeSelect.appendChild(o);
+      const label = document.createElement('label');
+      label.className = 'meal-type-checkbox';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.dataset.mealType = opt.val;
+      label.appendChild(cb);
+      const span = document.createElement('span');
+      span.textContent = opt.label;
+      label.appendChild(span);
+      mealTypesGroup.appendChild(label);
     });
-    addForm.appendChild(mealTypeSelect);
+    addForm.appendChild(mealTypesGroup);
 
     const recipeSelect = document.createElement('select');
     recipeSelect.id = 'modalNewDishRecipe';
@@ -357,9 +363,9 @@ export const Renderer = (function() {
             const existing = DishStore.getAll().find(d => d.name === name);
             const category = existing ? existing.category : Utils.guessCategory(name);
             const recipeId = existing ? existing.recipeId : null;
-            // Переносим mealType из существующей записи, если она есть
-            const mealType = existing && existing.mealType ? existing.mealType : null;
-            DishStore.addDish(name, STATUSES.PLANNED, dateStr, category, false, '', recipeId, mealType);
+            // Переносим mealTypes из существующей записи, если они есть
+            const mealTypes = existing && Array.isArray(existing.mealTypes) ? existing.mealTypes : [];
+            DishStore.addDish(name, STATUSES.PLANNED, dateStr, category, false, '', recipeId, mealTypes);
           };
           suggestItem.addEventListener('click', handleSelect);
           suggestItem.addEventListener('keydown', (e) => {
@@ -390,14 +396,14 @@ export const Renderer = (function() {
       const category = categorySelect.value;
       const note = document.getElementById('modalNewDishNote').value.trim();
       const recipeId = recipeSelect.value ? Number(recipeSelect.value) : null;
-      // ---- Приём пищи (v4.0) ----
-      const mealTypeValue = mealTypeSelect.value;
-      const mealType = mealTypeValue ? mealTypeValue : null;
-      DishStore.addDish(name, status, dateStr, category, false, note, recipeId, mealType);
+      // ---- Приём пищи (v4.0): собираем массив из отмеченных чекбоксов ----
+      const checkedBoxes = mealTypesGroup.querySelectorAll('input[type=checkbox]:checked');
+      const mealTypes = Array.from(checkedBoxes).map(cb => cb.dataset.mealType);
+      DishStore.addDish(name, status, dateStr, category, false, note, recipeId, mealTypes);
       nameInput.value = '';
       document.getElementById('modalNewDishNote').value = '';
       recipeSelect.value = '';
-      mealTypeSelect.value = '';
+      mealTypesGroup.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
     });
 
     return addSection;
@@ -871,8 +877,14 @@ export const Renderer = (function() {
     document.getElementById(CONSTANTS.SELECTORS.editDishStatus).value = dish.status;
     document.getElementById(CONSTANTS.SELECTORS.editDishCategory).value = dish.category || CATEGORIES.OTHER;
 
-    // ---- Приём пищи (v4.0) ----
-    document.getElementById(CONSTANTS.SELECTORS.editDishMealType).value = dish.mealType || '';
+    // ---- Приём пищи (v4.0): проставляем чекбоксы ----
+    const editMealTypesGroup = document.getElementById(CONSTANTS.SELECTORS.editDishMealTypesGroup);
+    if (editMealTypesGroup) {
+      const currentMealTypes = Array.isArray(dish.mealTypes) ? dish.mealTypes : [];
+      editMealTypesGroup.querySelectorAll('input[type=checkbox]').forEach(cb => {
+        cb.checked = currentMealTypes.includes(cb.dataset.mealType);
+      });
+    }
 
     const recipeSelect = document.getElementById(CONSTANTS.SELECTORS.editDishRecipe);
     recipeSelect.innerHTML = '';
@@ -913,13 +925,18 @@ export const Renderer = (function() {
     const category = document.getElementById(CONSTANTS.SELECTORS.editDishCategory).value;
     const recipeValue = document.getElementById(CONSTANTS.SELECTORS.editDishRecipe).value;
     const recipeId = recipeValue ? Number(recipeValue) : null;
-    // ---- Приём пищи (v4.0) ----
-    const mealTypeValue = document.getElementById(CONSTANTS.SELECTORS.editDishMealType).value;
-    const mealType = mealTypeValue ? mealTypeValue : null;
+
+    // ---- Приём пищи (v4.0): собираем массив из отмеченных чекбоксов ----
+    const editMealTypesGroup = document.getElementById(CONSTANTS.SELECTORS.editDishMealTypesGroup);
+    let mealTypes = [];
+    if (editMealTypesGroup) {
+      const checkedBoxes = editMealTypesGroup.querySelectorAll('input[type=checkbox]:checked');
+      mealTypes = Array.from(checkedBoxes).map(cb => cb.dataset.mealType);
+    }
 
     if (!name) { showMessage('Введите название блюда', 'error'); return; }
 
-    DishStore.updateDish(id, { name, status, category, note, recipeId, mealType });
+    DishStore.updateDish(id, { name, status, category, note, recipeId, mealTypes });
     closeEditDishModal();
     showMessage(`✅ Блюдо "${name}" обновлено`);
   }
@@ -968,7 +985,7 @@ export const Renderer = (function() {
 
     let added = 0;
     sourceDishes.forEach(dish => {
-      // При копировании переносим и mealType, если он был задан
+      // При копировании переносим и mealTypes, если они заданы
       DishStore.addDish(
         dish.name,
         STATUSES.PLANNED,
@@ -977,7 +994,7 @@ export const Renderer = (function() {
         false,
         dish.note || '',
         dish.recipeId || null,
-        dish.mealType || null
+        dish.mealTypes || []
       );
       added++;
     });
@@ -994,7 +1011,7 @@ export const Renderer = (function() {
 
     let category = null;
     let finalRecipeId = recipeId;
-    let mealType = null;
+    let mealTypes = [];
 
     if (finalRecipeId !== null) {
       const recipe = RecipeStore.getById(finalRecipeId);
@@ -1008,10 +1025,10 @@ export const Renderer = (function() {
       const existing = DishStore.getAll().find(d => d.name === name);
       category = existing ? existing.category : Utils.guessCategory(name);
       finalRecipeId = existing && existing.recipeId ? existing.recipeId : null;
-      mealType = existing && existing.mealType ? existing.mealType : null;
+      mealTypes = existing && Array.isArray(existing.mealTypes) ? existing.mealTypes : [];
     }
 
-    DishStore.addDish(name, STATUSES.PLANNED, dateStr, category, false, '', finalRecipeId, mealType);
+    DishStore.addDish(name, STATUSES.PLANNED, dateStr, category, false, '', finalRecipeId, mealTypes);
     if (typeof closeModalCallback === 'function') closeModalCallback();
     showMessage(`✅ Блюдо "${name}" добавлено в план на завтра (${Utils.formatDate(tomorrow)})`);
   }
@@ -1345,7 +1362,7 @@ export const Renderer = (function() {
     recContent.appendChild(backBtn);
   }
 
-    function openAddModal(dateStr = null) {
+  function openAddModal(dateStr = null) {
     let defaultDate;
     if (dateStr) {
       defaultDate = new Date(dateStr);
@@ -1358,7 +1375,12 @@ export const Renderer = (function() {
     document.getElementById(CONSTANTS.SELECTORS.newDishNote).value = '';
     document.getElementById(CONSTANTS.SELECTORS.newDishStatus).value = STATUSES.PLANNED;
     document.getElementById(CONSTANTS.SELECTORS.newDishCategory).value = CATEGORIES.MAIN;
-    document.getElementById(CONSTANTS.SELECTORS.newDishMealType).value = '';
+
+    // ---- Приём пищи (v4.0): сбрасываем все чекбоксы ----
+    const addMealTypesGroup = document.getElementById(CONSTANTS.SELECTORS.newDishMealTypesGroup);
+    if (addMealTypesGroup) {
+      addMealTypesGroup.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
+    }
 
     // ---- Заполняем список рецептов (v4.0, добавлено) ----
     const recipeSelect = document.getElementById(CONSTANTS.SELECTORS.newDishRecipe);
@@ -1528,7 +1550,7 @@ export const Renderer = (function() {
       });
     }
 
-        // ---- Поле «Рецепт» в глобальной модалке добавления (v4.0, добавлено) ----
+    // ---- Поле «Рецепт» в глобальной модалке добавления (v4.0, добавлено) ----
     const addRecipeSelect = document.getElementById(CONSTANTS.SELECTORS.newDishRecipe);
     if (addRecipeSelect) {
       addRecipeSelect.addEventListener('change', function() {
@@ -1539,6 +1561,7 @@ export const Renderer = (function() {
         }
       });
     }
+
     const repeatOverlay = document.getElementById(CONSTANTS.SELECTORS.repeatMenuOverlay);
     if (repeatOverlay) {
       document.getElementById(CONSTANTS.SELECTORS.repeatMenuClose).addEventListener('click', closeRepeatMenuModal);
