@@ -150,15 +150,32 @@ export const Renderer = (function() {
     });
   }
 
-  // Карточка блюда в трёхколоночной раскладке:
-  //   [название (растёт, переносится)] [рецепт] [👍 👎 🗑️]
+  // Карточка блюда в четырёхколоночной раскладке:
+  //   [✅/📅] [название растёт, переносится] [📖 Рецепт] [👍 👎 🗑️]
   // При наличии заметки — отдельная строка снизу на всю ширину.
   function buildDishElement(dish, dateStr) {
     const dishDiv = document.createElement('div');
     dishDiv.className = `modal-dish ${dish.status}`;
     if (dish.liked) dishDiv.classList.add('liked');
 
-    // ---- Колонка 1: название ----
+    // ---- Колонка 1: переключатель статуса ----
+    // Тап переключает done ↔ planned, блюдо переезжает в другую
+    // группу автоматически через dishes:changed.
+    const statusToggle = document.createElement('button');
+    statusToggle.type = 'button';
+    statusToggle.className = 'status-toggle-btn';
+    statusToggle.textContent = dish.status === STATUSES.DONE ? '✅' : '📅';
+    statusToggle.title = dish.status === STATUSES.DONE
+      ? 'Отметить как запланированное'
+      : 'Отметить как приготовленное';
+    statusToggle.setAttribute('aria-label', statusToggle.title);
+    statusToggle.addEventListener('click', function(e) {
+      e.stopPropagation();
+      DishStore.toggleStatus(dish.id);
+    });
+    dishDiv.appendChild(statusToggle);
+
+    // ---- Колонка 2: название ----
     const nameSpan = document.createElement('span');
     nameSpan.className = 'dish-name';
     nameSpan.textContent = dish.name;
@@ -176,7 +193,7 @@ export const Renderer = (function() {
     });
     dishDiv.appendChild(nameSpan);
 
-    // ---- Колонка 2: рецепт (пустая, если нет) ----
+    // ---- Колонка 3: рецепт (пустая, если нет) ----
     const recipeCol = document.createElement('div');
     recipeCol.className = 'dish-recipe';
     if (dish.recipeId) {
@@ -196,7 +213,7 @@ export const Renderer = (function() {
     }
     dishDiv.appendChild(recipeCol);
 
-    // ---- Колонка 3: действия ----
+    // ---- Колонка 4: действия (👍 👎 🗑️) ----
     const actions = document.createElement('div');
     actions.className = 'dish-actions';
 
