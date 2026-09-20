@@ -526,7 +526,7 @@ import { printWeeklyMenu } from './features/Print.js';
     const dateInput = document.getElementById(CONSTANTS.SELECTORS.newDishDate);
     const statusSelect = document.getElementById(CONSTANTS.SELECTORS.newDishStatus);
     const categorySelect = document.getElementById(CONSTANTS.SELECTORS.newDishCategory);
-    const mealTypeSelect = document.getElementById(CONSTANTS.SELECTORS.newDishMealType);
+    const mealTypesGroup = document.getElementById(CONSTANTS.SELECTORS.newDishMealTypesGroup);
     const recipeSelect = document.getElementById(CONSTANTS.SELECTORS.newDishRecipe);
     const name = nameInput.value.trim();
     if (!name) { showMessage('Введи название блюда', 'error'); return; }
@@ -537,15 +537,21 @@ import { printWeeklyMenu } from './features/Print.js';
       date = Utils.formatDateLocal(d);
     }
     const note = noteInput.value.trim();
-    const mealTypeValue = mealTypeSelect ? mealTypeSelect.value : '';
-    const mealType = mealTypeValue ? mealTypeValue : null;
+    // ---- Приём пищи (v4.0): собираем массив из отмеченных чекбоксов ----
+    let mealTypes = [];
+    if (mealTypesGroup) {
+      const checkedBoxes = mealTypesGroup.querySelectorAll('input[type=checkbox]:checked');
+      mealTypes = Array.from(checkedBoxes).map(cb => cb.dataset.mealType);
+    }
     const recipeValue = recipeSelect ? recipeSelect.value : '';
     const recipeId = recipeValue ? Number(recipeValue) : null;
-    DishStore.addDish(name, statusSelect.value, date, categorySelect.value, false, note, recipeId, mealType);
+    DishStore.addDish(name, statusSelect.value, date, categorySelect.value, false, note, recipeId, mealTypes);
     Renderer.closeAddModal();
     nameInput.value = '';
     noteInput.value = '';
-    if (mealTypeSelect) mealTypeSelect.value = '';
+    if (mealTypesGroup) {
+      mealTypesGroup.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
+    }
     if (recipeSelect) recipeSelect.value = '';
   });
 
