@@ -1069,6 +1069,40 @@ export const Renderer = (function() {
     });
   }
 
+  // Подсказки по обозначениям под списком блюд на экране «Сегодня».
+  // Показываются только когда есть что показывать (см. renderToday).
+  function buildTodayHints() {
+    const hints = document.createElement('div');
+    hints.className = 'today-hints';
+    hints.setAttribute('aria-label', 'Обозначения');
+
+    const rows = [
+      ['✅', 'Приготовлено — блюдо уже готовили'],
+      ['📅', 'Запланировано — блюдо в плане'],
+      ['👍', 'Нравится — попадёт в рекомендации'],
+      ['👎', 'Не нравится — не будем предлагать']
+    ];
+
+    rows.forEach(([icon, text]) => {
+      const row = document.createElement('div');
+      row.className = 'today-hint-row';
+
+      const iconSpan = document.createElement('span');
+      iconSpan.className = 'today-hint-icon';
+      iconSpan.textContent = icon;
+      iconSpan.setAttribute('aria-hidden', 'true');
+      row.appendChild(iconSpan);
+
+      const textSpan = document.createElement('span');
+      textSpan.textContent = text;
+      row.appendChild(textSpan);
+
+      hints.appendChild(row);
+    });
+
+    return hints;
+  }
+
   function renderToday() {
     const container = document.getElementById(CONSTANTS.SELECTORS.todayContent);
     if (!container) return;
@@ -1141,6 +1175,11 @@ export const Renderer = (function() {
     actions.appendChild(suggestBtn);
 
     container.appendChild(actions);
+
+    // Подсказки — только если что-то запланировано.
+    if (dayDishes.length > 0) {
+      container.appendChild(buildTodayHints());
+    }
   }
 
   function openModal(dateStr) {
