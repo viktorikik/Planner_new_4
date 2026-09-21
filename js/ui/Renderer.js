@@ -1853,3 +1853,15 @@ export const Renderer = (function() {
     rerollChoiceDish
   };
 })();
+
+
+// ============================================================
+// ИМЕНОВАННЫЕ ЭКСПОРТЫ (реэкспорт методов Renderer)
+// Нужны, потому что main.js импортирует эти функции напрямую.
+// ============================================================
+export const openChoiceScreen = Renderer.openChoiceScreen;
+export const closeChoiceModal = Renderer.closeChoiceModal;
+export const setChoiceMealType = Renderer.setChoiceMealType;
+export const setChoiceCategory = Renderer.setChoiceCategory;
+export const setChoiceOnlyFavorites = Renderer.setChoiceOnlyFavorites;
+export const rerollChoiceDish = Renderer.rerollChoiceDish;
