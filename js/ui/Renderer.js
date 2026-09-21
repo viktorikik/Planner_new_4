@@ -36,7 +36,6 @@ export const Renderer = (function() {
   const modalOverlay = els.modalOverlay;
   const modalDate = els.modalTitle;
   const modalContent = els.modalContent;
-  const recOverlay = els.recOverlay;
 
   const CATEGORY_OPTIONS = [
     { val: CATEGORIES.SOUP,   label: '🍲 Суп' },
@@ -1600,20 +1599,9 @@ export const Renderer = (function() {
 
   initEventListeners();
 
-  // closeRecModal оставлен — он подключён в main.js для модалки recOverlay.
-  // Сама модалка и её селекторы будут удалены на шаге 4 (Constants.js + index.html).
-  function closeRecModal() {
-    if (!recOverlay) return;
-    recOverlay.classList.remove('active');
-    if (recOverlay._trapFocusCleanup) {
-      recOverlay._trapFocusCleanup();
-      delete recOverlay._trapFocusCleanup;
-    }
-  }
-
   return {
     renderCalendar, renderMenu, renderToday, openModal, closeModal,
-    closeRecModal, openAddModal, closeAddModal,
+    openAddModal, closeAddModal,
     setSearchQuery, setStatusFilter, setCategoryFilter,
     getCurrentDate: () => currentDate,
     getCurrentView: () => currentView,
