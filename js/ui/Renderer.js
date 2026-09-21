@@ -151,7 +151,8 @@ export const Renderer = (function() {
   }
 
   // Карточка блюда в четырёхколоночной раскладке:
-  //   [✅/📅] [название растёт, переносится] [📖 Рецепт] [👍 👎 🗑️]
+  //   [✅/📅] [название растёт, переносится] [📖 Рецепт] [👍 👎]
+  // Удаление — свайпом влево по карточке, с подтверждением.
   function buildDishElement(dish, dateStr) {
     const dishDiv = document.createElement('div');
     dishDiv.className = `modal-dish ${dish.status}`;
@@ -210,7 +211,7 @@ export const Renderer = (function() {
     }
     dishDiv.appendChild(recipeCol);
 
-    // ---- Колонка 4: действия (👍 👎 🗑️) ----
+    // ---- Колонка 4: действия (👍 👎) ----
     const actions = document.createElement('div');
     actions.className = 'dish-actions';
 
@@ -238,20 +239,6 @@ export const Renderer = (function() {
     });
     actions.appendChild(downBtn);
 
-    const deleteBtn = document.createElement('button');
-    deleteBtn.type = 'button';
-    deleteBtn.className = 'action-btn delete-btn';
-    deleteBtn.textContent = '🗑️';
-    deleteBtn.title = 'Удалить';
-    deleteBtn.setAttribute('aria-label', 'Удалить блюдо');
-    deleteBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      if (confirm('Удалить это блюдо?')) {
-        DishStore.removeDish(dish.id);
-      }
-    });
-    actions.appendChild(deleteBtn);
-
     dishDiv.appendChild(actions);
 
     if (dish.note) {
@@ -260,6 +247,94 @@ export const Renderer = (function() {
       noteSpan.textContent = dish.note;
       dishDiv.appendChild(noteSpan);
     }
+
+    // ---- Свайп влево для удаления ----
+    let swipeStartX = 0;
+    let swipeStartY = 0;
+    let swipeActive = false;
+    let swipeStartedOnButton = false;
+    let swipedRecently = false;
+
+    dishDiv.addEventListener('touchstart', function(e) {
+      // Не активируем свайп, если палец на кнопке (status/recipe/thumb).
+      if (e.target.closest('button')) {
+        swipeStartedOnButton = true;
+        return;
+      }
+      swipeStartedOnButton = false;
+      const t = e.changedTouches[0];
+      swipeStartX = t.clientX;
+      swipeStartY = t.clientY;
+      swipeActive = false;
+      swipedRecently = false;
+    }, { passive: true });
+
+    dishDiv.addEventListener('touchmove', function(e) {
+      if (swipeStartedOnButton) return;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - swipeStartX;
+      const dy = t.clientY - swipeStartY;
+
+      // Активируем свайп только если жест горизонтальный и заметный.
+      if (!swipeActive) {
+        if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy)) {
+          swipeActive = true;
+          dishDiv.classList.add('swiping');
+        } else if (Math.abs(dy) > 12) {
+          // Это вертикальный скролл — выходим, не мешаем прокрутке.
+          swipeStartedOnButton = true;
+          return;
+        }
+      }
+
+      if (swipeActive) {
+        e.preventDefault();
+        const shift = Math.max(-80, Math.min(0, dx));
+        dishDiv.style.transform = `translateX(${shift}px)`;
+        dishDiv.classList.toggle('swipe-will-delete', shift <= -50);
+      }
+    }, { passive: false });
+
+    dishDiv.addEventListener('touchend', function(e) {
+      if (swipeStartedOnButton) {
+        swipeStartedOnButton = false;
+        return;
+      }
+      if (!swipeActive) return;
+
+      const t = e.changedTouches[0];
+      const dx = t.clientX - swipeStartX;
+
+      dishDiv.classList.remove('swiping');
+      dishDiv.classList.remove('swipe-will-delete');
+      dishDiv.style.transform = '';
+
+      if (dx <= -50) {
+        swipedRecently = true;
+        if (confirm('Вы точно хотите удалить это блюдо?')) {
+          DishStore.removeDish(dish.id);
+        }
+      }
+      swipeActive = false;
+    }, { passive: true });
+
+    dishDiv.addEventListener('touchcancel', function() {
+      swipeStartedOnButton = false;
+      swipeActive = false;
+      dishDiv.classList.remove('swiping');
+      dishDiv.classList.remove('swipe-will-delete');
+      dishDiv.style.transform = '';
+    }, { passive: true });
+
+    // Ловим click в capture-фазе, чтобы отменить его после свайпа
+    // (иначе свайп случайно откроет модалку редактирования).
+    dishDiv.addEventListener('click', function(e) {
+      if (swipedRecently) {
+        e.stopPropagation();
+        e.preventDefault();
+        swipedRecently = false;
+      }
+    }, true);
 
     return dishDiv;
   }
@@ -366,7 +441,7 @@ export const Renderer = (function() {
       row.className = 'choice-result-item';
       row.setAttribute('role', 'button');
       row.setAttribute('tabindex', '0');
-      row.setAttribute('aria-label', `Добавить блюдо ${item.name} на завтра`);
+      row.setAttribute('aria-label', `Выбрать дату для блюда ${item.name}`);
 
       const emoji = document.createElement('span');
       emoji.className = 'choice-result-emoji';
@@ -394,8 +469,18 @@ export const Renderer = (function() {
         : 'ещё не готовили';
       row.appendChild(last);
 
+      // Открываем модалку «Новое блюдо» с предзаполнением.
+      // Пользователь сам выбирает дату и подтверждает.
       const handleSelect = () => {
-        addDishToTomorrow(item.name, item.recipeId, closeChoiceModal);
+        closeChoiceModal();
+        // setTimeout, чтобы observer истории успел отработать корректно.
+        setTimeout(() => {
+          openAddModal(null, {
+            name: item.name,
+            recipeId: item.recipeId,
+            category: item.category
+          });
+        }, 0);
       };
       row.addEventListener('click', handleSelect);
       row.addEventListener('keydown', (e) => {
@@ -463,7 +548,6 @@ export const Renderer = (function() {
 
   // «🎲 Другое» — сдвигает окно выдачи на 5 блюд вперёд (по кругу).
   // Не добавляет и не закрывает модалку — только перелистывает список.
-  // В итерации 2 (scoring) поведение можно будет доработать.
   function rerollChoiceDish() {
     const allItems = DishStore.getAllUniqueWithLastDone();
     const filtered = applyChoiceFilters(allItems);
@@ -474,8 +558,7 @@ export const Renderer = (function() {
   }
 
   // ---- Старые функции экранов-«стратегий» оставлены как есть,
-  //      но больше не вызываются из choiceOverlay. Удалим во второй итерации,
-  //      когда убедимся, что новый экран покрывает все сценарии. ----
+  //      но больше не вызываются из choiceOverlay. Удалим во второй итерации. ----
 
   function buildAddForm(dateStr) {
     const addSection = document.createElement('div');
@@ -1629,10 +1712,13 @@ export const Renderer = (function() {
     recContent.appendChild(backBtn);
   }
 
-  function openAddModal(dateStr = null) {
+  // options.prefill — предзаполнение формы: { name, recipeId, category, mealTypes, date }
+  function openAddModal(dateStr = null, prefill = {}) {
     let defaultDate;
     if (dateStr) {
       defaultDate = new Date(dateStr);
+    } else if (prefill.date) {
+      defaultDate = new Date(prefill.date);
     } else {
       defaultDate = new Date();
       defaultDate.setDate(defaultDate.getDate() + 1);
@@ -1664,9 +1750,36 @@ export const Renderer = (function() {
       recipeSelect.value = '';
     }
 
+    // ---- Применяем предзаполнение (после того, как селекты наполнены) ----
+    if (prefill.name) {
+      document.getElementById(CONSTANTS.SELECTORS.newDishName).value = prefill.name;
+    }
+    if (prefill.category) {
+      document.getElementById(CONSTANTS.SELECTORS.newDishCategory).value = prefill.category;
+    }
+    if (prefill.recipeId && recipeSelect) {
+      recipeSelect.value = String(prefill.recipeId);
+    }
+    if (Array.isArray(prefill.mealTypes) && addMealTypesGroup) {
+      addMealTypesGroup.querySelectorAll('input[type=checkbox]').forEach(cb => {
+        cb.checked = prefill.mealTypes.includes(cb.dataset.mealType);
+      });
+    }
+
     const overlay = document.getElementById(CONSTANTS.SELECTORS.addModalOverlay);
     overlay.classList.add('active');
     trapFocus(overlay, closeAddModal);
+
+    // Фокус в поле «Название» — если оно пустое, ставим туда курсор;
+    // если предзаполнено — выделяем текст, чтобы легко было заменить.
+    const nameField = document.getElementById(CONSTANTS.SELECTORS.newDishName);
+    setTimeout(() => {
+      if (nameField.value) {
+        nameField.select();
+      } else {
+        nameField.focus();
+      }
+    }, 60);
   }
 
   function closeAddModal() {
