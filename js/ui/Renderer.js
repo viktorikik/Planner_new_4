@@ -110,7 +110,6 @@ export const Renderer = (function() {
     undoBtn.className = 'undo-snackbar-btn';
     undoBtn.textContent = 'Вернуть';
     undoBtn.addEventListener('click', () => {
-      // restoreDish сохраняет id, liked, disliked, mealTypes — восстанавливает как было.
       DishStore.restoreDish(dish);
       closeUndoSnackbar();
       showMessage('↩️ Блюдо вернули в меню');
@@ -200,6 +199,8 @@ export const Renderer = (function() {
   // Карточка блюда. Обёртка .dish-swipe-wrap содержит:
   //   - кнопку .dish-swipe-action со словом «Удалить» (сзади, справа);
   //   - саму карточку .modal-dish (спереди, сдвигается свайпом влево).
+  // Кнопка «Удалить» невидима, пока карточка не сдвинута (класс .is-shifted
+  // на обёртке переключает её opacity через CSS).
   function buildDishElement(dish, dateStr) {
     const wrap = document.createElement('div');
     wrap.className = 'dish-swipe-wrap';
@@ -215,6 +216,7 @@ export const Renderer = (function() {
     dishDiv.className = `modal-dish ${dish.status}`;
     if (dish.liked) dishDiv.classList.add('liked');
 
+    // ---- Колонка 1: переключатель статуса ----
     const statusToggle = document.createElement('button');
     statusToggle.type = 'button';
     statusToggle.className = 'status-toggle-btn';
@@ -229,6 +231,7 @@ export const Renderer = (function() {
     });
     dishDiv.appendChild(statusToggle);
 
+    // ---- Колонка 2: название ----
     const nameSpan = document.createElement('span');
     nameSpan.className = 'dish-name';
     nameSpan.textContent = dish.name;
@@ -246,6 +249,7 @@ export const Renderer = (function() {
     });
     dishDiv.appendChild(nameSpan);
 
+    // ---- Колонка 3: рецепт ----
     const recipeCol = document.createElement('div');
     recipeCol.className = 'dish-recipe';
     if (dish.recipeId) {
@@ -265,6 +269,7 @@ export const Renderer = (function() {
     }
     dishDiv.appendChild(recipeCol);
 
+    // ---- Колонка 4: 👍 👎 ----
     const actions = document.createElement('div');
     actions.className = 'dish-actions';
 
@@ -313,6 +318,8 @@ export const Renderer = (function() {
     let opened = false;
     let movedBySwipe = false;
 
+    // Единая точка смены позиции карточки. Дополнительно переключает класс
+    // .is-shifted на обёртке — через него CSS показывает кнопку «Удалить».
     function applyShift(px, animate) {
       if (animate) {
         dishDiv.classList.remove('swiping');
@@ -321,6 +328,7 @@ export const Renderer = (function() {
       }
       currentShift = px;
       dishDiv.style.transform = px === 0 ? '' : `translateX(${px}px)`;
+      wrap.classList.toggle('is-shifted', px !== 0);
     }
 
     function closeSwipe() {
@@ -377,6 +385,9 @@ export const Renderer = (function() {
       if (shift < -SWIPE_ACTION_WIDTH - 16) shift = -SWIPE_ACTION_WIDTH - 16;
       currentShift = shift;
       dishDiv.style.transform = `translateX(${shift}px)`;
+      // Кнопка «Удалить» появляется ровно в тот момент, когда карточка
+      // сдвинулась хоть на пиксель.
+      wrap.classList.toggle('is-shifted', shift !== 0);
     }, { passive: false });
 
     dishDiv.addEventListener('touchend', function() {
