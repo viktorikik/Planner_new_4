@@ -1,4 +1,4 @@
-import { STATUSES, CATEGORIES, CATEGORY_LABELS, MEAL_TYPES, MEAL_TYPE_LABELS, CONSTANTS } from '../utils/Constants.js';
+import { STATUSES, CATEGORIES, MEAL_TYPES, MEAL_TYPE_LABELS, CONSTANTS } from '../utils/Constants.js';
 import { Utils } from '../utils/Utils.js';
 import { EventBus } from '../utils/EventBus.js';
 import { DishStore } from '../stores/DishStore.js';
@@ -37,8 +37,6 @@ export const Renderer = (function() {
   const modalDate = els.modalTitle;
   const modalContent = els.modalContent;
   const recOverlay = els.recOverlay;
-  const recTitle = els.recTitle;
-  const recContent = els.recContent;
 
   const CATEGORY_OPTIONS = [
     { val: CATEGORIES.SOUP,   label: '🍲 Суп' },
@@ -256,7 +254,6 @@ export const Renderer = (function() {
     let swipedRecently = false;
 
     dishDiv.addEventListener('touchstart', function(e) {
-      // Не активируем свайп, если палец на кнопке (status/recipe/thumb).
       if (e.target.closest('button')) {
         swipeStartedOnButton = true;
         return;
@@ -275,13 +272,11 @@ export const Renderer = (function() {
       const dx = t.clientX - swipeStartX;
       const dy = t.clientY - swipeStartY;
 
-      // Активируем свайп только если жест горизонтальный и заметный.
       if (!swipeActive) {
         if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy)) {
           swipeActive = true;
           dishDiv.classList.add('swiping');
         } else if (Math.abs(dy) > 12) {
-          // Это вертикальный скролл — выходим, не мешаем прокрутке.
           swipeStartedOnButton = true;
           return;
         }
@@ -326,8 +321,7 @@ export const Renderer = (function() {
       dishDiv.style.transform = '';
     }, { passive: true });
 
-    // Ловим click в capture-фазе, чтобы отменить его после свайпа
-    // (иначе свайп случайно откроет модалку редактирования).
+    // Ловим click в capture-фазе, чтобы отменить его после свайпа.
     dishDiv.addEventListener('click', function(e) {
       if (swipedRecently) {
         e.stopPropagation();
@@ -343,12 +337,6 @@ export const Renderer = (function() {
   // ЭКРАН «ЧТО ПРИГОТОВИТЬ?» (v4.0) — фильтры + результаты
   // ============================================================
 
-  // Применяет фильтры к списку уникальных блюд.
-  // Правила:
-  //   - дизлайки исключены всегда;
-  //   - mealType: пустой массив у блюда = «подходит ко всему»;
-  //   - категория — точное совпадение;
-  //   - «только любимые» — блюдо когда-либо получало 👍.
   function applyChoiceFilters(items) {
     const allDishes = DishStore.getAll();
     const result = [];
@@ -359,18 +347,14 @@ export const Renderer = (function() {
       const dish = allDishes.find(d => d.name === item.name);
       if (!dish) return;
 
-      // Фильтр по mealType
       if (choiceFilterMealType) {
         const types = Array.isArray(dish.mealTypes) ? dish.mealTypes : [];
-        // Пустой массив = «подходит ко всему», оставляем.
         if (types.length > 0 && !types.includes(choiceFilterMealType)) return;
       }
 
-      // Фильтр по категории
       const cat = dish.category || Utils.guessCategory(dish.name);
       if (choiceFilterCategory !== 'all' && cat !== choiceFilterCategory) return;
 
-      // Только любимые
       if (choiceFilterOnlyFavorites) {
         const isLiked = allDishes.some(d => d.name === item.name && d.liked);
         if (!isLiked) return;
@@ -428,7 +412,6 @@ export const Renderer = (function() {
 
     if (rerollBtn) rerollBtn.hidden = false;
 
-    // Показываем 5 блюд, начиная с offset. Если offset ушёл за край — по кругу.
     const total = filtered.length;
     const takeCount = Math.min(5, total);
     const limited = [];
@@ -469,11 +452,8 @@ export const Renderer = (function() {
         : 'ещё не готовили';
       row.appendChild(last);
 
-      // Открываем модалку «Новое блюдо» с предзаполнением.
-      // Пользователь сам выбирает дату и подтверждает.
       const handleSelect = () => {
         closeChoiceModal();
-        // setTimeout, чтобы observer истории успел отработать корректно.
         setTimeout(() => {
           openAddModal(null, {
             name: item.name,
@@ -501,8 +481,6 @@ export const Renderer = (function() {
     renderChoiceResults();
   }
 
-  // Открывает экран «Что приготовить?». Фильтры сбрасываются.
-  // mealTypePreset — если задан ('dinner' и т.п.), этот чип активен сразу.
   function openChoiceScreen(mealTypePreset = null) {
     choiceFilterMealType = mealTypePreset || '';
     choiceFilterCategory = 'all';
@@ -546,8 +524,6 @@ export const Renderer = (function() {
     renderChoiceResults();
   }
 
-  // «🎲 Другое» — сдвигает окно выдачи на 5 блюд вперёд (по кругу).
-  // Не добавляет и не закрывает модалку — только перелистывает список.
   function rerollChoiceDish() {
     const allItems = DishStore.getAllUniqueWithLastDone();
     const filtered = applyChoiceFilters(allItems);
@@ -557,8 +533,7 @@ export const Renderer = (function() {
     renderChoiceResults();
   }
 
-  // ---- Старые функции экранов-«стратегий» оставлены как есть,
-  //      но больше не вызываются из choiceOverlay. Удалим во второй итерации. ----
+  // ============================================================
 
   function buildAddForm(dateStr) {
     const addSection = document.createElement('div');
@@ -1384,334 +1359,6 @@ export const Renderer = (function() {
     showMessage(`✅ Блюдо "${name}" добавлено в план на завтра (${Utils.formatDate(tomorrow)})`);
   }
 
-  // ---- Старые экраны-стратегии (оставлены как есть, но больше
-  //      не вызываются из choiceOverlay). Удалим во второй итерации. ----
-
-  function showCategorySelection() {
-    recTitle.textContent = '🍽️ Выберите категорию';
-    recContent.innerHTML = '';
-
-    const container = document.createElement('div');
-    container.className = 'rec-category-selection';
-
-    const desc = document.createElement('p');
-    desc.textContent = 'Выберите категорию блюд, которые хотите приготовить:';
-    desc.className = 'rec-category-desc';
-    container.appendChild(desc);
-
-    const categories = [
-      { key: CATEGORIES.SOUP,   label: '🍲 Супы' },
-      { key: CATEGORIES.SALAD,  label: '🥗 Салаты' },
-      { key: CATEGORIES.MAIN,   label: '🍖 Основные блюда' },
-      { key: CATEGORIES.BAKERY, label: '🥐 Выпечка' },
-      { key: CATEGORIES.OTHER,  label: '🍽️ Другое' }
-    ];
-
-    categories.forEach(cat => {
-      const btn = document.createElement('button');
-      btn.className = 'category-choice-btn';
-      btn.textContent = cat.label;
-      btn.addEventListener('click', () => showRecommendationsForCategory(cat.key));
-      container.appendChild(btn);
-    });
-
-    const backBtn = document.createElement('button');
-    backBtn.className = 'rec-back-btn';
-    backBtn.textContent = '← Назад';
-    backBtn.addEventListener('click', returnToChoice);
-    container.appendChild(backBtn);
-
-    recContent.appendChild(container);
-    recOverlay.classList.add('active');
-    trapFocus(recOverlay, closeRecModal);
-  }
-
-  function showRecommendationsForCategory(category) {
-    recTitle.textContent = `🍽️ Рекомендации: ${CATEGORY_LABELS[category] || category}`;
-
-    const allUnique = DishStore.getAllUniqueWithLastDone();
-    const filtered = [];
-    allUnique.forEach(item => {
-      const dish = DishStore.getAll().find(d => d.name === item.name);
-      if (dish && dish.category === category && item.lastDoneDate) {
-        if (DishStore.isDishNameDisliked(item.name)) return;
-        const liked = DishStore.getAll().some(d => d.name === item.name && d.liked);
-        filtered.push({ name: item.name, lastDate: item.lastDoneDate, liked });
-      }
-    });
-
-    filtered.sort((a, b) => a.lastDate.localeCompare(b.lastDate));
-    const likedItems = filtered.filter(item => item.liked);
-    const otherItems = filtered.filter(item => !item.liked);
-    const likedResult = likedItems.slice(0, 1);
-    const othersResult = otherItems.slice(0, 3);
-
-    recContent.innerHTML = '';
-
-    if (likedResult.length === 0 && othersResult.length === 0) {
-      const empty = document.createElement('div');
-      empty.className = 'modal-empty';
-      empty.textContent = `😌 В категории "${CATEGORY_LABELS[category]}" нет блюд, которые вы уже готовили. Добавьте несколько!`;
-      recContent.appendChild(empty);
-    } else {
-      if (likedResult.length > 0) {
-        const section = document.createElement('div');
-        section.className = 'rec-section';
-        const title = document.createElement('h4');
-        title.textContent = '👍 Давно не готовили любимое блюдо';
-        section.appendChild(title);
-        likedResult.forEach(item => {
-          section.appendChild(buildRecItem(item));
-        });
-        recContent.appendChild(section);
-      }
-      if (othersResult.length > 0) {
-        const section = document.createElement('div');
-        section.className = 'rec-section';
-        const title = document.createElement('h4');
-        title.textContent = '🍽️ Другие давние блюда';
-        section.appendChild(title);
-        othersResult.forEach(item => {
-          section.appendChild(buildRecItem(item));
-        });
-        recContent.appendChild(section);
-      }
-      const hint = document.createElement('div');
-      hint.className = 'rec-hint';
-      hint.textContent = '👆 Кликните по блюду, чтобы добавить его в план на завтра';
-      recContent.appendChild(hint);
-    }
-
-    const backBtn = document.createElement('button');
-    backBtn.className = 'rec-back-btn';
-    backBtn.textContent = '← Назад к категориям';
-    backBtn.addEventListener('click', showCategorySelection);
-    recContent.appendChild(backBtn);
-
-    recOverlay.classList.add('active');
-    trapFocus(recOverlay, closeRecModal);
-  }
-
-  function buildRecItem(item) {
-    const row = document.createElement('div');
-    row.className = 'rec-item';
-    row.dataset.name = item.name;
-    row.setAttribute('tabindex', '0');
-    row.setAttribute('role', 'button');
-    row.setAttribute('aria-label', `Добавить блюдо ${item.name} на завтра`);
-    const nameSpan = document.createElement('span');
-    nameSpan.className = 'rec-name';
-    nameSpan.textContent = item.name;
-    row.appendChild(nameSpan);
-    const daysSpan = document.createElement('span');
-    daysSpan.className = 'rec-days';
-    daysSpan.textContent = `последний раз ${Utils.daysAgo(item.lastDate)}`;
-    row.appendChild(daysSpan);
-    const handleSelect = () => {
-      addDishToTomorrow(item.name, null, () => recOverlay.classList.remove('active'));
-    };
-    row.addEventListener('click', handleSelect);
-    row.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        handleSelect();
-      }
-    });
-    return row;
-  }
-
-  function openFavorites() {
-    recTitle.textContent = '👍 Понравившиеся блюда';
-    const favs = DishStore.getFavorites();
-    recContent.innerHTML = '';
-    if (favs.length === 0) {
-      const empty = document.createElement('div');
-      empty.className = 'modal-empty';
-      empty.textContent = '😌 У вас пока нет понравившихся блюд. Отмечайте их пальцем вверх 👍 в модалке дня.';
-      recContent.appendChild(empty);
-    } else {
-      const map = {};
-      favs.forEach(d => {
-        if (!map[d.name] || d.date > map[d.name]) map[d.name] = { name: d.name, lastDate: d.date, id: d.id };
-      });
-      const list = Object.values(map);
-      list.sort((a, b) => a.lastDate.localeCompare(b.lastDate));
-      const section = document.createElement('div');
-      section.className = 'rec-section';
-      const title = document.createElement('h4');
-      title.textContent = 'Все понравившиеся блюда';
-      section.appendChild(title);
-      list.forEach(item => {
-        const row = document.createElement('div');
-        row.className = 'rec-item';
-        row.dataset.id = item.id;
-        row.dataset.name = item.name;
-        row.setAttribute('tabindex', '0');
-        row.setAttribute('role', 'button');
-        row.setAttribute('aria-label', `Добавить ${item.name} на завтра`);
-        const nameSpan = document.createElement('span');
-        nameSpan.className = 'rec-name';
-        nameSpan.textContent = '👍 ' + item.name;
-        row.appendChild(nameSpan);
-        const daysSpan = document.createElement('span');
-        daysSpan.className = 'rec-days';
-        daysSpan.textContent = `последний раз ${Utils.daysAgo(item.lastDate)}`;
-        row.appendChild(daysSpan);
-        const removeBtn = document.createElement('button');
-        removeBtn.className = 'rec-remove';
-        removeBtn.textContent = '✕';
-        removeBtn.title = 'Убрать оценку';
-        removeBtn.setAttribute('aria-label', `Убрать оценку у ${item.name}`);
-        row.appendChild(removeBtn);
-        const handleAdd = () => {
-          addDishToTomorrow(item.name, null, () => recOverlay.classList.remove('active'));
-        };
-        row.addEventListener('click', function(e) {
-          if (e.target === removeBtn) return;
-          handleAdd();
-        });
-        row.addEventListener('keydown', (e) => {
-          if (e.target === removeBtn) return;
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            handleAdd();
-          }
-        });
-        removeBtn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          const id = Number(this.closest('.rec-item').dataset.id);
-          const dish = DishStore.getAll().find(d => d.id === id);
-          if (dish) {
-            DishStore.toggleLike(id);
-            openFavorites();
-          }
-        });
-        section.appendChild(row);
-      });
-      recContent.appendChild(section);
-      const hint = document.createElement('div');
-      hint.className = 'rec-hint';
-      hint.textContent = '👆 Кликните по блюду (кроме крестика), чтобы добавить его в план на завтра. Нажмите ✕, чтобы убрать оценку.';
-      recContent.appendChild(hint);
-    }
-
-    const backBtn = document.createElement('button');
-    backBtn.className = 'rec-back-btn';
-    backBtn.textContent = '← Назад';
-    backBtn.addEventListener('click', returnToChoice);
-    recContent.appendChild(backBtn);
-
-    recOverlay.classList.add('active');
-    trapFocus(recOverlay, closeRecModal);
-  }
-
-  function closeRecModal() {
-    recOverlay.classList.remove('active');
-    if (recOverlay._trapFocusCleanup) {
-      recOverlay._trapFocusCleanup();
-      delete recOverlay._trapFocusCleanup;
-    }
-  }
-
-  // Возврат из recOverlay в choiceOverlay.
-  // Фильтры НЕ сбрасываются — пользователь вернулся, должен видеть то же состояние.
-  function returnToChoice() {
-    closeRecModal();
-    const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
-    if (!overlay) return;
-    renderChoiceScreenDom();
-    overlay.classList.add('active');
-    trapFocus(overlay, closeChoiceModal);
-  }
-
-  function showTasteCategorySelection() {
-    recTitle.textContent = '✨ На твой вкус';
-    recContent.innerHTML = '';
-
-    const container = document.createElement('div');
-    container.className = 'rec-category-selection';
-
-    const desc = document.createElement('p');
-    desc.textContent = 'Выберите категорию — или доверьтесь случаю:';
-    desc.className = 'rec-category-desc';
-    container.appendChild(desc);
-
-    const allBtn = document.createElement('button');
-    allBtn.className = 'category-choice-btn';
-    allBtn.textContent = '🎲 Все категории';
-    allBtn.addEventListener('click', () => showRandomTasteDish(null));
-    container.appendChild(allBtn);
-
-    const categories = [
-      { key: CATEGORIES.SOUP,   label: '🍲 Супы' },
-      { key: CATEGORIES.SALAD,  label: '🥗 Салаты' },
-      { key: CATEGORIES.MAIN,   label: '🍖 Основные блюда' },
-      { key: CATEGORIES.BAKERY, label: '🥐 Выпечка' },
-      { key: CATEGORIES.OTHER,  label: '🍽️ Другое' }
-    ];
-
-    categories.forEach(cat => {
-      const btn = document.createElement('button');
-      btn.className = 'category-choice-btn';
-      btn.textContent = cat.label;
-      btn.addEventListener('click', () => showRandomTasteDish(cat.key));
-      container.appendChild(btn);
-    });
-
-    const backBtn = document.createElement('button');
-    backBtn.className = 'rec-back-btn';
-    backBtn.textContent = '← Назад';
-    backBtn.addEventListener('click', returnToChoice);
-    container.appendChild(backBtn);
-
-    recContent.appendChild(container);
-    recOverlay.classList.add('active');
-    trapFocus(recOverlay, closeRecModal);
-  }
-
-  function showRandomTasteDish(category) {
-    const random = DishStore.getRandomDishFromTaste(category);
-    recTitle.textContent = `✨ ${random.categoryLabel}`;
-    recContent.innerHTML = '';
-
-    const section = document.createElement('div');
-    section.className = 'rec-section';
-
-    const dishBox = document.createElement('div');
-    dishBox.className = 'rec-taste-result';
-    dishBox.textContent = random.name;
-    section.appendChild(dishBox);
-
-    recContent.appendChild(section);
-
-    const actionsRow = document.createElement('div');
-    actionsRow.className = 'rec-taste-actions';
-
-    const addBtn = document.createElement('button');
-    addBtn.type = 'button';
-    addBtn.className = 'rec-taste-add';
-    addBtn.textContent = '➕ В план на завтра';
-    addBtn.addEventListener('click', () => {
-      addDishToTomorrow(random.name, null, () => recOverlay.classList.remove('active'));
-    });
-    actionsRow.appendChild(addBtn);
-
-    const rerollBtn = document.createElement('button');
-    rerollBtn.type = 'button';
-    rerollBtn.className = 'rec-taste-reroll';
-    rerollBtn.textContent = '🔄 Другое блюдо';
-    rerollBtn.addEventListener('click', () => showRandomTasteDish(category));
-    actionsRow.appendChild(rerollBtn);
-
-    recContent.appendChild(actionsRow);
-
-    const backBtn = document.createElement('button');
-    backBtn.className = 'rec-back-btn';
-    backBtn.textContent = '← Назад к категориям';
-    backBtn.addEventListener('click', showTasteCategorySelection);
-    recContent.appendChild(backBtn);
-  }
-
   // options.prefill — предзаполнение формы: { name, recipeId, category, mealTypes, date }
   function openAddModal(dateStr = null, prefill = {}) {
     let defaultDate;
@@ -1750,7 +1397,6 @@ export const Renderer = (function() {
       recipeSelect.value = '';
     }
 
-    // ---- Применяем предзаполнение (после того, как селекты наполнены) ----
     if (prefill.name) {
       document.getElementById(CONSTANTS.SELECTORS.newDishName).value = prefill.name;
     }
@@ -1770,8 +1416,6 @@ export const Renderer = (function() {
     overlay.classList.add('active');
     trapFocus(overlay, closeAddModal);
 
-    // Фокус в поле «Название» — если оно пустое, ставим туда курсор;
-    // если предзаполнено — выделяем текст, чтобы легко было заменить.
     const nameField = document.getElementById(CONSTANTS.SELECTORS.newDishName);
     setTimeout(() => {
       if (nameField.value) {
@@ -1909,7 +1553,6 @@ export const Renderer = (function() {
         openModal(currentModalDate);
       }
       renderToday();
-      // Если экран «Что приготовить?» открыт — обновить список результатов
       const choiceOverlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
       if (choiceOverlay && choiceOverlay.classList.contains('active')) {
         renderChoiceResults();
@@ -1957,8 +1600,19 @@ export const Renderer = (function() {
 
   initEventListeners();
 
+  // closeRecModal оставлен — он подключён в main.js для модалки recOverlay.
+  // Сама модалка и её селекторы будут удалены на шаге 4 (Constants.js + index.html).
+  function closeRecModal() {
+    if (!recOverlay) return;
+    recOverlay.classList.remove('active');
+    if (recOverlay._trapFocusCleanup) {
+      recOverlay._trapFocusCleanup();
+      delete recOverlay._trapFocusCleanup;
+    }
+  }
+
   return {
-    renderCalendar, renderMenu, renderToday, openModal, closeModal, openFavorites,
+    renderCalendar, renderMenu, renderToday, openModal, closeModal,
     closeRecModal, openAddModal, closeAddModal,
     setSearchQuery, setStatusFilter, setCategoryFilter,
     getCurrentDate: () => currentDate,
@@ -1966,9 +1620,6 @@ export const Renderer = (function() {
     setCurrentDate: (d) => { currentDate = d; },
     setCurrentView: (v) => { currentView = v; },
     showRecipeCard,
-    showCategorySelection,
-    showTasteCategorySelection,
-    returnToChoice,
     closeEditDishModal,
     closeRepeatMenuModal,
     // ---- Экран «Что приготовить?» (v4.0) ----
