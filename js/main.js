@@ -603,10 +603,22 @@ import { printWeeklyMenu } from './features/Print.js';
 
   // ---------- Service Worker (PWA) ----------
   if ('serviceWorker' in navigator) {
+    const hadController = !!navigator.serviceWorker.controller;
+
     window.addEventListener('load', function() {
-      navigator.serviceWorker.register('./sw.js').catch(function() {
-        // Тихо игнорируем — офлайн-режим не критичен для работы приложения.
-      });
+      navigator.serviceWorker
+        .register('./sw.js', { updateViaCache: 'none' })
+        .then(function(reg) { return reg.update(); })
+        .catch(function() {
+          // Тихо игнорируем — офлайн-режим не критичен для работы приложения.
+        });
+    });
+
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function() {
+      if (!hadController || refreshing) return;
+      refreshing = true;
+      window.location.reload();
     });
   }
 
