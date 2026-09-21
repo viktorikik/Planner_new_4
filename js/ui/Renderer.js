@@ -16,11 +16,15 @@ export const Renderer = (function() {
   // вынесен в замыкание, чтобы не загрязнять глобальную область.
   let touchDragActive = false;
 
+  // Ссылка на карточку, у которой сейчас открыта зона удаления (свайп влево).
+  // Нужна, чтобы при открытии новой карточки закрывать предыдущую.
+  let openSwipeCard = null;
+
   // ---- Состояние фильтров экрана «Что приготовить?» (v4.0) ----
-  let choiceFilterMealType = '';        // '' = все, иначе breakfast/lunch/dinner/snack
-  let choiceFilterCategory = 'all';     // 'all' или категория
+  let choiceFilterMealType = '';
+  let choiceFilterCategory = 'all';
   let choiceFilterOnlyFavorites = false;
-  let choiceOffset = 0;                 // сдвиг окна в списке результатов
+  let choiceOffset = 0;
 
   const els = {};
   for (const key in CONSTANTS.SELECTORS) {
@@ -45,8 +49,6 @@ export const Renderer = (function() {
     { val: CATEGORIES.OTHER,  label: '🍽️ Другое' }
   ];
 
-  // Опции для чекбоксов «Приём пищи» (без пустого варианта — чекбоксы сами
-  // означают «отмечено / не отмечено»).
   const MEAL_TYPE_OPTIONS = [
     { val: MEAL_TYPES.BREAKFAST, label: MEAL_TYPE_LABELS[MEAL_TYPES.BREAKFAST] },
     { val: MEAL_TYPES.LUNCH,     label: MEAL_TYPE_LABELS[MEAL_TYPES.LUNCH] },
@@ -68,6 +70,10 @@ export const Renderer = (function() {
     [CATEGORIES.BAKERY]: 'Выпечка',
     [CATEGORIES.OTHER]:  'Другое'
   };
+
+  // Ширина красной зоны с кнопкой удаления. Порог прилипания — половина.
+  const SWIPE_ACTION_WIDTH = 80;
+  const SWIPE_REVEAL_THRESHOLD = SWIPE_ACTION_WIDTH / 2;
 
   function pluralizeRu(n, one, few, many) {
     const mod10 = n % 10;
@@ -147,10 +153,32 @@ export const Renderer = (function() {
     });
   }
 
-  // Карточка блюда в четырёхколоночной раскладке:
-  //   [✅/📅] [название растёт, переносится] [📖 Рецепт] [👍 👎]
-  // Удаление — свайпом влево по карточке, с подтверждением.
+  // Закрыть открытую карточку (если есть). Используется, когда пользователь
+  // открывает свайпом другую карточку — предыдущая плавно возвращается.
+  function closeOpenSwipeCard() {
+    if (openSwipeCard && openSwipeCard._closeSwipe) {
+      openSwipeCard._closeSwipe();
+    }
+  }
+
+  // Карточка блюда. Возвращает обёртку .dish-swipe-wrap, внутри которой:
+  //   - красная кнопка удаления .dish-swipe-action (сзади, absolute);
+  //   - сама карточка .modal-dish (спереди, сдвигается свайпом).
+  // Свайп влево — открывает кнопку 🗑️. Тап по кнопке — удаляет блюдо.
+  // Свайп вправо или тап по карточке (когда кнопка видна) — закрывает.
   function buildDishElement(dish, dateStr) {
+    const wrap = document.createElement('div');
+    wrap.className = 'dish-swipe-wrap';
+
+    // Кнопка удаления — лежит за карточкой, справа.
+    const action = document.createElement('button');
+    action.type = 'button';
+    action.className = 'dish-swipe-action';
+    action.setAttribute('aria-label', `Удалить блюдо ${dish.name}`);
+    action.title = 'Удалить';
+    action.textContent = '🗑️';
+    wrap.appendChild(action);
+
     const dishDiv = document.createElement('div');
     dishDiv.className = `modal-dish ${dish.status}`;
     if (dish.liked) dishDiv.classList.add('liked');
@@ -188,7 +216,7 @@ export const Renderer = (function() {
     });
     dishDiv.appendChild(nameSpan);
 
-    // ---- Колонка 3: рецепт (пустая, если нет) ----
+    // ---- Колонка 3: рецепт ----
     const recipeCol = document.createElement('div');
     recipeCol.className = 'dish-recipe';
     if (dish.recipeId) {
@@ -208,7 +236,7 @@ export const Renderer = (function() {
     }
     dishDiv.appendChild(recipeCol);
 
-    // ---- Колонка 4: действия (👍 👎) ----
+    // ---- Колонка 4: 👍 👎 ----
     const actions = document.createElement('div');
     actions.className = 'dish-actions';
 
@@ -245,97 +273,146 @@ export const Renderer = (function() {
       dishDiv.appendChild(noteSpan);
     }
 
-    // ---- Свайп влево для удаления ----
-    let swipeStartX = 0;
-    let swipeStartY = 0;
-    let swipeActive = false;
-    let swipeStartedOnButton = false;
-    let swipedRecently = false;
+    wrap.appendChild(dishDiv);
+
+    // ============================================================
+    // СВАЙП: карточка едет влево, за ней открывается 🗑️
+    // ============================================================
+    let startX = 0, startY = 0;
+    let currentShift = 0;         // текущее смещение карточки (отрицательное = влево)
+    let directionLocked = null;   // 'h' | 'v' | null
+    let startedOnButton = false;  // тач начался на внутренней кнопке
+    let opened = false;           // красная кнопка сейчас видна
+    let movedBySwipe = false;     // был ли свайп (нужно, чтобы отменить «click» после него)
+
+    // Установить позицию с анимацией или без.
+    function applyShift(px, animate) {
+      if (animate) {
+        dishDiv.classList.remove('swiping');
+      } else {
+        dishDiv.classList.add('swiping');
+      }
+      currentShift = px;
+      dishDiv.style.transform = px === 0 ? '' : `translateX(${px}px)`;
+    }
+
+    function closeSwipe() {
+      opened = false;
+      applyShift(0, true);
+      if (openSwipeCard === wrap) openSwipeCard = null;
+    }
+
+    function openSwipe() {
+      if (openSwipeCard && openSwipeCard !== wrap && openSwipeCard._closeSwipe) {
+        openSwipeCard._closeSwipe();
+      }
+      opened = true;
+      applyShift(-SWIPE_ACTION_WIDTH, true);
+      openSwipeCard = wrap;
+    }
+
+    // Даём wrap наружу метод, чтобы другие карточки могли её закрыть.
+    wrap._closeSwipe = closeSwipe;
 
     dishDiv.addEventListener('touchstart', function(e) {
-      if (e.target.closest('button')) {
-        swipeStartedOnButton = true;
+      // Тач по внутренней кнопке — не свайпаем. Но если карточка уже открыта,
+      // разрешаем тап: клик по карточке закроет её.
+      if (e.target.closest('button') && !opened) {
+        startedOnButton = true;
         return;
       }
-      swipeStartedOnButton = false;
+      startedOnButton = false;
       const t = e.changedTouches[0];
-      swipeStartX = t.clientX;
-      swipeStartY = t.clientY;
-      swipeActive = false;
-      swipedRecently = false;
+      startX = t.clientX;
+      startY = t.clientY;
+      directionLocked = null;
+      movedBySwipe = false;
     }, { passive: true });
 
     dishDiv.addEventListener('touchmove', function(e) {
-      if (swipeStartedOnButton) return;
+      if (startedOnButton) return;
       const t = e.changedTouches[0];
-      const dx = t.clientX - swipeStartX;
-      const dy = t.clientY - swipeStartY;
+      const dx = t.clientX - startX;
+      const dy = t.clientY - startY;
 
-      if (!swipeActive) {
-        if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy)) {
-          swipeActive = true;
-          dishDiv.classList.add('swiping');
-        } else if (Math.abs(dy) > 12) {
-          swipeStartedOnButton = true;
-          return;
+      if (!directionLocked) {
+        if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+          directionLocked = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
+          if (directionLocked === 'h') {
+            dishDiv.classList.add('swiping');
+            movedBySwipe = true;
+          }
         }
       }
+      if (directionLocked !== 'h') return;
 
-      if (swipeActive) {
-        e.preventDefault();
-        const shift = Math.max(-80, Math.min(0, dx));
-        dishDiv.style.transform = `translateX(${shift}px)`;
-        dishDiv.classList.toggle('swipe-will-delete', shift <= -50);
-      }
+      e.preventDefault();
+      const base = opened ? -SWIPE_ACTION_WIDTH : 0;
+      let shift = base + dx;
+      // Не даём уехать вправо за 0 и влево за ширину кнопки + небольшой овершут.
+      if (shift > 0) shift = 0;
+      if (shift < -SWIPE_ACTION_WIDTH - 16) shift = -SWIPE_ACTION_WIDTH - 16;
+      currentShift = shift;
+      dishDiv.style.transform = `translateX(${shift}px)`;
     }, { passive: false });
 
-    dishDiv.addEventListener('touchend', function(e) {
-      if (swipeStartedOnButton) {
-        swipeStartedOnButton = false;
+    dishDiv.addEventListener('touchend', function() {
+      if (startedOnButton) { startedOnButton = false; return; }
+      if (directionLocked !== 'h') {
+        directionLocked = null;
         return;
       }
-      if (!swipeActive) return;
-
-      const t = e.changedTouches[0];
-      const dx = t.clientX - swipeStartX;
-
       dishDiv.classList.remove('swiping');
-      dishDiv.classList.remove('swipe-will-delete');
-      dishDiv.style.transform = '';
-
-      if (dx <= -50) {
-        swipedRecently = true;
-        if (confirm('Вы точно хотите удалить это блюдо?')) {
-          DishStore.removeDish(dish.id);
-        }
+      if (currentShift <= -SWIPE_REVEAL_THRESHOLD) {
+        openSwipe();
+      } else {
+        closeSwipe();
       }
-      swipeActive = false;
+      directionLocked = null;
     }, { passive: true });
 
     dishDiv.addEventListener('touchcancel', function() {
-      swipeStartedOnButton = false;
-      swipeActive = false;
+      startedOnButton = false;
+      directionLocked = null;
       dishDiv.classList.remove('swiping');
-      dishDiv.classList.remove('swipe-will-delete');
-      dishDiv.style.transform = '';
+      if (opened) {
+        applyShift(-SWIPE_ACTION_WIDTH, true);
+      } else {
+        applyShift(0, true);
+      }
     }, { passive: true });
 
-    // Ловим click в capture-фазе, чтобы отменить его после свайпа.
+    // Клик в capture-фазе:
+    //   - если был свайп — отменяем сам клик (чтобы не открылась редактирование);
+    //   - если карточка открыта — клик по ней закрывает, внутренние кнопки не срабатывают.
     dishDiv.addEventListener('click', function(e) {
-      if (swipedRecently) {
+      if (movedBySwipe) {
         e.stopPropagation();
         e.preventDefault();
-        swipedRecently = false;
+        movedBySwipe = false;
+        return;
+      }
+      if (opened) {
+        e.stopPropagation();
+        e.preventDefault();
+        closeSwipe();
       }
     }, true);
 
-    return dishDiv;
+    // Клик по красной кнопке — удаление.
+    action.addEventListener('click', function(e) {
+      e.stopPropagation();
+      DishStore.removeDish(dish.id);
+      showMessage('🗑️ Блюдо удалено');
+      if (openSwipeCard === wrap) openSwipeCard = null;
+    });
+
+    return wrap;
   }
 
   // ============================================================
-  // ЭКРАН «ЧТО ПРИГОТОВИТЬ?» (v4.0) — фильтры + результаты
+  // ЭКРАН «ЧТО ПРИГОТОВИТЬ?» (v4.0)
   // ============================================================
-
   function applyChoiceFilters(items) {
     const allDishes = DishStore.getAll();
     const result = [];
@@ -1070,7 +1147,6 @@ export const Renderer = (function() {
   }
 
   // Подсказки по обозначениям под списком блюд на экране «Сегодня».
-  // Показываются только когда есть что показывать (см. renderToday).
   function buildTodayHints() {
     const hints = document.createElement('div');
     hints.className = 'today-hints';
@@ -1397,7 +1473,6 @@ export const Renderer = (function() {
     showMessage(`✅ Блюдо "${name}" добавлено в план на завтра (${Utils.formatDate(tomorrow)})`);
   }
 
-  // options.prefill — предзаполнение формы: { name, recipeId, category, mealTypes, date }
   function openAddModal(dateStr = null, prefill = {}) {
     let defaultDate;
     if (dateStr) {
@@ -1649,7 +1724,6 @@ export const Renderer = (function() {
     showRecipeCard,
     closeEditDishModal,
     closeRepeatMenuModal,
-    // ---- Экран «Что приготовить?» (v4.0) ----
     openChoiceScreen,
     closeChoiceModal,
     setChoiceMealType,
@@ -1659,10 +1733,6 @@ export const Renderer = (function() {
   };
 })();
 
-// ============================================================
-// ИМЕНОВАННЫЕ ЭКСПОРТЫ (реэкспорт методов Renderer)
-// Нужны, потому что main.js импортирует эти функции напрямую.
-// ============================================================
 export const openChoiceScreen = Renderer.openChoiceScreen;
 export const closeChoiceModal = Renderer.closeChoiceModal;
 export const setChoiceMealType = Renderer.setChoiceMealType;
