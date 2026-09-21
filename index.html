@@ -650,6 +650,21 @@
   </button>
 </nav>
 
+<script>
+window.addEventListener('error', function(e) {
+  var box = document.createElement('div');
+  box.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#d00;color:#fff;padding:12px;z-index:99999;font:12px/1.4 monospace;white-space:pre-wrap;word-break:break-all;';
+  box.textContent = 'ОШИБКА: ' + e.message + '\n' + e.filename + ':' + e.lineno + ':' + e.colno;
+  document.body.appendChild(box);
+});
+window.addEventListener('unhandledrejection', function(e) {
+  var box = document.createElement('div');
+  box.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#d80;color:#fff;padding:12px;z-index:99999;font:12px/1.4 monospace;white-space:pre-wrap;word-break:break-all;';
+  box.textContent = 'PROMISE: ' + (e.reason && e.reason.message || e.reason);
+  document.body.appendChild(box);
+});
+</script>
+  
 <script type="module" src="js/main.js"></script>
 </body>
 </html>
