@@ -4359,3 +4359,141 @@ body.dark-theme .today-hints {
   width: 1.4em;
   text-align: center;
 }
+
+/* ============================================================
+   Свайп-удаление карточки блюда.
+   Карточка едет влево, за ней открывается «Удалить».
+   ============================================================ */
+.dish-swipe-wrap {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  margin-bottom: 6px;
+}
+
+.dish-swipe-wrap .modal-dish {
+  position: relative;
+  z-index: 1;
+  transition: transform 0.22s ease;
+  margin: 0;
+}
+
+.dish-swipe-wrap .modal-dish.swiping {
+  transition: none;
+}
+
+/* Красная зона со словом «Удалить» — прижата к правому краю. */
+.dish-swipe-action {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: #e53935;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 12px;
+}
+
+.dish-swipe-action:active {
+  background: #c62828;
+}
+
+/* ============================================================
+   Плашка «Вернуть удалённое блюдо».
+   Висит над нижней навигацией, живёт 5 секунд.
+   ============================================================ */
+.undo-snackbar {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: 84px;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: #2a2a30;
+  color: #fff;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.28);
+  transform: translateY(calc(100% + 20px));
+  opacity: 0;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+  pointer-events: none;
+}
+
+.undo-snackbar.visible {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.undo-snackbar-text {
+  flex: 1 1 auto;
+  font-size: 14px;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.undo-snackbar-btn {
+  flex: 0 0 auto;
+  background: none;
+  border: none;
+  color: #ffb27a;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 4px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.undo-snackbar-btn:active {
+  opacity: 0.7;
+}
+
+/* ============================================================
+   Подсказки по обозначениям на экране «Сегодня».
+   ============================================================ */
+.today-hints {
+  margin: 24px 0 8px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.04);
+  color: #555;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+body.dark-theme .today-hints {
+  background: rgba(255, 255, 255, 0.06);
+  color: #c2c2cc;
+}
+
+.today-hint-row {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.today-hint-row + .today-hint-row {
+  margin-top: 6px;
+}
+
+.today-hint-icon {
+  flex-shrink: 0;
+  width: 1.4em;
+  text-align: center;
+  font-size: 15px;
+  line-height: 1;
+}
