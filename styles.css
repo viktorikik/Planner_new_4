@@ -4280,3 +4280,82 @@ body.dark-theme .today-hints {
   width: 1.4em;
   text-align: center;
 }
+
+/* ============================================================
+   Свайп-удаление карточки блюда.
+   Карточка едет влево, за ней открывается красная кнопка 🗑️.
+   ============================================================ */
+.dish-swipe-wrap {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px; /* подгони под border-radius .modal-dish */
+  margin-bottom: 6px;  /* подгони под отступ .modal-dish, если он был */
+}
+
+.dish-swipe-wrap .modal-dish {
+  position: relative;
+  z-index: 1;
+  /* background у .modal-dish должен быть непрозрачным,
+     иначе за карточкой будет видно красную зону. */
+  transition: transform 0.22s ease;
+  margin: 0; /* margin теперь у wrap */
+}
+
+.dish-swipe-wrap .modal-dish.swiping {
+  transition: none;
+}
+
+/* Красная зона с иконкой — лежит справа, прижата к правому краю. */
+.dish-swipe-action {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: #e53935;
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 12px; /* тот же радиус, что у wrap */
+}
+
+.dish-swipe-action:active {
+  background: #c62828;
+}
+
+/* Подсказки на экране «Сегодня» */
+.today-hints {
+  margin: 24px 0 8px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.04);
+  font-size: 13px;
+  line-height: 1.5;
+  opacity: 0.75;
+}
+
+body.dark-theme .today-hints {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.today-hint-row {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.today-hint-row + .today-hint-row {
+  margin-top: 4px;
+}
+
+.today-hint-icon {
+  flex-shrink: 0;
+  width: 1.4em;
+  text-align: center;
+}
