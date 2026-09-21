@@ -4249,3 +4249,34 @@ body.dark-theme .modal-dish.swipe-will-delete {
 body.dark-theme .modal-dish.swipe-will-delete::after {
   color: #ff8a8a;
 }
+
+/* Подсказки по обозначениям на экране «Сегодня» */
+.today-hints {
+  margin: 24px 0 8px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.04);
+  font-size: 13px;
+  line-height: 1.5;
+  opacity: 0.75;
+}
+
+body.dark-theme .today-hints {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.today-hint-row {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.today-hint-row + .today-hint-row {
+  margin-top: 4px;
+}
+
+.today-hint-icon {
+  flex-shrink: 0;
+  width: 1.4em;
+  text-align: center;
+}
