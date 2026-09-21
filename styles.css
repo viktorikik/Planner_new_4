@@ -4198,3 +4198,54 @@ body {
   .today-empty-icon { font-size: 40px; }
   .today-action-btn { font-size: 14px; padding: 11px 14px; }
 }
+
+/* ============================================================
+   СВАЙП-УДАЛЕНИЕ БЛЮДА В МОДАЛКЕ ДНЯ (v4.0)
+   Свайп влево по карточке → подтверждение → удаление.
+   Кнопка 🗑️ из карточки убрана, место освобождено под название.
+   ============================================================ */
+.modal-dish {
+  position: relative;
+  touch-action: pan-y;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+/* Во время активного свайпа — без transition, чтобы карточка шла за пальцем. */
+.modal-dish.swiping {
+  transition: none;
+  will-change: transform;
+}
+
+/* Карточка сдвинута достаточно далеко — подсветим и покажем намёк на удаление. */
+.modal-dish.swipe-will-delete {
+  background-color: rgba(229, 90, 90, 0.14);
+  border-radius: var(--radius-sm);
+}
+
+.modal-dish.swipe-will-delete::after {
+  content: '🗑️ Удалить';
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  font-weight: 600;
+  color: #e55a5a;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* Не даём горизонтальному свайпу вызвать горизонтальный скролл модалки. */
+.modal,
+.choice-modal,
+.welcome-modal,
+.onboarding-modal {
+  overflow-x: hidden;
+}
+
+body.dark-theme .modal-dish.swipe-will-delete {
+  background-color: rgba(229, 90, 90, 0.22);
+}
+body.dark-theme .modal-dish.swipe-will-delete::after {
+  color: #ff8a8a;
+}
