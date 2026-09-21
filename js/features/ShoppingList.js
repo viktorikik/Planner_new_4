@@ -373,6 +373,9 @@ export function loadShoppingList(key) {
   const view = document.getElementById(CONSTANTS.SELECTORS.shoppingListView);
   const groups = parseTextToGroups(text);
   renderGroupsHtml(groups, view);
+  // Явно возвращаем view в видимое состояние — если до этого был режим
+  // редактирования, он мог оставить view скрытым (display: none).
+  view.style.display = 'block';
   setHeaderLabel('Список на ' + getPeriodLabel(key));
 
   // Кнопка «Редактировать вручную» — снова «✎»
@@ -439,6 +442,9 @@ export function generateShoppingList() {
 
   const view = document.getElementById(CONSTANTS.SELECTORS.shoppingListView);
   renderGroupsHtml(grouped, view);
+  // То же самое: возвращаем view в видимое состояние после возможного
+  // режима редактирования.
+  view.style.display = 'block';
 
   const periodLabel = fromDate === toDate
     ? Utils.formatDate(new Date(fromDate))
@@ -473,17 +479,22 @@ export function toggleShoppingListEdit() {
     renderGroupsHtml(groups, view);
     // Обновляем textarea нормализованным текстом
     textarea.value = groupsToText(groups);
+    // Явный 'none' / 'block' — не полагаемся на пустую строку,
+    // которую может перебить правило из styles.css.
     textarea.style.display = 'none';
-    view.style.display = '';
+    view.style.display = 'block';
     btn.textContent = '✎ Редактировать вручную';
     btn.dataset.mode = 'view';
   } else {
     // Переходим в режим редактирования
-    textarea.style.display = '';
+    // Явный 'block' — важно, иначе CSS-правило display: none на textarea
+    // оставит его невидимым, и пользователь увидит пустое окно.
+    textarea.style.display = 'block';
     view.style.display = 'none';
     btn.textContent = '✓ Готово';
     btn.dataset.mode = 'edit';
-    textarea.focus();
+    // Фокус после отрисовки — на случай, если браузер ещё не пересчитал layout.
+    setTimeout(() => textarea.focus(), 0);
   }
 }
 
