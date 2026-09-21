@@ -4497,3 +4497,16 @@ body.dark-theme .today-hints {
   font-size: 15px;
   line-height: 1;
 }
+
+/* Кнопка «Удалить» невидима, пока карточку не тянут.
+   Появляется плавно, как только карточка сдвинулась. */
+.dish-swipe-action {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+
+.dish-swipe-wrap.is-shifted .dish-swipe-action {
+  opacity: 1;
+  pointer-events: auto;
+}
