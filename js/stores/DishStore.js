@@ -33,7 +33,6 @@ export const DishStore = (function() {
   }
 
   // Приводит любое значение к массиву mealTypes.
-  // Принимает: массив строк, одну строку, null/undefined.
   function normalizeMealTypes(value) {
     if (!value) return [];
     if (Array.isArray(value)) {
@@ -51,8 +50,6 @@ export const DishStore = (function() {
     if (!dish.id) dish.id = generateId();
     if (dish.recipeId === undefined) dish.recipeId = null;
 
-    // Миграция: старое поле mealType (строка|null) → mealTypes (массив).
-    // Работает один раз — после сохранения блюда поле mealType исчезает.
     if (dish.mealTypes === undefined) {
       if (dish.mealType) {
         dish.mealTypes = [dish.mealType];
@@ -60,11 +57,9 @@ export const DishStore = (function() {
         dish.mealTypes = [];
       }
     }
-    // Защита: mealTypes всегда массив
     if (!Array.isArray(dish.mealTypes)) {
       dish.mealTypes = dish.mealTypes ? [dish.mealTypes] : [];
     }
-    // Удаляем старое поле, чтобы не путалось в модели
     delete dish.mealType;
 
     return dish;
@@ -133,12 +128,44 @@ export const DishStore = (function() {
   function getForDate(dateStr) { return dishes.filter(d => d.date === dateStr); }
 
   // mealTypes — массив значений из MEAL_TYPES. Может быть пустым.
-  // Функция принимает массив, строку или null — нормализует внутри.
-  function addDish(name, status, date, category, liked = false, note = '', recipeId = null, mealTypes = []) {
+  // disliked — если true, блюдо сразу помечается «не нравится» (взаимоисключение с liked).
+  function addDish(name, status, date, category, liked = false, note = '', recipeId = null, mealTypes = [], disliked = false) {
     if (!name || !status || !date || !category) return false;
     const id = generateId();
     const normalized = normalizeMealTypes(mealTypes);
-    dishes.push({ id, name, status, date, category, liked, disliked: false, note, recipeId, mealTypes: normalized });
+    // Взаимоисключение: если disliked=true, liked принудительно false.
+    const finalLiked = disliked ? false : !!liked;
+    dishes.push({
+      id, name, status, date, category,
+      liked: finalLiked,
+      disliked: !!disliked,
+      note, recipeId, mealTypes: normalized
+    });
+    save();
+    return true;
+  }
+
+  // Восстанавливает блюдо по снимку (объект с теми же полями, что хранятся
+  // в массиве dishes). Сохраняет исходный id, если он есть. Используется
+  // для кнопки «Вернуть» после удаления.
+  function restoreDish(snapshot) {
+    if (!snapshot || !snapshot.name || !snapshot.status || !snapshot.date || !snapshot.category) {
+      return false;
+    }
+    const copy = {
+      id: snapshot.id || generateId(),
+      name: snapshot.name,
+      status: snapshot.status,
+      date: snapshot.date,
+      category: snapshot.category,
+      liked: !!snapshot.liked,
+      disliked: !!snapshot.disliked,
+      note: snapshot.note || '',
+      recipeId: snapshot.recipeId || null,
+      mealTypes: Array.isArray(snapshot.mealTypes) ? snapshot.mealTypes.slice() : []
+    };
+    const normalized = normalizeDish(copy);
+    dishes.push(normalized);
     save();
     return true;
   }
@@ -159,7 +186,6 @@ export const DishStore = (function() {
     return true;
   }
 
-  // Классический toggleLike оставлен — используется в «Любимых» для снятия оценки
   function toggleLike(id) {
     const dish = dishes.find(d => d.id === id);
     if (!dish) return false;
@@ -169,7 +195,6 @@ export const DishStore = (function() {
     return true;
   }
 
-  // 👍 Нравится — взаимоисключение с 👎
   function toggleThumbUp(id) {
     const dish = dishes.find(d => d.id === id);
     if (!dish) return false;
@@ -183,7 +208,6 @@ export const DishStore = (function() {
     return true;
   }
 
-  // 👎 Не нравится — взаимоисключение с 👍
   function toggleThumbDown(id) {
     const dish = dishes.find(d => d.id === id);
     if (!dish) return false;
@@ -197,7 +221,6 @@ export const DishStore = (function() {
     return true;
   }
 
-  // Проверка: последняя по дате запись с этим именем имеет 👎?
   function isDishNameDisliked(name) {
     const entries = dishes.filter(d => d.name === name);
     if (entries.length === 0) return false;
@@ -270,6 +293,7 @@ export const DishStore = (function() {
 
   return {
     init, getAll, getForDate, addDish, removeDish,
+    restoreDish,
     toggleStatus, toggleLike, toggleThumbUp, toggleThumbDown,
     isDishNameDisliked,
     getAllUniqueWithLastDone,
