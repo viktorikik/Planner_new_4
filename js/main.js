@@ -275,7 +275,6 @@ import { printWeeklyMenu } from './features/Print.js';
   // ---------- Универсальное закрытие модалок ----------
   const modals = [
     { overlay: document.getElementById(CONSTANTS.SELECTORS.modalOverlay), close: Renderer.closeModal },
-    { overlay: document.getElementById(CONSTANTS.SELECTORS.recOverlay), close: Renderer.closeRecModal },
     { overlay: document.getElementById(CONSTANTS.SELECTORS.addModalOverlay), close: Renderer.closeAddModal },
     { overlay: document.getElementById(CONSTANTS.SELECTORS.editDishOverlay), close: Renderer.closeEditDishModal },
     { overlay: document.getElementById(CONSTANTS.SELECTORS.repeatMenuOverlay), close: Renderer.closeRepeatMenuModal },
@@ -402,7 +401,6 @@ import { printWeeklyMenu } from './features/Print.js';
 
   // ---------- Кнопки закрытия статических модалок ----------
   document.getElementById(CONSTANTS.SELECTORS.modalClose).addEventListener('click', Renderer.closeModal);
-  document.getElementById(CONSTANTS.SELECTORS.recClose).addEventListener('click', Renderer.closeRecModal);
   document.getElementById(CONSTANTS.SELECTORS.addModalClose).addEventListener('click', Renderer.closeAddModal);
   document.getElementById(CONSTANTS.SELECTORS.addModalCancel).addEventListener('click', Renderer.closeAddModal);
   document.getElementById(CONSTANTS.SELECTORS.exportModalClose).addEventListener('click', () => {
@@ -451,7 +449,7 @@ import { printWeeklyMenu } from './features/Print.js';
     });
   }
 
-  // Кнопка «🎲 Другое» — случайное из текущего пула
+  // Кнопка «🎲 Другое» — перелистывает окно результатов
   const choiceRerollBtn = document.getElementById('choiceRerollBtn');
   if (choiceRerollBtn) {
     choiceRerollBtn.addEventListener('click', function() {
