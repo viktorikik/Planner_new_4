@@ -20,6 +20,7 @@ export const Renderer = (function() {
   let choiceFilterMealType = '';        // '' = все, иначе breakfast/lunch/dinner/snack
   let choiceFilterCategory = 'all';     // 'all' или категория
   let choiceFilterOnlyFavorites = false;
+  let choiceOffset = 0;                 // сдвиг окна в списке результатов
 
   const els = {};
   for (const key in CONSTANTS.SELECTORS) {
@@ -340,9 +341,8 @@ export const Renderer = (function() {
 
     const allItems = DishStore.getAllUniqueWithLastDone();
     const filtered = applyChoiceFilters(allItems);
-    const limited = filtered.slice(0, 10);
 
-    if (limited.length === 0) {
+    if (filtered.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'choice-empty';
       empty.textContent = '😌 Ничего не найдено. Попробуйте ослабить фильтры.';
@@ -352,6 +352,14 @@ export const Renderer = (function() {
     }
 
     if (rerollBtn) rerollBtn.hidden = false;
+
+    // Показываем 5 блюд, начиная с offset. Если offset ушёл за край — по кругу.
+    const total = filtered.length;
+    const takeCount = Math.min(5, total);
+    const limited = [];
+    for (let i = 0; i < takeCount; i++) {
+      limited.push(filtered[(choiceOffset + i) % total]);
+    }
 
     limited.forEach(item => {
       const row = document.createElement('div');
@@ -414,6 +422,7 @@ export const Renderer = (function() {
     choiceFilterMealType = mealTypePreset || '';
     choiceFilterCategory = 'all';
     choiceFilterOnlyFavorites = false;
+    choiceOffset = 0;
 
     renderChoiceScreenDom();
 
@@ -435,28 +444,33 @@ export const Renderer = (function() {
 
   function setChoiceMealType(type) {
     choiceFilterMealType = type || '';
+    choiceOffset = 0;
     renderChoiceChips();
     renderChoiceResults();
   }
 
   function setChoiceCategory(cat) {
     choiceFilterCategory = cat || 'all';
+    choiceOffset = 0;
     renderChoiceResults();
   }
 
   function setChoiceOnlyFavorites(flag) {
     choiceFilterOnlyFavorites = !!flag;
+    choiceOffset = 0;
     renderChoiceResults();
   }
 
-  // «🎲 Другое» — случайное из текущего отфильтрованного пула.
-  // В итерации 2 станет «умным» (по scoring).
+  // «🎲 Другое» — сдвигает окно выдачи на 5 блюд вперёд (по кругу).
+  // Не добавляет и не закрывает модалку — только перелистывает список.
+  // В итерации 2 (scoring) поведение можно будет доработать.
   function rerollChoiceDish() {
     const allItems = DishStore.getAllUniqueWithLastDone();
     const filtered = applyChoiceFilters(allItems);
     if (filtered.length === 0) return;
-    const random = filtered[Math.floor(Math.random() * filtered.length)];
-    addDishToTomorrow(random.name, random.recipeId, closeChoiceModal);
+
+    choiceOffset = (choiceOffset + 5) % filtered.length;
+    renderChoiceResults();
   }
 
   // ---- Старые функции экранов-«стратегий» оставлены как есть,
@@ -1853,7 +1867,6 @@ export const Renderer = (function() {
     rerollChoiceDish
   };
 })();
-
 
 // ============================================================
 // ИМЕНОВАННЫЕ ЭКСПОРТЫ (реэкспорт методов Renderer)
