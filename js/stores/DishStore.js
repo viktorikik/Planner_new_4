@@ -1,4 +1,4 @@
-import { STATUSES, CATEGORIES, CATEGORY_LABELS, CONSTANTS } from '../utils/Constants.js';
+import { STATUSES, CATEGORIES, CONSTANTS } from '../utils/Constants.js';
 import { Utils } from '../utils/Utils.js';
 import { EventBus } from '../utils/EventBus.js';
 import { showStorageError } from '../utils/notifications.js';
@@ -27,16 +27,6 @@ export const DishStore = (function() {
     { name: 'Удон', status: STATUSES.PLANNED, date: '2026-09-10', category: CATEGORIES.MAIN, note: '' },
     { name: 'Паста Болоньезе', status: STATUSES.PLANNED, date: '2026-09-12', category: CATEGORIES.MAIN, note: 'сделать с фаршем индейки' },
   ];
-
-  // «На твой вкус» — подборка по категориям. Используется функцией
-  // getRandomDishFromTaste(category).
-  const TASTE_DISHES = {
-    [CATEGORIES.SOUP]:   ['Борщ', 'Солянка', 'Уха', 'Щи', 'Сырный суп', 'Гороховый суп', 'Рассольник', 'Окрошка'],
-    [CATEGORIES.SALAD]:  ['Селедка под шубой', 'Оливье', 'Крабовый', 'Цезарь с курицей', 'Мимоза', 'Винегрет', 'Греческий салат', 'Салат из свежих овощей'],
-    [CATEGORIES.MAIN]:   ['Картофельное пюре с котлетой', 'Пельмени', 'Манты', 'Гречка с мясом', 'Голубцы', 'Жаркое', 'Макароны по-флотски', 'Плов'],
-    [CATEGORIES.BAKERY]: ['Блины', 'Оладьи', 'Сырники', 'Пирог с яблоками', 'Ватрушки', 'Пирожки'],
-    [CATEGORIES.OTHER]:  ['Пицца', 'Шаурма', 'Сэндвичи', 'Омлет', 'Яичница с беконом']
-  };
 
   function generateId() {
     return Date.now() + Math.random() * 10000;
@@ -243,19 +233,6 @@ export const DishStore = (function() {
     save();
   }
 
-  // Случайное блюдо из категории.
-  // Без аргумента (category = null) — случайная категория из TASTE_DISHES
-  // (обратная совместимость со старым вызовом без параметров).
-  // С аргументом — строго из указанной категории.
-  function getRandomDishFromTaste(category = null) {
-    const available = Object.keys(TASTE_DISHES);
-    const pool = (category && TASTE_DISHES[category]) ? [category] : available;
-    const cat = pool[Math.floor(Math.random() * pool.length)];
-    const list = TASTE_DISHES[cat];
-    const name = list[Math.floor(Math.random() * list.length)];
-    return { name, category: cat, categoryLabel: CATEGORY_LABELS[cat] };
-  }
-
   function updateDishDate(id, newDate) {
     const dish = dishes.find(d => d.id === id);
     if (!dish) return false;
@@ -297,7 +274,7 @@ export const DishStore = (function() {
     isDishNameDisliked,
     getAllUniqueWithLastDone,
     getFavorites, replaceAll,
-    getRandomDishFromTaste, updateDishDate, clearRecipeRefs,
+    updateDishDate, clearRecipeRefs,
     updateDish
   };
 })();
