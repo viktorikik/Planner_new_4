@@ -1,5 +1,5 @@
 /* ============================================================
-   1. ПЕРЕМЕННЫЕ – СВЕТЛАЯ ТЕМА (улучшенная контрастность)
+   1. ПЕРЕМЕННЫЕ – СВЕТЛАЯ ТЕМА
    ============================================================ */
 :root {
   --bg-primary: #f2f0ed;
@@ -34,6 +34,7 @@
   --color-soup: #f59e0b;
   --color-salad: #10b981;
   --color-main: #ef4444;
+  --color-bakery: #d97706;
   --search-bg: #ffffff;
   --search-border: #d1d1d9;
 
@@ -94,6 +95,7 @@ body.dark-theme {
   --color-soup: #fbbf24;
   --color-salad: #34d399;
   --color-main: #f87171;
+  --color-bakery: #fbbf24;
   --search-bg: rgba(45, 45, 65, 0.6);
   --search-border: rgba(255, 255, 255, 0.1);
   --card-bg: rgba(40, 40, 56, 0.7);
@@ -102,6 +104,9 @@ body.dark-theme {
   --accent-text: #1a1a1a;
 }
 
+/* ============================================================
+   2. БАЗА
+   ============================================================ */
 * {
   margin: 0;
   padding: 0;
@@ -158,6 +163,9 @@ textarea:focus-visible {
   margin: 0 auto;
 }
 
+/* ============================================================
+   3. ШАПКА
+   ============================================================ */
 .app-header {
   display: flex;
   align-items: center;
@@ -190,27 +198,6 @@ textarea:focus-visible {
   border-radius: 3px;
 }
 
-.theme-toggle {
-  background: var(--cell-bg);
-  border: 1px solid var(--cell-border);
-  border-radius: var(--radius-md);
-  padding: 6px var(--spacing-md);
-  cursor: pointer;
-  font-size: 20px;
-  line-height: 1.4;
-  color: var(--text-primary);
-  transition: var(--transition-fast);
-  min-height: 40px;
-  min-width: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.theme-toggle:hover {
-  background: var(--day-hover);
-  transform: scale(1.05);
-}
-
 .view-toggle {
   display: flex;
   gap: 3px;
@@ -239,6 +226,9 @@ textarea:focus-visible {
   background: var(--day-hover);
 }
 
+/* ============================================================
+   4. КНОПКИ ДЕЙСТВИЙ
+   ============================================================ */
 .actions {
   display: flex;
   flex-direction: column;
@@ -314,20 +304,12 @@ textarea:focus-visible {
   transform: translateY(-2px);
 }
 
-.import-hint {
-  font-size: 12px;
-  color: var(--text-muted);
-  text-align: center;
-  margin-top: 2px;
-  opacity: 0.7;
-}
-
 .import-hidden {
   display: none;
 }
 
 /* ============================================================
-   ГРУППА ЧЕКБОКСОВ «ПРИЁМ ПИЩИ» (v4.0)
+   5. ГРУППА ЧЕКБОКСОВ «ПРИЁМ ПИЩИ»
    ============================================================ */
 .meal-types-group {
   display: grid;
@@ -356,7 +338,6 @@ textarea:focus-visible {
   border-color: var(--accent-color);
 }
 
-.add-modal .form-group .meal-types-group .meal-type-checkbox input[type="checkbox"],
 .meal-type-checkbox input[type="checkbox"] {
   width: 18px;
   height: 18px;
@@ -382,25 +363,8 @@ textarea:focus-visible {
   line-height: 1.3;
 }
 
-@media (max-width: 480px) {
-  .meal-types-group {
-    gap: 6px;
-  }
-  .meal-type-checkbox {
-    padding: 8px 10px;
-    font-size: 13px;
-    gap: 6px;
-  }
-  .add-modal .form-group .meal-types-group .meal-type-checkbox input[type="checkbox"],
-  .meal-type-checkbox input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    min-width: 16px;
-  }
-}
-
 /* ============================================================
-   ПЕРЕКЛЮЧАТЕЛЬ «НЕДЕЛЯ · МЕСЯЦ» В БЛОКЕ КАЛЕНДАРЯ (v4.0)
+   6. КАЛЕНДАРЬ (неделя / месяц)
    ============================================================ */
 .calendar-view-switch {
   display: flex;
@@ -590,6 +554,9 @@ textarea:focus-visible {
   font-weight: 700;
 }
 
+/* ============================================================
+   7. НЕДЕЛЬНЫЙ СПИСОК
+   ============================================================ */
 .week-list {
   display: flex;
   flex-direction: column;
@@ -662,6 +629,7 @@ textarea:focus-visible {
   align-items: center;
   gap: 4px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  touch-action: none;
 }
 .meal-chip:active {
   cursor: grabbing;
@@ -676,8 +644,8 @@ textarea:focus-visible {
   border-left-color: var(--planned-color);
 }
 .meal-chip.liked {
-  border-left-color: var(--liked-color);
-  background: rgba(239, 68, 68, 0.08);
+  border-left-color: var(--done-color);
+  background: rgba(16, 185, 129, 0.08);
 }
 .meal-chip .recipe-badge {
   font-size: 12px;
@@ -698,6 +666,9 @@ textarea:focus-visible {
   font-style: italic;
 }
 
+/* ============================================================
+   8. ПОИСК И ФИЛЬТРЫ
+   ============================================================ */
 .search-filter-wrap {
   display: flex;
   flex-wrap: wrap;
@@ -726,6 +697,9 @@ textarea:focus-visible {
   box-shadow: 0 0 0 3px var(--accent-light);
 }
 
+/* ============================================================
+   9. БЛОК «МЕНЮ»
+   ============================================================ */
 .menu-list {
   margin-top: 16px;
   background: rgba(128, 128, 140, 0.04);
@@ -760,6 +734,7 @@ textarea:focus-visible {
   color: var(--text-primary);
   display: flex;
   justify-content: space-between;
+  align-items: center;
   border-left: 3px solid var(--text-muted);
 }
 .menu-item.done {
@@ -777,10 +752,31 @@ textarea:focus-visible {
 .menu-item.category-main {
   border-left-color: var(--color-main);
 }
+.menu-item.category-bakery {
+  border-left-color: var(--color-bakery);
+}
 .menu-item .status-badge {
   font-size: 12px;
   color: var(--text-muted);
 }
+
+.menu-item .menu-item-name {
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+  padding-right: 8px;
+  transition: var(--transition-fast);
+}
+.menu-item .menu-item-name:hover {
+  color: var(--accent-color);
+}
+.menu-item .menu-item-name:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 .menu-empty {
   color: var(--text-muted);
   text-align: center;
@@ -788,6 +784,9 @@ textarea:focus-visible {
   font-size: 14px;
 }
 
+/* ============================================================
+   10. МОДАЛКИ — БАЗА
+   ============================================================ */
 .modal-overlay {
   display: none;
   position: fixed;
@@ -820,6 +819,7 @@ textarea:focus-visible {
   width: 100%;
   max-height: 85vh;
   overflow-y: auto;
+  overflow-x: hidden;
   box-shadow: 0 40px 80px rgba(0, 0, 0, 0.3);
   border: 1px solid var(--cell-border);
 }
@@ -850,6 +850,23 @@ textarea:focus-visible {
   transform: rotate(90deg);
 }
 
+.modal-desc {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.modal-empty {
+  color: var(--text-muted);
+  text-align: center;
+  padding: var(--spacing-lg) 0;
+  font-size: 15px;
+}
+
+/* ============================================================
+   11. МОДАЛКА ДНЯ — ГРУППЫ И КАРТОЧКА БЛЮДА
+   ============================================================ */
 .day-meals-section {
   margin-bottom: var(--spacing-lg);
   border-bottom: 2px solid var(--cell-border);
@@ -865,9 +882,6 @@ textarea:focus-visible {
   gap: var(--spacing-sm);
 }
 
-/* ============================================================
-   ГРУППЫ ДНЯ И КАРТОЧКА БЛЮДА В ЧЕТЫРЕ КОЛОНКИ (v4.0)
-   ============================================================ */
 .day-group {
   margin-bottom: 16px;
 }
@@ -915,10 +929,84 @@ textarea:focus-visible {
   line-height: 1.35;
   cursor: pointer;
 }
+.modal-dish .dish-name:hover .dish-name-text {
+  color: var(--accent-color);
+}
+.modal-dish .dish-name:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
 
 .modal-dish .dish-recipe {
   display: inline-flex;
   align-items: center;
+}
+
+.modal-dish .recipe-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--accent-color);
+  background: var(--accent-light);
+  color: var(--accent-color);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.5;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  appearance: none;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.modal-dish .recipe-chip:hover {
+  background: var(--accent-color);
+  color: var(--accent-text);
+  transform: scale(1.04);
+}
+.modal-dish .recipe-chip:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+body.dark-theme .modal-dish .recipe-chip {
+  background: rgba(255, 107, 53, 0.18);
+}
+body.dark-theme .modal-dish .recipe-chip:hover {
+  background: var(--accent-color);
+  color: #1a1a1a;
+}
+
+.modal-dish .status-toggle-btn {
+  background: none;
+  border: none;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+  opacity: 0.9;
+  transition: var(--transition-fast);
+  appearance: none;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+}
+.modal-dish .status-toggle-btn:hover {
+  opacity: 1;
+  transform: scale(1.15);
+}
+.modal-dish .status-toggle-btn:active {
+  transform: scale(0.95);
+}
+.modal-dish .status-toggle-btn:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+  border-radius: 6px;
 }
 
 .modal-dish .dish-actions {
@@ -927,26 +1015,35 @@ textarea:focus-visible {
   gap: var(--spacing-xs);
 }
 
-.modal-dish .action-btn {
+.modal-dish .thumb-btn {
   background: none;
   border: none;
-  font-size: 18px;
+  font-size: 17px;
+  line-height: 1;
   cursor: pointer;
-  padding: 0 var(--spacing-xs);
+  padding: 0 3px;
+  opacity: 0.35;
+  filter: grayscale(1);
   transition: var(--transition-fast);
-  color: var(--text-muted);
+  appearance: none;
+  font-family: inherit;
 }
-.modal-dish .action-btn:hover {
-  transform: scale(1.2);
-  color: var(--text-primary);
+.modal-dish .thumb-btn:hover {
+  opacity: 0.7;
+  filter: grayscale(0.3);
+  transform: scale(1.15);
 }
-.modal-dish .delete-btn:hover {
-  color: #e55a5a;
+.modal-dish .thumb-btn.active {
+  opacity: 1;
+  filter: none;
 }
-.modal-dish .like-btn {
-  font-size: 20px;
+.modal-dish .thumb-btn:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
-.modal-dish .like-btn.liked {
+
+.modal-dish.liked .dish-name {
   color: var(--liked-color);
 }
 
@@ -959,9 +1056,12 @@ textarea:focus-visible {
   margin-top: var(--spacing-xs);
   width: 100%;
   word-break: break-word;
-  flex: 0 0 100%;
+  grid-column: 1 / -1;
 }
 
+/* ============================================================
+   12. РЕДАКТИРОВАНИЕ БЛЮДА (inline)
+   ============================================================ */
 .edit-input {
   width: 100%;
   padding: 2px 6px;
@@ -982,7 +1082,7 @@ textarea:focus-visible {
   flex-direction: column;
   gap: var(--spacing-xs);
   width: 100%;
-  flex: 0 0 100%;
+  grid-column: 1 / -1;
 }
 .edit-container .edit-input {
   width: 100%;
@@ -998,13 +1098,9 @@ textarea:focus-visible {
   opacity: 0.8;
 }
 
-.modal-empty {
-  color: var(--text-muted);
-  text-align: center;
-  padding: var(--spacing-lg) 0;
-  font-size: 15px;
-}
-
+/* ============================================================
+   13. МОДАЛКА ДНЯ — БЛОК ДОБАВЛЕНИЯ БЛЮДА
+   ============================================================ */
 .modal-add-section {
   margin-top: var(--spacing-sm);
   padding-top: 16px;
@@ -1129,91 +1225,20 @@ textarea:focus-visible {
   font-style: italic;
   padding: var(--spacing-sm) 0;
 }
+.suggest-title {
+  margin-top: 12px;
+}
 
+/* ============================================================
+   14. МОДАЛКА «МОИ РЕЦЕПТЫ» И «СПИСОК ПОКУПОК» — общая ширина
+   ============================================================ */
 .rec-modal .modal {
   max-width: 480px;
 }
-.rec-modal .rec-section {
-  margin-bottom: 16px;
-}
-.rec-modal .rec-section h4 {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: var(--spacing-sm);
-}
-.rec-modal .rec-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-sm) 14px;
-  background: var(--rec-item-bg);
-  border-radius: var(--radius-md);
-  margin-bottom: var(--spacing-xs);
-  cursor: pointer;
-  transition: var(--transition-fast);
-  font-size: 14px;
-  color: var(--text-primary);
-  gap: var(--spacing-sm);
-}
-.rec-modal .rec-item:hover {
-  background: var(--day-hover);
-  transform: translateX(4px);
-}
-.rec-modal .rec-item .rec-name {
-  font-weight: 500;
-  flex: 1;
-}
-.rec-modal .rec-item .rec-days {
-  font-size: 12px;
-  color: var(--text-muted);
-}
-.rec-modal .rec-item .rec-remove {
-  background: none;
-  border: none;
-  font-size: 18px;
-  cursor: pointer;
-  color: var(--text-muted);
-  transition: var(--transition-fast);
-  padding: 0 var(--spacing-xs);
-}
-.rec-modal .rec-item .rec-remove:hover {
-  color: #e55a5a;
-  transform: scale(1.2);
-}
-.rec-modal .rec-empty {
-  color: var(--text-muted);
-  font-size: 14px;
-  font-style: italic;
-  padding: var(--spacing-sm) 0;
-}
-.rec-modal .rec-hint {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin-top: var(--spacing-md);
-  text-align: center;
-  border-top: 1px solid var(--cell-border);
-  padding-top: var(--spacing-md);
-}
 
-.category-choice-btn {
-  display: block;
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 8px;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--cell-border);
-  background: var(--card-bg);
-  font-size: 16px;
-  cursor: pointer;
-  transition: var(--transition-fast);
-  color: var(--text-primary);
-}
-.category-choice-btn:hover {
-  background: var(--card-hover-bg);
-  transform: translateX(4px);
-}
-
+/* ============================================================
+   15. МОДАЛКИ ДОБАВЛЕНИЯ / РЕДАКТИРОВАНИЯ — ФОРМА
+   ============================================================ */
 .add-modal .modal {
   max-width: 400px;
 }
@@ -1282,6 +1307,27 @@ textarea:focus-visible {
   transform: translateY(-2px);
 }
 
+#repeatMenuDate {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--cell-border);
+  background: var(--input-bg);
+  font-size: 15px;
+  color: var(--text-primary);
+  outline: none;
+  transition: var(--transition-fast);
+  appearance: none;
+  font-family: inherit;
+}
+#repeatMenuDate:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+/* ============================================================
+   16. МОДАЛКИ ЭКСПОРТА
+   ============================================================ */
 .export-modal .modal {
   max-width: 400px;
 }
@@ -1314,9 +1360,41 @@ textarea:focus-visible {
   margin-top: 2px;
 }
 
+.export-modal .recipe-export-option {
+  display: block;
+  width: 100%;
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+  border: 1px solid var(--cell-border);
+  border-radius: var(--radius-lg);
+  background: var(--card-bg);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  text-align: left;
+  font-size: 15px;
+  color: var(--text-primary);
+  appearance: none;
+}
+.export-modal .recipe-export-option:hover {
+  background: var(--card-hover-bg);
+  transform: translateX(4px);
+}
+.export-modal .recipe-export-option .export-label {
+  font-weight: 600;
+}
+.export-modal .recipe-export-option .export-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 2px;
+}
+
+#recipeExportOverlay {
+  z-index: 1100;
+}
+
 /* ============================================================
-   ЭКРАН «ЧТО ПРИГОТОВИТЬ?» (v4.0)
-   Фильтры + список результатов + действия.
+   17. ЭКРАН «ЧТО ПРИГОТОВИТЬ?»
    ============================================================ */
 .choice-overlay {
   display: none;
@@ -1345,6 +1423,7 @@ textarea:focus-visible {
   width: 100%;
   max-height: 88vh;
   overflow-y: auto;
+  overflow-x: hidden;
   box-shadow: 0 40px 80px rgba(0, 0, 0, 0.4);
   border: 1px solid var(--cell-border);
   text-align: left;
@@ -1357,7 +1436,6 @@ textarea:focus-visible {
   text-align: center;
 }
 
-/* Фильтры */
 .choice-filter-group {
   margin-bottom: 14px;
 }
@@ -1370,7 +1448,6 @@ textarea:focus-visible {
   letter-spacing: 0.4px;
 }
 
-/* Чипы приёма пищи */
 .choice-chips {
   display: flex;
   flex-wrap: wrap;
@@ -1405,7 +1482,6 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
-/* Селект категории */
 .choice-category-select {
   width: 100%;
   padding: 10px 14px;
@@ -1428,7 +1504,6 @@ textarea:focus-visible {
   box-shadow: 0 0 0 3px var(--accent-light);
 }
 
-/* Чекбокс «Только любимые» */
 .choice-favorite-toggle {
   display: flex;
   align-items: center;
@@ -1465,7 +1540,6 @@ textarea:focus-visible {
   font-weight: 600;
 }
 
-/* Список результатов */
 .choice-results {
   min-height: 80px;
   max-height: 340px;
@@ -1518,7 +1592,8 @@ textarea:focus-visible {
 .choice-result-last {
   font-size: 12px;
   color: var(--text-muted);
-  white-space: nowrap;
+  white-space: normal;
+  line-height: 1.3;
 }
 
 .choice-empty {
@@ -1529,7 +1604,6 @@ textarea:focus-visible {
   line-height: 1.5;
 }
 
-/* Действия */
 .choice-actions {
   display: flex;
   gap: 8px;
@@ -1604,41 +1678,9 @@ textarea:focus-visible {
   color: var(--text-primary);
 }
 
-@media (max-width: 480px) {
-  .choice-modal {
-    padding: 20px 14px;
-    border-radius: 20px;
-    max-height: 92vh;
-  }
-  .choice-modal h2 {
-    font-size: 19px;
-    margin-bottom: 12px;
-  }
-  .choice-chip {
-    font-size: 12px;
-    padding: 6px 10px;
-  }
-  .choice-favorite-toggle {
-    padding: 10px 12px;
-    font-size: 13px;
-  }
-  .choice-result-item {
-    grid-template-columns: 24px minmax(0, 1fr) auto;
-    gap: 6px;
-    padding: 8px 4px;
-  }
-  .choice-result-name {
-    font-size: 14px;
-  }
-  .choice-result-last {
-    font-size: 11px;
-  }
-  .choice-action-btn {
-    font-size: 13px;
-    padding: 10px 12px;
-  }
-}
-
+/* ============================================================
+   18. ПРИВЕТСТВЕННАЯ МОДАЛКА
+   ============================================================ */
 .welcome-overlay {
   display: none;
   position: fixed;
@@ -1665,6 +1707,7 @@ textarea:focus-visible {
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
+  overflow-x: hidden;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
   border: 1px solid var(--cell-border);
   text-align: center;
@@ -1740,965 +1783,8 @@ textarea:focus-visible {
   transform: scale(0.96);
 }
 
-.recipe-card {
-  background: var(--card-bg);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-md);
-  margin-bottom: var(--spacing-sm);
-  border: 1px solid var(--cell-border);
-  transition: var(--transition-fast);
-}
-.recipe-card:hover {
-  background: var(--card-hover-bg);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(0,0,0,0.06);
-}
-.recipe-card .recipe-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-sm);
-}
-.recipe-card .recipe-name {
-  font-weight: 700;
-  font-size: 16px;
-  color: var(--text-primary);
-}
-.recipe-card .recipe-actions {
-  display: flex;
-  gap: 6px;
-}
-.recipe-card .recipe-actions button {
-  background: none;
-  border: none;
-  font-size: 18px;
-  cursor: pointer;
-  color: var(--text-muted);
-  transition: var(--transition-fast);
-}
-.recipe-card .recipe-actions button:hover {
-  transform: scale(1.2);
-  color: var(--text-primary);
-}
-.recipe-card .recipe-details {
-  margin-top: 6px;
-}
-.recipe-card .recipe-details .ingredients {
-  font-size: 14px;
-  color: var(--text-secondary);
-  margin-bottom: 6px;
-}
-.recipe-card .recipe-details .ingredients ul {
-  list-style: none;
-  padding-left: 0;
-  margin: 4px 0;
-}
-.recipe-card .recipe-details .ingredients li {
-  padding: 2px 0;
-  border-bottom: 1px dashed var(--cell-border);
-}
-.recipe-card .recipe-details .instructions {
-  font-size: 14px;
-  color: var(--text-secondary);
-  white-space: pre-wrap;
-  margin-top: 4px;
-}
-
-#recipesList li {
-  color: var(--text-primary);
-}
-#recipesList li button {
-  color: var(--text-muted);
-}
-body.dark-theme #recipesList li button {
-  color: var(--text-muted);
-}
-body.dark-theme #recipesList li button:hover {
-  color: var(--text-primary);
-}
-
-/* ===== КАРТОЧКА РЕЦЕПТА (просмотр) ===== */
-.recipe-view-modal,
-.recipe-view-modal .modal-header h3,
-.recipe-view-modal ul,
-.recipe-view-modal li,
-.recipe-view-modal pre,
-.recipe-view-modal strong {
-  color: var(--text-primary);
-}
-.recipe-view-modal li {
-  border-bottom-color: var(--cell-border);
-}
-.recipe-view-modal pre {
-  background: var(--cell-bg);
-  padding: 8px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--cell-border);
-  color: var(--text-primary);
-}
-
-/* ===== КНОПКИ В КАРТОЧКЕ РЕЦЕПТА ===== */
-.recipe-view-modal .recipe-card-buttons {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-}
-.recipe-view-modal .recipe-card-buttons .btn-primary,
-.recipe-view-modal .recipe-card-buttons .btn-secondary {
-  flex: 1;
-  justify-content: center;
-  text-align: center;
-  padding: var(--btn-padding);
-  border-radius: var(--radius-lg);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition-fast);
-  appearance: none;
-}
-.recipe-view-modal .btn-primary {
-  background: var(--accent-color);
-  color: var(--accent-text);
-  border: none;
-  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.25);
-}
-.recipe-view-modal .btn-primary:hover {
-  filter: brightness(1.05);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(255, 107, 53, 0.3);
-}
-.recipe-view-modal .btn-primary:active {
-  transform: translateY(0);
-}
-.recipe-view-modal .btn-secondary {
-  background: transparent;
-  border: 1.5px solid var(--text-muted);
-  color: var(--text-primary);
-}
-.recipe-view-modal .btn-secondary:hover {
-  background: var(--cell-bg);
-  border-color: var(--text-primary);
-  transform: translateY(-2px);
-}
-
-/* ===== СПИСОК ПОКУПОК ===== */
-#shoppingListDisplay .shopping-group {
-  margin-bottom: 14px;
-}
-#shoppingListDisplay .shopping-group h4 {
-  font-weight: 700;
-  font-size: 16px;
-  color: var(--text-primary);
-  margin-bottom: 4px;
-  border-left: 4px solid var(--accent-color);
-  padding-left: 8px;
-}
-#shoppingListDisplay .shopping-item {
-  font-size: 14px;
-  color: var(--text-secondary);
-  padding: 4px 0 4px 12px;
-  border-bottom: 1px dashed var(--cell-border);
-}
-#shoppingListDisplay .shopping-item::before {
-  content: '•';
-  color: var(--accent-color);
-  font-weight: bold;
-  margin-right: 6px;
-}
-
-#shoppingListResult {
-  width: 100%;
-  min-height: 150px;
-  padding: var(--spacing-sm);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--cell-border);
-  background: var(--input-bg);
-  color: var(--text-primary);
-  font-family: inherit;
-  font-size: 14px;
-  resize: vertical;
-  transition: var(--transition-fast);
-}
-#shoppingListResult:focus {
-  border-color: var(--accent-color);
-  box-shadow: 0 0 0 3px var(--accent-light);
-}
-
-.saved-list-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 14px;
-  background: var(--card-bg);
-  border-radius: var(--radius-md);
-  margin-bottom: 6px;
-  border: 1px solid var(--cell-border);
-  cursor: pointer;
-  transition: var(--transition-fast);
-}
-.saved-list-item:hover {
-  background: var(--card-hover-bg);
-  transform: translateX(4px);
-}
-.saved-list-item .list-date {
-  font-weight: 500;
-  color: var(--text-primary);
-}
-.saved-list-item .list-delete {
-  background: none;
-  border: none;
-  font-size: 18px;
-  cursor: pointer;
-  color: var(--text-muted);
-  transition: var(--transition-fast);
-}
-.saved-list-item .list-delete:hover {
-  color: #e55a5a;
-  transform: scale(1.2);
-}
-
 /* ============================================================
-   ДОПОЛНИТЕЛЬНЫЕ ПРАВИЛА ДЛЯ ТЁМНОЙ ТЕМЫ
-   ============================================================ */
-body.dark-theme #shoppingListDisplay .shopping-item,
-body.dark-theme #shoppingListDisplay .shopping-group h4,
-body.dark-theme .saved-list-item .list-date,
-body.dark-theme #savedListsList .saved-list-item {
-  color: var(--text-primary) !important;
-}
-body.dark-theme #shoppingListDisplay .shopping-item::before {
-  color: var(--accent-color);
-}
-
-body.dark-theme #shoppingListOverlay .form-group label,
-body.dark-theme #shoppingListOverlay h4,
-body.dark-theme #savedListsContainer h4 {
-  color: var(--text-primary) !important;
-}
-
-/* ============================================================
-   БЛОК ЭКСПОРТА/ИМПОРТА
-   ============================================================ */
-.backup-section {
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 2px solid var(--cell-border);
-  text-align: center;
-}
-.backup-row {
-  display: flex;
-  justify-content: center;
-  gap: var(--spacing-md);
-  flex-wrap: wrap;
-}
-.backup-row .btn {
-  min-width: 140px;
-  max-width: 200px;
-}
-.backup-hint {
-  margin-top: 8px;
-  font-size: 13px;
-  color: var(--text-muted);
-  line-height: 1.5;
-}
-.backup-hint strong {
-  color: var(--text-primary);
-}
-
-/* ============================================================
-   АДАПТИВНОСТЬ
-   ============================================================ */
-@media (max-width: 480px) {
-  .backup-row .btn {
-    min-width: 120px;
-    max-width: 160px;
-    font-size: 13px;
-    padding: var(--spacing-xs) var(--spacing-sm);
-  }
-  .backup-section {
-    margin-top: 16px;
-    padding-top: 12px;
-  }
-  .welcome-modal {
-    padding: var(--spacing-md) var(--spacing-sm);
-    max-width: 100%;
-  }
-  .welcome-modal h2 {
-    font-size: 20px;
-  }
-  .welcome-modal .welcome-features {
-    grid-template-columns: 1fr;
-  }
-  .welcome-modal .welcome-text {
-    font-size: 13px;
-  }
-  .welcome-modal .welcome-btn {
-    font-size: 15px;
-    padding: 8px 24px;
-    min-width: 140px;
-  }
-
-  .app {
-    padding: var(--spacing-md) var(--spacing-sm);
-    border-radius: var(--radius-md);
-  }
-  .logo h1 {
-    font-size: 22px;
-  }
-  .logo h1::before {
-    height: 22px;
-  }
-
-  #monthTitle {
-    font-size: 18px;
-    min-width: 80px;
-  }
-  .month-nav button {
-    padding: 4px 10px;
-    font-size: 18px;
-    min-height: 34px;
-    min-width: 34px;
-  }
-  .today-btn {
-    font-size: 13px;
-    padding: var(--spacing-xs) 14px;
-    min-height: 34px;
-  }
-  .day-cell {
-    min-height: 44px;
-    padding: 4px var(--spacing-xs);
-    border-radius: 14px;
-  }
-  .day-number {
-    font-size: 13px;
-  }
-  .week-row {
-    grid-template-columns: 30px 50px 1fr;
-    gap: var(--spacing-xs);
-    padding: var(--spacing-xs) var(--spacing-sm);
-    border-radius: 10px;
-  }
-  .week-row .date-col {
-    font-size: 13px;
-  }
-  .week-row .day-col {
-    font-size: 11px;
-  }
-  .meal-chip {
-    font-size: 11px;
-    padding: 2px 6px;
-  }
-  .btn-row .btn {
-    min-width: 120px;
-    max-width: 180px;
-    font-size: 13px;
-    padding: var(--spacing-xs) var(--spacing-sm);
-  }
-  .modal {
-    padding: 16px var(--spacing-md);
-    border-radius: var(--radius-md);
-  }
-  .modal-header h3 {
-    font-size: 18px;
-  }
-  .modal-dish {
-    font-size: 15px;
-    padding: 8px 2px;
-    gap: 4px 8px;
-  }
-  .day-group-title {
-    font-size: 14px;
-  }
-  .day-group-status-label {
-    font-size: 12px;
-    margin: 8px 0 3px;
-  }
-  .modal-dish .status-toggle-btn {
-    font-size: 20px;
-    min-width: 28px;
-    min-height: 28px;
-  }
-  .modal-add-new .field-half {
-    flex: 0 0 100%;
-    max-width: 100%;
-  }
-  .modal-field-input,
-  .modal-field-select {
-    font-size: 12px;
-  }
-  .modal-add-new .field-btn {
-    font-size: 12px;
-    padding: 6px 16px;
-  }
-  .rec-modal .rec-item {
-    font-size: 13px;
-    padding: 6px 10px;
-  }
-  .import-hint {
-    font-size: 11px;
-  }
-  #shoppingListDisplay .shopping-group h4 {
-    font-size: 15px;
-  }
-  #shoppingListDisplay .shopping-item {
-    font-size: 13px;
-  }
-  .calendar-header {
-    flex-wrap: nowrap;
-  }
-  .month-nav-wrapper {
-    flex: 1 1 auto;
-  }
-
-  .recipe-view-modal .recipe-card-buttons {
-    flex-direction: column;
-  }
-  .recipe-view-modal .recipe-card-buttons .btn-primary,
-  .recipe-view-modal .recipe-card-buttons .btn-secondary {
-    width: 100%;
-    font-size: 13px;
-    padding: 8px 16px;
-  }
-}
-
-@media (min-width: 480px) {
-  .modal-field-input,
-  .modal-field-select {
-    font-size: 13px;
-  }
-  .modal-add-new .field-half {
-    flex: 0 0 calc(50% - 8px);
-    max-width: calc(50% - 8px);
-  }
-  .modal-add-new {
-    gap: var(--spacing-md);
-  }
-}
-
-@media (min-width: 700px) {
-  .app {
-    padding: var(--spacing-xl) var(--spacing-xl);
-    border-radius: var(--radius-lg);
-  }
-
-  .day-cell {
-    min-height: 72px;
-    padding: 8px 4px;
-  }
-  .day-number {
-    font-size: 16px;
-  }
-  .app-header {
-    flex-direction: row;
-    justify-content: space-between;
-  }
-  .logo h1 {
-    font-size: 28px;
-  }
-  .btn-row .btn {
-    min-width: 160px;
-    max-width: 240px;
-  }
-  .week-row {
-    grid-template-columns: 50px 80px 1fr;
-    gap: 10px;
-    padding: var(--spacing-sm) var(--spacing-md);
-  }
-  .week-row .date-col {
-    font-size: 15px;
-  }
-  .week-row .day-col {
-    font-size: 13px;
-  }
-  .meal-chip {
-    font-size: 13px;
-    padding: 2px 10px;
-  }
-  .modal {
-    padding: var(--spacing-xl) var(--spacing-md);
-    max-width: 540px;
-  }
-  .modal-add-new {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-  }
-  .modal-add-new .field-half {
-    flex: 0 0 calc(50% - 8px);
-    max-width: calc(50% - 8px);
-  }
-  .rec-modal .modal {
-    max-width: 480px;
-  }
-
-  .calendar-header {
-    flex-direction: row;
-    align-items: center;
-    gap: var(--spacing-sm);
-    flex-wrap: nowrap;
-  }
-  .month-nav-wrapper {
-    order: 0;
-    justify-content: center;
-    flex-wrap: nowrap;
-    flex: 1 1 auto;
-  }
-  .today-btn {
-    order: 1;
-    align-self: center;
-    width: auto;
-    padding: var(--spacing-sm) var(--spacing-lg);
-    font-size: 15px;
-    min-height: 40px;
-    flex-shrink: 0;
-  }
-  #monthTitle {
-    font-size: 22px;
-    min-width: 140px;
-  }
-  .month-nav button {
-    padding: 6px 14px;
-    font-size: 22px;
-    min-height: 40px;
-    min-width: 40px;
-  }
-}
-
-@media (min-width: 1000px) {
-  .day-cell {
-    min-height: 80px;
-    padding: 10px 6px;
-  }
-  .day-number {
-    font-size: 18px;
-  }
-  .modal-add-new .field-half {
-    flex: 0 0 calc(50% - 10px);
-    max-width: calc(50% - 10px);
-  }
-}
-
-/* ===== ДОПОЛНИТЕЛЬНЫЕ КЛАССЫ ===== */
-
-.rec-category-desc {
-  margin-bottom: 16px;
-  color: var(--text-secondary);
-}
-
-.category-choice-btn {
-  display: block;
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 8px;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--cell-border);
-  background: var(--card-bg);
-  font-size: 16px;
-  cursor: pointer;
-  transition: var(--transition-fast);
-  color: var(--text-primary);
-}
-
-.category-choice-btn:hover {
-  background: var(--card-hover-bg);
-  transform: translateX(4px);
-}
-
-.rec-back-btn {
-  margin-top: 12px;
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.recipe-category-header {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text-primary);
-  padding: 6px 10px;
-  background: var(--badge-bg);
-  border-radius: var(--radius-sm);
-  margin-bottom: 8px;
-  border-left: 4px solid var(--accent-color);
-}
-
-.recipe-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.recipe-list-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 14px;
-  border-bottom: 1px solid var(--cell-border);
-  border-radius: var(--radius-sm);
-  transition: var(--transition-fast);
-  color: var(--text-primary);
-}
-
-.recipe-list-item:hover {
-  background: var(--day-hover);
-}
-
-.recipe-name-clickable {
-  cursor: pointer;
-  flex: 1;
-}
-
-.recipe-edit-btn {
-  background: none;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-  color: var(--text-muted);
-  transition: var(--transition-fast);
-  padding: 0 6px;
-}
-
-.recipe-edit-btn:hover {
-  color: var(--text-primary);
-}
-
-.recipe-view-modal {
-  max-width: 500px;
-}
-
-.recipe-ingredients {
-  margin-bottom: 12px;
-}
-
-.recipe-ingredients-list {
-  list-style: none;
-  padding-left: 0;
-  margin: 4px 0;
-}
-
-.recipe-ingredients-list li {
-  padding: 2px 0;
-  border-bottom: 1px solid var(--cell-border);
-}
-
-.recipe-instructions {
-  margin-top: 8px;
-}
-
-.recipe-instructions-text {
-  white-space: pre-wrap;
-  font-family: inherit;
-  margin: 4px 0;
-}
-
-.recipe-card-buttons {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.shopping-list-header {
-  margin-bottom: 8px;
-  font-size: 14px;
-  color: var(--text-secondary);
-}
-
-.suggest-title {
-  margin-top: 12px;
-}
-
-.meal-chip {
-  touch-action: none;
-}
-
-/* ============================================================
-   ФИНАЛЬНОЕ ИСПРАВЛЕНИЕ КНОПОК В КАРТОЧКЕ РЕЦЕПТА
-   ============================================================ */
-.recipe-view-modal .recipe-card-buttons .btn-primary {
-  background: var(--accent-color) !important;
-  color: var(--accent-text) !important;
-  border: none !important;
-  padding: 8px 20px !important;
-  border-radius: var(--radius-lg) !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  cursor: pointer !important;
-  flex: 1 !important;
-  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.25) !important;
-  transition: 0.15s !important;
-}
-
-.recipe-view-modal .recipe-card-buttons .btn-primary:hover {
-  filter: brightness(1.05) !important;
-  transform: translateY(-2px) !important;
-}
-
-.recipe-view-modal .recipe-card-buttons .btn-secondary {
-  background: transparent !important;
-  color: var(--text-primary) !important;
-  border: 1.5px solid var(--text-muted) !important;
-  padding: 8px 20px !important;
-  border-radius: var(--radius-lg) !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  cursor: pointer !important;
-  flex: 1 !important;
-  transition: 0.15s !important;
-}
-
-.recipe-view-modal .recipe-card-buttons .btn-secondary:hover {
-  background: var(--cell-bg) !important;
-  border-color: var(--text-primary) !important;
-  transform: translateY(-2px) !important;
-}
-
-@media (max-width: 480px) {
-  .recipe-view-modal .recipe-card-buttons {
-    flex-direction: column !important;
-  }
-}
-
-/* ============================================================
-   КАТЕГОРИЯ «ВЫПЕЧКА»
-   ============================================================ */
-.menu-item.category-bakery {
-  border-left-color: var(--color-bakery);
-}
-
-:root {
-  --color-bakery: #d97706;
-}
-
-body.dark-theme {
-  --color-bakery: #fbbf24;
-}
-
-/* ============================================================
-   ПАНЕЛЬ КНОПОК В МОДАЛКЕ «МОИ РЕЦЕПТЫ»
-   ============================================================ */
-.recipes-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 14px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--cell-border);
-}
-
-.recipes-toolbar button {
-  flex: 1 1 0;
-  min-width: 100px;
-  padding: 10px 14px;
-  border-radius: 14px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  appearance: none;
-  border: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  white-space: nowrap;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-  line-height: 1.2;
-}
-
-.recipes-toolbar .btn-done {
-  background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
-  color: var(--accent-text);
-  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.25);
-}
-.recipes-toolbar .btn-done:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(255, 107, 53, 0.35);
-  filter: brightness(1.05);
-}
-.recipes-toolbar .btn-done:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(255, 107, 53, 0.25);
-}
-
-.recipes-toolbar .btn-secondary {
-  background: var(--card-bg);
-  border: 1.5px solid var(--cell-border);
-  color: var(--text-primary);
-}
-.recipes-toolbar .btn-secondary:hover {
-  background: var(--card-hover-bg);
-  border-color: var(--accent-color);
-  color: var(--accent-color);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
-}
-.recipes-toolbar .btn-secondary:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-}
-
-@media (max-width: 480px) {
-  .recipes-toolbar button {
-    flex: 1 1 calc(50% - 4px);
-    min-width: 0;
-    font-size: 12px;
-    padding: 9px 10px;
-    border-radius: 12px;
-  }
-  .recipes-toolbar .btn-done {
-    flex: 1 1 100%;
-  }
-}
-
-body.dark-theme .recipes-toolbar button {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
-}
-body.dark-theme .recipes-toolbar .btn-done {
-  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.35);
-}
-body.dark-theme .recipes-toolbar .btn-secondary:hover {
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
-}
-
-/* ============================================================
-   ФИНАЛЬНАЯ ПАНЕЛЬ КНОПОК В МОДАЛКЕ «МОИ РЕЦЕПТЫ»
-   ============================================================ */
-.recipes-toolbar {
-  display: flex !important;
-  flex-wrap: wrap !important;
-  gap: 8px !important;
-  margin-bottom: 16px !important;
-  padding-bottom: 16px !important;
-  border-bottom: 1px solid var(--cell-border) !important;
-}
-
-.recipes-toolbar > button {
-  flex: 1 1 0 !important;
-  min-width: 0 !important;
-  height: 42px !important;
-  padding: 0 16px !important;
-  border-radius: 14px !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  font-family: inherit !important;
-  cursor: pointer !important;
-  transition: all 0.2s ease !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 6px !important;
-  white-space: nowrap !important;
-  box-sizing: border-box !important;
-}
-
-.recipes-toolbar > .btn-done {
-  background: linear-gradient(135deg, #ff6b35, #e55a2b) !important;
-  color: #ffffff !important;
-  border: none !important;
-  box-shadow: 0 4px 14px rgba(255, 107, 53, 0.35) !important;
-}
-.recipes-toolbar > .btn-done:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: 0 6px 20px rgba(255, 107, 53, 0.45) !important;
-  filter: brightness(1.05) !important;
-}
-.recipes-toolbar > .btn-done:active {
-  transform: translateY(0) !important;
-}
-
-.recipes-toolbar > .btn-secondary {
-  background: var(--card-bg) !important;
-  color: var(--text-primary) !important;
-  border: 1.5px solid var(--cell-border) !important;
-}
-.recipes-toolbar > .btn-secondary:hover {
-  background: var(--card-hover-bg) !important;
-  border-color: #ff6b35 !important;
-  color: #ff6b35 !important;
-  transform: translateY(-2px) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
-}
-.recipes-toolbar > .btn-secondary:active {
-  transform: translateY(0) !important;
-}
-
-@media (max-width: 480px) {
-  .recipes-toolbar > button {
-    flex: 1 1 calc(50% - 4px) !important;
-    font-size: 13px !important;
-    padding: 0 10px !important;
-  }
-  .recipes-toolbar > .btn-done {
-    flex: 1 1 100% !important;
-  }
-}
-
-/* ============================================================
-   КНОПКА УДАЛЕНИЯ РЕЦЕПТА
-   ============================================================ */
-.recipe-delete-btn {
-  background: none;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-  color: var(--text-muted);
-  transition: var(--transition-fast);
-  padding: 0 6px;
-}
-.recipe-delete-btn:hover {
-  color: #e55a5a;
-  transform: scale(1.2);
-}
-
-/* ============================================================
-   ФИЛЬТРЫ В МОДАЛКЕ «МОИ РЕЦЕПТЫ»
-   ============================================================ */
-.recipes-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-
-.recipes-filters input,
-.recipes-filters select {
-  padding: 8px 14px;
-  border-radius: 14px;
-  border: 1px solid var(--cell-border);
-  background: var(--search-bg);
-  font-size: 13px;
-  color: var(--text-primary);
-  outline: none;
-  transition: var(--transition-fast);
-  appearance: none;
-  min-width: 0;
-}
-
-.recipes-filters input {
-  flex: 2 1 160px;
-}
-
-.recipes-filters select {
-  flex: 1 1 120px;
-}
-
-.recipes-filters input:focus,
-.recipes-filters select:focus {
-  border-color: var(--accent-color);
-  box-shadow: 0 0 0 3px var(--accent-light);
-}
-
-@media (max-width: 480px) {
-  .recipes-filters input,
-  .recipes-filters select {
-    flex: 1 1 100%;
-  }
-}
-
-/* ============================================================
-   КАРТОЧКА РЕЦЕПТА — ФИНАЛЬНАЯ СТИЛИЗАЦИЯ
+   19. КАРТОЧКА РЕЦЕПТА (просмотр)
    ============================================================ */
 .recipe-view-modal {
   max-width: 520px;
@@ -2816,283 +1902,328 @@ body.dark-theme .recipes-toolbar .btn-secondary:hover {
 }
 
 .recipe-view-modal .recipe-card-buttons {
+  display: flex;
+  gap: 8px;
   margin-top: 16px;
 }
 
-@media (max-width: 480px) {
-  .recipe-view-titlerow h3 {
-    font-size: 19px;
-  }
-  .recipe-view-modal .recipe-section-title {
-    font-size: 14px;
-  }
-  .recipe-view-modal .recipe-ingredients-list li,
-  .recipe-view-modal .recipe-instructions-text {
-    font-size: 13px;
-  }
-}
-
-/* ============================================================
-   КНОПКИ ВЫБОРА ФОРМАТА В МОДАЛКЕ ЭКСПОРТА РЕЦЕПТОВ
-   ============================================================ */
-.export-modal .recipe-export-option {
-  display: block;
-  width: 100%;
-  padding: var(--spacing-md);
-  margin-bottom: var(--spacing-sm);
-  border: 1px solid var(--cell-border);
+.recipe-view-modal .recipe-card-buttons .btn-primary,
+.recipe-view-modal .recipe-card-buttons .btn-secondary {
+  flex: 1;
+  justify-content: center;
+  text-align: center;
+  padding: var(--btn-padding);
   border-radius: var(--radius-lg);
-  background: var(--card-bg);
-  cursor: pointer;
-  transition: var(--transition-fast);
-  text-align: left;
-  font-size: 15px;
-  color: var(--text-primary);
-  appearance: none;
-}
-.export-modal .recipe-export-option:hover {
-  background: var(--card-hover-bg);
-  transform: translateX(4px);
-}
-.export-modal .recipe-export-option .export-label {
-  font-weight: 600;
-}
-.export-modal .recipe-export-option .export-desc {
-  font-size: 12px;
-  color: var(--text-muted);
-  display: block;
-  margin-top: 2px;
-}
-
-/* ============================================================
-   МОДАЛКА ЭКСПОРТА РЕЦЕПТОВ — ПОВЕРХ МОДАЛКИ «МОИ РЕЦЕПТЫ»
-   ============================================================ */
-#recipeExportOverlay {
-  z-index: 1100;
-}
-
-/* ============================================================
-   КНОПКА ✎ В СПИСКЕ МЕНЮ
-   ============================================================ */
-.menu-item .menu-item-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
-.menu-item .menu-item-edit-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
   font-size: 14px;
-  color: var(--text-muted);
-  padding: 0 4px;
-  line-height: 1;
-  transition: var(--transition-fast);
-  appearance: none;
-}
-.menu-item .menu-item-edit-btn:hover {
-  color: var(--accent-color);
-  transform: scale(1.15);
-}
-.menu-item .menu-item-edit-btn:focus-visible {
-  outline: 2px solid var(--accent-color);
-  outline-offset: 2px;
-}
-
-/* ============================================================
-   ГРУППА A — стили для кликов и книжки рецепта
-   ============================================================ */
-.modal-dish .dish-name:hover .dish-name-text {
-  color: var(--accent-color);
-}
-.modal-dish .dish-name:focus-visible {
-  outline: 2px solid var(--accent-color);
-  outline-offset: 2px;
-  border-radius: 6px;
-}
-
-.modal-dish .recipe-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  padding: 2px 9px;
-  border-radius: 999px;
-  border: 1px solid var(--accent-color);
-  background: var(--accent-light);
-  color: var(--accent-color);
-  font-size: 11px;
   font-weight: 600;
-  line-height: 1.5;
   cursor: pointer;
   transition: var(--transition-fast);
   appearance: none;
   font-family: inherit;
-  white-space: nowrap;
 }
-.modal-dish .recipe-chip:hover {
+
+.recipe-view-modal .recipe-card-buttons .btn-primary {
   background: var(--accent-color);
   color: var(--accent-text);
-  transform: scale(1.04);
+  border: none;
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.25);
 }
-.modal-dish .recipe-chip:focus-visible {
-  outline: 2px solid var(--accent-color);
-  outline-offset: 2px;
+.recipe-view-modal .recipe-card-buttons .btn-primary:hover {
+  filter: brightness(1.05);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(255, 107, 53, 0.3);
 }
-
-.menu-item .menu-item-name {
-  cursor: pointer;
-  flex: 1;
-  min-width: 0;
-  word-break: break-word;
-  padding-right: 8px;
-  transition: var(--transition-fast);
-}
-.menu-item .menu-item-name:hover {
-  color: var(--accent-color);
-}
-.menu-item .menu-item-name:focus-visible {
-  outline: 2px solid var(--accent-color);
-  outline-offset: 2px;
-  border-radius: 4px;
+.recipe-view-modal .recipe-card-buttons .btn-primary:active {
+  transform: translateY(0);
 }
 
-body.dark-theme .modal-dish .recipe-chip {
-  background: rgba(255, 107, 53, 0.18);
+.recipe-view-modal .recipe-card-buttons .btn-secondary {
+  background: transparent;
+  border: 1.5px solid var(--text-muted);
+  color: var(--text-primary);
 }
-body.dark-theme .modal-dish .recipe-chip:hover {
-  background: var(--accent-color);
-  color: #1a1a1a;
+.recipe-view-modal .recipe-card-buttons .btn-secondary:hover {
+  background: var(--cell-bg);
+  border-color: var(--text-primary);
+  transform: translateY(-2px);
 }
 
 /* ============================================================
-   ПЕРЕКЛЮЧАТЕЛЬ СТАТУСА — ПЕРВАЯ КОЛОНКА КАРТОЧКИ (v4.0)
+   20. МОДАЛКА «МОИ РЕЦЕПТЫ» — ПАНЕЛЬ, ФИЛЬТРЫ, СПИСОК
    ============================================================ */
-.modal-dish .status-toggle-btn {
-  background: none;
-  border: none;
-  font-size: 22px;
-  line-height: 1;
+.recipes-back-btn {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 12px;
   cursor: pointer;
-  padding: 0 2px;
-  opacity: 0.9;
+  background: transparent;
+  border: 1.5px solid var(--text-muted);
+  color: var(--text-primary);
   transition: var(--transition-fast);
   appearance: none;
   font-family: inherit;
+}
+.recipes-back-btn:hover {
+  background: var(--cell-bg);
+  border-color: var(--text-primary);
+}
+.recipes-back-btn:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+.recipes-back-btn[hidden] {
+  display: none;
+}
+
+.recipes-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--cell-border);
+}
+
+.recipes-toolbar > button {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 42px;
+  padding: 0 16px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 32px;
-  min-height: 32px;
-}
-.modal-dish .status-toggle-btn:hover {
-  opacity: 1;
-  transform: scale(1.15);
-}
-.modal-dish .status-toggle-btn:active {
-  transform: scale(0.95);
-}
-.modal-dish .status-toggle-btn:focus-visible {
-  outline: 2px solid var(--accent-color);
-  outline-offset: 2px;
-  border-radius: 6px;
+  gap: 6px;
+  white-space: nowrap;
+  box-sizing: border-box;
+  appearance: none;
 }
 
-/* ============================================================
-   ГРУППА C — 👍/👎 и «Повторить меню»
-   ============================================================ */
-.modal-dish .thumb-btn {
-  background: none;
+.recipes-toolbar > .btn-done {
+  background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+  color: #ffffff;
   border: none;
-  font-size: 17px;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0 3px;
-  opacity: 0.35;
-  filter: grayscale(1);
-  transition: var(--transition-fast);
-  appearance: none;
-  font-family: inherit;
+  box-shadow: 0 4px 14px rgba(255, 107, 53, 0.35);
 }
-.modal-dish .thumb-btn:hover {
-  opacity: 0.7;
-  filter: grayscale(0.3);
-  transform: scale(1.15);
+.recipes-toolbar > .btn-done:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 53, 0.45);
+  filter: brightness(1.05);
 }
-.modal-dish .thumb-btn.active {
-  opacity: 1;
-  filter: none;
-}
-.modal-dish .thumb-btn:focus-visible {
-  outline: 2px solid var(--accent-color);
-  outline-offset: 2px;
-  border-radius: 4px;
+.recipes-toolbar > .btn-done:active {
+  transform: translateY(0);
 }
 
-.modal-dish.liked .dish-name {
-  color: var(--liked-color);
+.recipes-toolbar > .btn-secondary {
+  background: var(--card-bg);
+  color: var(--text-primary);
+  border: 1.5px solid var(--cell-border);
 }
-
-.meal-chip.liked {
-  border-left-color: var(--done-color);
-  background: rgba(16, 185, 129, 0.08);
-}
-
-.repeat-menu-btn {
-  display: block;
-  width: 100%;
-  margin: 12px 0;
-  padding: 10px 16px;
-  border-radius: var(--radius-md);
-  border: 1.5px dashed var(--accent-color);
-  background: var(--accent-light);
+.recipes-toolbar > .btn-secondary:hover {
+  background: var(--card-hover-bg);
+  border-color: var(--accent-color);
   color: var(--accent-color);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition-fast);
-  appearance: none;
-  font-family: inherit;
-  text-align: center;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
-.repeat-menu-btn:hover {
-  background: var(--accent-color);
-  color: var(--accent-text);
-  transform: translateY(-1px);
-}
-.repeat-menu-btn:focus-visible {
-  outline: 2px solid var(--accent-color);
-  outline-offset: 2px;
+.recipes-toolbar > .btn-secondary:active {
+  transform: translateY(0);
 }
 
-.modal-desc {
-  color: var(--text-secondary);
-  font-size: 14px;
-  margin-bottom: 12px;
-  line-height: 1.5;
+body.dark-theme .recipes-toolbar > button {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+body.dark-theme .recipes-toolbar > .btn-done {
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.35);
+}
+body.dark-theme .recipes-toolbar > .btn-secondary:hover {
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
 }
 
-#repeatMenuDate {
-  width: 100%;
-  padding: 10px 14px;
-  border-radius: var(--radius-lg);
+/* Фильтры «Мои рецепты» */
+.recipes-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.recipes-filters input,
+.recipes-filters select {
+  padding: 8px 14px;
+  border-radius: 14px;
   border: 1px solid var(--cell-border);
-  background: var(--input-bg);
-  font-size: 15px;
+  background: var(--search-bg);
+  font-size: 13px;
   color: var(--text-primary);
   outline: none;
   transition: var(--transition-fast);
   appearance: none;
-  font-family: inherit;
+  min-width: 0;
 }
-#repeatMenuDate:focus {
+
+.recipes-filters input {
+  flex: 2 1 160px;
+}
+
+.recipes-filters select {
+  flex: 1 1 120px;
+}
+
+.recipes-filters input:focus,
+.recipes-filters select:focus {
   border-color: var(--accent-color);
   box-shadow: 0 0 0 3px var(--accent-light);
 }
 
+/* Список рецептов с группировкой */
+.recipe-category-section {
+  margin-bottom: 12px;
+}
+
+.recipe-category-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  padding: 8px 10px;
+  background: var(--badge-bg);
+  border: none;
+  border-left: 4px solid var(--accent-color);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  appearance: none;
+  box-sizing: border-box;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.recipe-category-header:hover {
+  background: var(--day-hover);
+}
+.recipe-category-header:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+.recipe-category-header:active {
+  transform: scale(0.995);
+}
+
+.recipe-category-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--accent-color);
+  flex-shrink: 0;
+  transition: transform var(--transition-fast);
+  transform: rotate(90deg);
+}
+.recipe-category-section.collapsed .recipe-category-arrow {
+  transform: rotate(0deg);
+}
+
+.recipe-category-title {
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.recipe-category-count {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.recipe-category-section.collapsed .recipe-list {
+  display: none;
+}
+
+body.dark-theme .recipe-category-header {
+  background: rgba(255, 255, 255, 0.04);
+}
+body.dark-theme .recipe-category-header:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.recipe-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.recipe-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--cell-border);
+  border-radius: var(--radius-sm);
+  transition: var(--transition-fast);
+  color: var(--text-primary);
+}
+.recipe-list-item:hover {
+  background: var(--day-hover);
+}
+
+.recipe-name-clickable {
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+}
+.recipe-name-clickable:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.recipe-edit-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: var(--transition-fast);
+  padding: 0 6px;
+}
+.recipe-edit-btn:hover {
+  color: var(--text-primary);
+  transform: scale(1.15);
+}
+
+.recipe-delete-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: var(--transition-fast);
+  padding: 0 6px;
+}
+.recipe-delete-btn:hover {
+  color: #e55a5a;
+  transform: scale(1.2);
+}
+
 /* ============================================================
-   ГРУППА D — список покупок
+   21. СПИСОК ПОКУПОК
    ============================================================ */
 .shopping-dates-row {
   display: flex;
@@ -3145,7 +2276,9 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 16px rgba(255, 107, 53, 0.3);
 }
-.shopping-generate-btn:active { transform: translateY(0); }
+.shopping-generate-btn:active {
+  transform: translateY(0);
+}
 
 .shopping-saved-block {
   margin-top: 8px;
@@ -3174,6 +2307,39 @@ body.dark-theme .modal-dish .recipe-chip:hover {
 .shopping-back-btn:hover {
   background: var(--cell-bg);
   border-color: var(--text-primary);
+}
+
+.saved-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: var(--card-bg);
+  border-radius: var(--radius-md);
+  margin-bottom: 6px;
+  border: 1px solid var(--cell-border);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+.saved-list-item:hover {
+  background: var(--card-hover-bg);
+  transform: translateX(4px);
+}
+.saved-list-item .list-date {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.saved-list-item .list-delete {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: var(--transition-fast);
+}
+.saved-list-item .list-delete:hover {
+  color: #e55a5a;
+  transform: scale(1.2);
 }
 
 .shopping-list-view {
@@ -3317,21 +2483,226 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   transform: translateY(-2px);
 }
 
-@media (max-width: 480px) {
-  .shopping-actions-row button {
-    flex: 1 1 calc(50% - 4px);
-    font-size: 12px;
-    padding: 8px 10px;
-  }
+body.dark-theme #shoppingListDisplay .shopping-group h4,
+body.dark-theme .saved-list-item .list-date,
+body.dark-theme #savedListsList .saved-list-item {
+  color: var(--text-primary);
 }
 
-.saved-list-item .list-date {
-  font-weight: 500;
+body.dark-theme #shoppingListOverlay .form-group label,
+body.dark-theme #shoppingListOverlay h4,
+body.dark-theme #savedListsContainer h4 {
   color: var(--text-primary);
 }
 
 /* ============================================================
-   ОБУЧАЮЩИЙ ТУР (ONBOARDING)
+   22. БЛОК ЭКСПОРТА/ИМПОРТА (на главной)
+   ============================================================ */
+.backup-section {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 2px solid var(--cell-border);
+  text-align: center;
+}
+.backup-row {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+.backup-row .btn {
+  min-width: 140px;
+  max-width: 200px;
+}
+.backup-hint {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.backup-hint strong {
+  color: var(--text-primary);
+}
+
+/* ============================================================
+   23. СВАЙП-УДАЛЕНИЕ КАРТОЧКИ БЛЮДА
+   ============================================================ */
+.dish-swipe-wrap {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  margin-bottom: 6px;
+}
+
+.dish-swipe-wrap .modal-dish {
+  position: relative;
+  z-index: 1;
+  background: var(--modal-bg);
+  transition: transform 0.22s ease;
+  margin: 0;
+}
+
+.dish-swipe-wrap .modal-dish.swiping {
+  transition: none;
+  will-change: transform;
+}
+
+.dish-swipe-action {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: #e53935;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+  font-family: inherit;
+}
+
+.dish-swipe-action:active {
+  background: #c62828;
+}
+
+.dish-swipe-wrap.is-shifted .dish-swipe-action {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ============================================================
+   24. ПЛАШКА «ВЕРНУТЬ УДАЛЁННОЕ»
+   ============================================================ */
+.undo-snackbar {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: 84px;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: #2a2a30;
+  color: #fff;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.28);
+  transform: translateY(calc(100% + 20px));
+  opacity: 0;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+  pointer-events: none;
+}
+
+.undo-snackbar.visible {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.undo-snackbar-text {
+  flex: 1 1 auto;
+  font-size: 14px;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.undo-snackbar-btn {
+  flex: 0 0 auto;
+  background: none;
+  border: none;
+  color: #ffb27a;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 4px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  font-family: inherit;
+}
+
+.undo-snackbar-btn:active {
+  opacity: 0.7;
+}
+
+/* ============================================================
+   25. ПОДСКАЗКИ НА ЭКРАНЕ «СЕГОДНЯ»
+   ============================================================ */
+.today-hints {
+  margin: 24px 0 8px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.04);
+  color: #555;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+body.dark-theme .today-hints {
+  background: rgba(255, 255, 255, 0.06);
+  color: #c2c2cc;
+}
+
+.today-hint-row {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.today-hint-row + .today-hint-row {
+  margin-top: 6px;
+}
+
+.today-hint-icon {
+  flex-shrink: 0;
+  width: 1.4em;
+  text-align: center;
+  font-size: 15px;
+  line-height: 1;
+}
+
+/* ============================================================
+   26. КНОПКА «ПОВТОРИТЬ МЕНЮ»
+   ============================================================ */
+.repeat-menu-btn {
+  display: block;
+  width: 100%;
+  margin: 12px 0;
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  border: 1.5px dashed var(--accent-color);
+  background: var(--accent-light);
+  color: var(--accent-color);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  appearance: none;
+  font-family: inherit;
+  text-align: center;
+}
+.repeat-menu-btn:hover {
+  background: var(--accent-color);
+  color: var(--accent-text);
+  transform: translateY(-1px);
+}
+.repeat-menu-btn:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   27. ОБУЧАЮЩИЙ ТУР (ONBOARDING)
    ============================================================ */
 .onboarding-overlay {
   display: none;
@@ -3546,244 +2917,8 @@ body.dark-theme .onboarding-modal {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
 }
 
-@media (max-width: 480px) {
-  .onboarding-modal {
-    padding: var(--spacing-md) var(--spacing-md) var(--spacing-xs);
-    border-radius: 20px;
-    max-height: 92vh;
-  }
-  .onboarding-icon { font-size: 44px; margin-bottom: var(--spacing-xs); }
-  .onboarding-title { font-size: 19px; }
-  .onboarding-text { font-size: 13px; line-height: 1.5; }
-  .onboarding-btn {
-    padding: 8px 14px;
-    font-size: 13px;
-  }
-  .onboarding-nav {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .onboarding-nav-right {
-    margin-left: 0;
-    width: 100%;
-    justify-content: space-between;
-  }
-  .onboarding-nav-right .onboarding-btn {
-    flex: 1 1 0;
-  }
-  .onboarding-btn-ghost {
-    width: 100%;
-    text-align: center;
-    order: 2;
-    margin-top: 4px;
-  }
-  .onboarding-dots { padding: var(--spacing-sm) 0 var(--spacing-xs); }
-}
-
 /* ============================================================
-   СВОРАЧИВАНИЕ КАТЕГОРИЙ В МОДАЛКЕ «МОИ РЕЦЕПТЫ»
-   ============================================================ */
-.recipe-category-header {
-  display: flex !important;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  text-align: left;
-  font-family: inherit;
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text-primary);
-  padding: 8px 10px;
-  background: var(--badge-bg);
-  border: none;
-  border-left: 4px solid var(--accent-color);
-  border-radius: var(--radius-sm);
-  margin-bottom: 8px;
-  cursor: pointer;
-  transition: var(--transition-fast);
-  appearance: none;
-  box-sizing: border-box;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-}
-.recipe-category-header:hover {
-  background: var(--day-hover);
-}
-.recipe-category-header:focus-visible {
-  outline: 2px solid var(--accent-color);
-  outline-offset: 2px;
-}
-.recipe-category-header:active {
-  transform: scale(0.995);
-}
-
-.recipe-category-arrow {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  line-height: 1;
-  color: var(--accent-color);
-  flex-shrink: 0;
-  transition: transform var(--transition-fast);
-  transform: rotate(90deg);
-}
-.recipe-category-section.collapsed .recipe-category-arrow {
-  transform: rotate(0deg);
-}
-
-.recipe-category-title {
-  flex: 1;
-  min-width: 0;
-  word-break: break-word;
-}
-
-.recipe-category-count {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-muted);
-  flex-shrink: 0;
-}
-
-.recipe-category-section.collapsed .recipe-list {
-  display: none;
-}
-
-body.dark-theme .recipe-category-header {
-  background: rgba(255, 255, 255, 0.04);
-}
-body.dark-theme .recipe-category-header:hover {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-/* ============================================================
-   УВАЖЕНИЕ К НАСТРОЙКЕ «УМЕНЬШИТЬ ДВИЖЕНИЕ»
-   ============================================================ */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-
-/* ============================================================
-   ПЕЧАТНАЯ ОБЛАСТЬ
-   ============================================================ */
-#printArea {
-  display: none;
-}
-
-/* ============================================================
-   СТИЛИ ДЛЯ ПЕЧАТИ
-   ============================================================ */
-@media print {
-  body > *:not(#printArea) {
-    display: none !important;
-  }
-
-  #printArea {
-    display: block !important;
-    font-family: Georgia, 'Times New Roman', serif;
-    color: #000;
-    background: #fff;
-    padding: 0;
-    margin: 0;
-  }
-
-  @page {
-    size: A4 portrait;
-    margin: 15mm 12mm;
-  }
-
-  html, body {
-    background: #fff !important;
-    color: #000 !important;
-    padding: 0 !important;
-    margin: 0 !important;
-  }
-
-  #printArea .print-header {
-    text-align: center;
-    border-bottom: 2px solid #000;
-    padding-bottom: 8px;
-    margin-bottom: 14px;
-  }
-  #printArea .print-title {
-    font-size: 22pt;
-    font-weight: 700;
-    margin: 0 0 4px 0;
-    letter-spacing: -0.5px;
-  }
-  #printArea .print-subtitle {
-    font-size: 11pt;
-    color: #333;
-    margin: 0;
-  }
-
-  #printArea .print-day {
-    margin-bottom: 12px;
-    page-break-inside: avoid;
-  }
-  #printArea .print-day-header {
-    font-size: 13pt;
-    font-weight: 700;
-    border-bottom: 1px solid #888;
-    padding-bottom: 3px;
-    margin-bottom: 5px;
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-  }
-  #printArea .print-day-date {
-    color: #333;
-    font-size: 11pt;
-    font-weight: normal;
-  }
-
-  #printArea .print-dishes {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 0 6px;
-  }
-  #printArea .print-dishes li {
-    font-size: 11pt;
-    line-height: 1.5;
-    padding: 1px 0;
-  }
-  #printArea .print-dish-mark {
-    display: inline-block;
-    width: 16px;
-    color: #666;
-  }
-  #printArea .print-dish-status {
-    color: #666;
-    font-size: 9pt;
-    margin-left: 4px;
-  }
-
-  #printArea .print-day-empty {
-    font-size: 10pt;
-    font-style: italic;
-    color: #888;
-    padding-left: 6px;
-  }
-
-  #printArea .print-footer {
-    margin-top: 16px;
-    padding-top: 8px;
-    border-top: 1px solid #888;
-    text-align: center;
-    font-size: 9pt;
-    color: #666;
-  }
-}
-
-/* ============================================================
-   МЕНЮ-ГАМБУРГЕР В ШАПКЕ
+   28. КНОПКА-ГАМБУРГЕР И ВЫПАДАЮЩЕЕ МЕНЮ В ШАПКЕ
    ============================================================ */
 .more-menu-wrap {
   position: relative;
@@ -3899,22 +3034,12 @@ body.dark-theme .recipe-category-header:hover {
   text-align: center;
 }
 
-@media (max-width: 480px) {
-  .more-menu {
-    min-width: 200px;
-  }
-  .more-menu-item {
-    font-size: 13px;
-    padding: 9px 10px;
-  }
-}
-
 body.dark-theme .more-menu {
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
 }
 
 /* ============================================================
-   BOTTOM NAVIGATION (v4.0)
+   29. НИЖНЯЯ НАВИГАЦИЯ (BOTTOM NAV)
    ============================================================ */
 .bottom-nav {
   position: fixed;
@@ -3977,37 +3102,7 @@ body {
 }
 
 /* ============================================================
-   КНОПКА «← НАЗАД» В МОДАЛКЕ «МОИ РЕЦЕПТЫ» (v4.0)
-   ============================================================ */
-.recipes-back-btn {
-  display: inline-block;
-  padding: 6px 14px;
-  border-radius: var(--radius-md);
-  font-size: 13px;
-  font-weight: 500;
-  margin-bottom: 12px;
-  cursor: pointer;
-  background: transparent;
-  border: 1.5px solid var(--text-muted);
-  color: var(--text-primary);
-  transition: var(--transition-fast);
-  appearance: none;
-  font-family: inherit;
-}
-.recipes-back-btn:hover {
-  background: var(--cell-bg);
-  border-color: var(--text-primary);
-}
-.recipes-back-btn:focus-visible {
-  outline: 2px solid var(--accent-color);
-  outline-offset: 2px;
-}
-.recipes-back-btn[hidden] {
-  display: none;
-}
-
-/* ============================================================
-   ПЕРЕКЛЮЧЕНИЕ КОНТЕНТА ПО ТАБАМ (v4.0)
+   30. ПЕРЕКЛЮЧЕНИЕ КОНТЕНТА ПО ТАБАМ
    ============================================================ */
 .tab-view {
   display: none;
@@ -4020,7 +3115,7 @@ body {
 }
 
 /* ============================================================
-   ЗАГОТОВКИ ЭКРАНОВ-ТАБОВ (v4.0)
+   31. ЭКРАНЫ-ЗАГЛУШКИ ВКЛАДОК
    ============================================================ */
 .tab-placeholder {
   padding: 40px 20px;
@@ -4076,20 +3171,8 @@ body {
   outline-offset: 2px;
 }
 
-@media (max-width: 480px) {
-  .tab-placeholder {
-    padding: 32px 16px;
-  }
-  .tab-placeholder-icon {
-    font-size: 48px;
-  }
-  .tab-placeholder-title {
-    font-size: 18px;
-  }
-}
-
 /* ============================================================
-   ЭКРАН «СЕГОДНЯ» (v4.0)
+   32. ЭКРАН «СЕГОДНЯ»
    ============================================================ */
 .today-header {
   display: flex;
@@ -4192,328 +3275,559 @@ body {
   transform: translateY(0);
 }
 
+/* ============================================================
+   33. ПЕЧАТНАЯ ОБЛАСТЬ
+   ============================================================ */
+#printArea {
+  display: none;
+}
+
+/* ============================================================
+   34. СТИЛИ ДЛЯ ПЕЧАТИ
+   ============================================================ */
+@media print {
+  body > *:not(#printArea) {
+    display: none !important;
+  }
+
+  #printArea {
+    display: block !important;
+    font-family: Georgia, 'Times New Roman', serif;
+    color: #000;
+    background: #fff;
+    padding: 0;
+    margin: 0;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 15mm 12mm;
+  }
+
+  html, body {
+    background: #fff !important;
+    color: #000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  #printArea .print-header {
+    text-align: center;
+    border-bottom: 2px solid #000;
+    padding-bottom: 8px;
+    margin-bottom: 14px;
+  }
+  #printArea .print-title {
+    font-size: 22pt;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+    letter-spacing: -0.5px;
+  }
+  #printArea .print-subtitle {
+    font-size: 11pt;
+    color: #333;
+    margin: 0;
+  }
+
+  #printArea .print-day {
+    margin-bottom: 12px;
+    page-break-inside: avoid;
+  }
+  #printArea .print-day-header {
+    font-size: 13pt;
+    font-weight: 700;
+    border-bottom: 1px solid #888;
+    padding-bottom: 3px;
+    margin-bottom: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  #printArea .print-day-date {
+    color: #333;
+    font-size: 11pt;
+    font-weight: normal;
+  }
+
+  #printArea .print-dishes {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 0 6px;
+  }
+  #printArea .print-dishes li {
+    font-size: 11pt;
+    line-height: 1.5;
+    padding: 1px 0;
+  }
+  #printArea .print-dish-mark {
+    display: inline-block;
+    width: 16px;
+    color: #666;
+  }
+  #printArea .print-dish-status {
+    color: #666;
+    font-size: 9pt;
+    margin-left: 4px;
+  }
+
+  #printArea .print-day-empty {
+    font-size: 10pt;
+    font-style: italic;
+    color: #888;
+    padding-left: 6px;
+  }
+
+  #printArea .print-footer {
+    margin-top: 16px;
+    padding-top: 8px;
+    border-top: 1px solid #888;
+    text-align: center;
+    font-size: 9pt;
+    color: #666;
+  }
+}
+
+/* ============================================================
+   35. УВАЖЕНИЕ К НАСТРОЙКЕ «УМЕНЬШИТЬ ДВИЖЕНИЕ»
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================
+   36. АДАПТИВНОСТЬ — МОБИЛЬНЫЙ (до 480px)
+   ============================================================ */
 @media (max-width: 480px) {
-  .today-date { font-size: 18px; }
-  .today-empty { padding: 24px 12px; }
-  .today-empty-icon { font-size: 40px; }
-  .today-action-btn { font-size: 14px; padding: 11px 14px; }
+  .meal-types-group {
+    gap: 6px;
+  }
+  .meal-type-checkbox {
+    padding: 8px 10px;
+    font-size: 13px;
+    gap: 6px;
+  }
+  .meal-type-checkbox input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+  }
+
+  .choice-modal {
+    padding: 20px 14px;
+    border-radius: 20px;
+    max-height: 92vh;
+  }
+  .choice-modal h2 {
+    font-size: 19px;
+    margin-bottom: 12px;
+  }
+  .choice-chip {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+  .choice-favorite-toggle {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+  .choice-result-item {
+    grid-template-columns: 24px minmax(0, 1fr) auto;
+    gap: 6px;
+    padding: 8px 4px;
+  }
+  .choice-result-name {
+    font-size: 14px;
+  }
+  .choice-result-last {
+    font-size: 11px;
+  }
+  .choice-action-btn {
+    font-size: 13px;
+    padding: 10px 12px;
+  }
+
+  .backup-row .btn {
+    min-width: 120px;
+    max-width: 160px;
+    font-size: 13px;
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+  .backup-section {
+    margin-top: 16px;
+    padding-top: 12px;
+  }
+
+  .welcome-modal {
+    padding: var(--spacing-md) var(--spacing-sm);
+    max-width: 100%;
+  }
+  .welcome-modal h2 {
+    font-size: 20px;
+  }
+  .welcome-modal .welcome-features {
+    grid-template-columns: 1fr;
+  }
+  .welcome-modal .welcome-text {
+    font-size: 13px;
+  }
+  .welcome-modal .welcome-btn {
+    font-size: 15px;
+    padding: 8px 24px;
+    min-width: 140px;
+  }
+
+  .app {
+    padding: var(--spacing-md) var(--spacing-sm);
+    border-radius: var(--radius-md);
+  }
+  .logo h1 {
+    font-size: 22px;
+  }
+  .logo h1::before {
+    height: 22px;
+  }
+
+  #monthTitle {
+    font-size: 18px;
+    min-width: 80px;
+  }
+  .month-nav button {
+    padding: 4px 10px;
+    font-size: 18px;
+    min-height: 34px;
+    min-width: 34px;
+  }
+  .today-btn {
+    font-size: 13px;
+    padding: var(--spacing-xs) 14px;
+    min-height: 34px;
+  }
+  .calendar-header {
+    flex-wrap: nowrap;
+  }
+  .month-nav-wrapper {
+    flex: 1 1 auto;
+  }
+
+  .day-cell {
+    min-height: 44px;
+    padding: 4px var(--spacing-xs);
+    border-radius: 14px;
+  }
+  .day-number {
+    font-size: 13px;
+  }
+
+  .week-row {
+    grid-template-columns: 30px 50px 1fr;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: 10px;
+  }
+  .week-row .date-col {
+    font-size: 13px;
+  }
+  .week-row .day-col {
+    font-size: 11px;
+  }
+  .meal-chip {
+    font-size: 11px;
+    padding: 2px 6px;
+  }
+
+  .btn-row .btn {
+    min-width: 120px;
+    max-width: 180px;
+    font-size: 13px;
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+
+  .modal {
+    padding: 16px var(--spacing-md);
+    border-radius: var(--radius-md);
+  }
+  .modal-header h3 {
+    font-size: 18px;
+  }
+  .modal-dish {
+    font-size: 15px;
+    padding: 8px 2px;
+    gap: 4px 8px;
+  }
+  .day-group-title {
+    font-size: 14px;
+  }
+  .day-group-status-label {
+    font-size: 12px;
+    margin: 8px 0 3px;
+  }
+  .modal-dish .status-toggle-btn {
+    font-size: 20px;
+    min-width: 28px;
+    min-height: 28px;
+  }
+
+  .modal-add-new .field-half {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  .modal-field-input,
+  .modal-field-select {
+    font-size: 12px;
+  }
+  .modal-add-new .field-btn {
+    font-size: 12px;
+    padding: 6px 16px;
+  }
+
+  .recipe-view-modal .recipe-card-buttons {
+    flex-direction: column;
+  }
+  .recipe-view-modal .recipe-card-buttons .btn-primary,
+  .recipe-view-modal .recipe-card-buttons .btn-secondary {
+    width: 100%;
+    font-size: 13px;
+    padding: 8px 16px;
+  }
+
+  .recipe-view-titlerow h3 {
+    font-size: 19px;
+  }
+  .recipe-view-modal .recipe-section-title {
+    font-size: 14px;
+  }
+  .recipe-view-modal .recipe-ingredients-list li,
+  .recipe-view-modal .recipe-instructions-text {
+    font-size: 13px;
+  }
+
+  .recipes-toolbar > button {
+    flex: 1 1 calc(50% - 4px);
+    font-size: 13px;
+    padding: 0 10px;
+  }
+  .recipes-toolbar > .btn-done {
+    flex: 1 1 100%;
+  }
+
+  .recipes-filters input,
+  .recipes-filters select {
+    flex: 1 1 100%;
+  }
+
+  .shopping-actions-row button {
+    flex: 1 1 calc(50% - 4px);
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+
+  .onboarding-modal {
+    padding: var(--spacing-md) var(--spacing-md) var(--spacing-xs);
+    border-radius: 20px;
+    max-height: 92vh;
+  }
+  .onboarding-icon {
+    font-size: 44px;
+    margin-bottom: var(--spacing-xs);
+  }
+  .onboarding-title {
+    font-size: 19px;
+  }
+  .onboarding-text {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .onboarding-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+  .onboarding-nav {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .onboarding-nav-right {
+    margin-left: 0;
+    width: 100%;
+    justify-content: space-between;
+  }
+  .onboarding-nav-right .onboarding-btn {
+    flex: 1 1 0;
+  }
+  .onboarding-btn-ghost {
+    width: 100%;
+    text-align: center;
+    order: 2;
+    margin-top: 4px;
+  }
+  .onboarding-dots {
+    padding: var(--spacing-sm) 0 var(--spacing-xs);
+  }
+
+  .more-menu {
+    min-width: 200px;
+  }
+  .more-menu-item {
+    font-size: 13px;
+    padding: 9px 10px;
+  }
+
+  .tab-placeholder {
+    padding: 32px 16px;
+  }
+  .tab-placeholder-icon {
+    font-size: 48px;
+  }
+  .tab-placeholder-title {
+    font-size: 18px;
+  }
+
+  .today-date {
+    font-size: 18px;
+  }
+  .today-empty {
+    padding: 24px 12px;
+  }
+  .today-empty-icon {
+    font-size: 40px;
+  }
+  .today-action-btn {
+    font-size: 14px;
+    padding: 11px 14px;
+  }
 }
 
 /* ============================================================
-   СВАЙП-УДАЛЕНИЕ БЛЮДА В МОДАЛКЕ ДНЯ (v4.0)
-   Свайп влево по карточке → подтверждение → удаление.
-   Кнопка 🗑️ из карточки убрана, место освобождено под название.
+   37. АДАПТИВНОСТЬ — ПЛАНШЕТ (от 480px)
    ============================================================ */
-.modal-dish {
-  position: relative;
-  touch-action: pan-y;
-  transition: transform 0.2s ease, background-color 0.2s ease;
-}
-
-/* Во время активного свайпа — без transition, чтобы карточка шла за пальцем. */
-.modal-dish.swiping {
-  transition: none;
-  will-change: transform;
-}
-
-/* Карточка сдвинута достаточно далеко — подсветим и покажем намёк на удаление. */
-.modal-dish.swipe-will-delete {
-  background-color: rgba(229, 90, 90, 0.14);
-  border-radius: var(--radius-sm);
-}
-
-.modal-dish.swipe-will-delete::after {
-  content: '🗑️ Удалить';
-  position: absolute;
-  right: 6px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 12px;
-  font-weight: 600;
-  color: #e55a5a;
-  pointer-events: none;
-  white-space: nowrap;
-}
-
-/* Не даём горизонтальному свайпу вызвать горизонтальный скролл модалки. */
-.modal,
-.choice-modal,
-.welcome-modal,
-.onboarding-modal {
-  overflow-x: hidden;
-}
-
-body.dark-theme .modal-dish.swipe-will-delete {
-  background-color: rgba(229, 90, 90, 0.22);
-}
-body.dark-theme .modal-dish.swipe-will-delete::after {
-  color: #ff8a8a;
-}
-
-/* Подсказки по обозначениям на экране «Сегодня» */
-.today-hints {
-  margin: 24px 0 8px;
-  padding: 14px 16px;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.04);
-  font-size: 13px;
-  line-height: 1.5;
-  opacity: 0.75;
-}
-
-body.dark-theme .today-hints {
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.today-hint-row {
-  display: flex;
-  gap: 8px;
-  align-items: baseline;
-}
-
-.today-hint-row + .today-hint-row {
-  margin-top: 4px;
-}
-
-.today-hint-icon {
-  flex-shrink: 0;
-  width: 1.4em;
-  text-align: center;
+@media (min-width: 480px) {
+  .modal-field-input,
+  .modal-field-select {
+    font-size: 13px;
+  }
+  .modal-add-new .field-half {
+    flex: 0 0 calc(50% - 8px);
+    max-width: calc(50% - 8px);
+  }
+  .modal-add-new {
+    gap: var(--spacing-md);
+  }
 }
 
 /* ============================================================
-   Свайп-удаление карточки блюда.
-   Карточка едет влево, за ней открывается красная кнопка 🗑️.
+   38. АДАПТИВНОСТЬ — ДЕСКТОП (от 700px)
    ============================================================ */
-.dish-swipe-wrap {
-  position: relative;
-  overflow: hidden;
-  border-radius: 12px; /* подгони под border-radius .modal-dish */
-  margin-bottom: 6px;  /* подгони под отступ .modal-dish, если он был */
-}
+@media (min-width: 700px) {
+  .app {
+    padding: var(--spacing-xl) var(--spacing-xl);
+    border-radius: var(--radius-lg);
+  }
 
-.dish-swipe-wrap .modal-dish {
-  position: relative;
-  z-index: 1;
-  /* background у .modal-dish должен быть непрозрачным,
-     иначе за карточкой будет видно красную зону. */
-  transition: transform 0.22s ease;
-  margin: 0; /* margin теперь у wrap */
-}
+  .app-header {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+  .logo h1 {
+    font-size: 28px;
+  }
 
-.dish-swipe-wrap .modal-dish.swiping {
-  transition: none;
-}
+  .day-cell {
+    min-height: 72px;
+    padding: 8px 4px;
+  }
+  .day-number {
+    font-size: 16px;
+  }
 
-/* Красная зона с иконкой — лежит справа, прижата к правому краю. */
-.dish-swipe-action {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 80px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: #e53935;
-  color: #fff;
-  font-size: 22px;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0;
-  border-radius: 12px; /* тот же радиус, что у wrap */
-}
+  .btn-row .btn {
+    min-width: 160px;
+    max-width: 240px;
+  }
 
-.dish-swipe-action:active {
-  background: #c62828;
-}
+  .week-row {
+    grid-template-columns: 50px 80px 1fr;
+    gap: 10px;
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+  .week-row .date-col {
+    font-size: 15px;
+  }
+  .week-row .day-col {
+    font-size: 13px;
+  }
+  .meal-chip {
+    font-size: 13px;
+    padding: 2px 10px;
+  }
 
-/* Подсказки на экране «Сегодня» */
-.today-hints {
-  margin: 24px 0 8px;
-  padding: 14px 16px;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.04);
-  font-size: 13px;
-  line-height: 1.5;
-  opacity: 0.75;
-}
+  .modal {
+    padding: var(--spacing-xl) var(--spacing-md);
+    max-width: 540px;
+  }
+  .modal-add-new {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+  .modal-add-new .field-half {
+    flex: 0 0 calc(50% - 8px);
+    max-width: calc(50% - 8px);
+  }
+  .rec-modal .modal {
+    max-width: 480px;
+  }
 
-body.dark-theme .today-hints {
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.today-hint-row {
-  display: flex;
-  gap: 8px;
-  align-items: baseline;
-}
-
-.today-hint-row + .today-hint-row {
-  margin-top: 4px;
-}
-
-.today-hint-icon {
-  flex-shrink: 0;
-  width: 1.4em;
-  text-align: center;
+  .calendar-header {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex-wrap: nowrap;
+  }
+  .month-nav-wrapper {
+    order: 0;
+    justify-content: center;
+    flex-wrap: nowrap;
+    flex: 1 1 auto;
+  }
+  .today-btn {
+    order: 1;
+    align-self: center;
+    width: auto;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    font-size: 15px;
+    min-height: 40px;
+    flex-shrink: 0;
+  }
+  #monthTitle {
+    font-size: 22px;
+    min-width: 140px;
+  }
+  .month-nav button {
+    padding: 6px 14px;
+    font-size: 22px;
+    min-height: 40px;
+    min-width: 40px;
+  }
 }
 
 /* ============================================================
-   Свайп-удаление карточки блюда.
-   Карточка едет влево, за ней открывается «Удалить».
+   39. АДАПТИВНОСТЬ — БОЛЬШОЙ ДЕСКТОП (от 1000px)
    ============================================================ */
-.dish-swipe-wrap {
-  position: relative;
-  overflow: hidden;
-  border-radius: 12px;
-  margin-bottom: 6px;
-}
-
-.dish-swipe-wrap .modal-dish {
-  position: relative;
-  z-index: 1;
-  transition: transform 0.22s ease;
-  margin: 0;
-}
-
-.dish-swipe-wrap .modal-dish.swiping {
-  transition: none;
-}
-
-/* Красная зона со словом «Удалить» — прижата к правому краю. */
-.dish-swipe-action {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 120px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: #e53935;
-  color: #fff;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  cursor: pointer;
-  padding: 0;
-  border-radius: 12px;
-}
-
-.dish-swipe-action:active {
-  background: #c62828;
-}
-
-/* ============================================================
-   Плашка «Вернуть удалённое блюдо».
-   Висит над нижней навигацией, живёт 5 секунд.
-   ============================================================ */
-.undo-snackbar {
-  position: fixed;
-  left: 12px;
-  right: 12px;
-  bottom: 84px;
-  z-index: 2000;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  border-radius: 12px;
-  background: #2a2a30;
-  color: #fff;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.28);
-  transform: translateY(calc(100% + 20px));
-  opacity: 0;
-  transition: transform 0.25s ease, opacity 0.25s ease;
-  pointer-events: none;
-}
-
-.undo-snackbar.visible {
-  transform: translateY(0);
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.undo-snackbar-text {
-  flex: 1 1 auto;
-  font-size: 14px;
-  line-height: 1.3;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.undo-snackbar-btn {
-  flex: 0 0 auto;
-  background: none;
-  border: none;
-  color: #ffb27a;
-  font-size: 14px;
-  font-weight: 600;
-  padding: 6px 4px;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.undo-snackbar-btn:active {
-  opacity: 0.7;
-}
-
-/* ============================================================
-   Подсказки по обозначениям на экране «Сегодня».
-   ============================================================ */
-.today-hints {
-  margin: 24px 0 8px;
-  padding: 14px 16px;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.04);
-  color: #555;
-  font-size: 13px;
-  line-height: 1.55;
-}
-
-body.dark-theme .today-hints {
-  background: rgba(255, 255, 255, 0.06);
-  color: #c2c2cc;
-}
-
-.today-hint-row {
-  display: flex;
-  gap: 8px;
-  align-items: baseline;
-}
-
-.today-hint-row + .today-hint-row {
-  margin-top: 6px;
-}
-
-.today-hint-icon {
-  flex-shrink: 0;
-  width: 1.4em;
-  text-align: center;
-  font-size: 15px;
-  line-height: 1;
-}
-
-/* Кнопка «Удалить» невидима, пока карточку не тянут.
-   Появляется плавно, как только карточка сдвинулась. */
-.dish-swipe-action {
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.12s ease;
-}
-
-.dish-swipe-wrap.is-shifted .dish-swipe-action {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* Причины под названием блюда в «Что приготовить?» — вместо старой
-   строки с датой. Может занимать до двух строк, поэтому разрешаем перенос. */
-.choice-result-last {
-  white-space: normal;
-  line-height: 1.3;
+@media (min-width: 1000px) {
+  .day-cell {
+    min-height: 80px;
+    padding: 10px 6px;
+  }
+  .day-number {
+    font-size: 18px;
+  }
+  .modal-add-new .field-half {
+    flex: 0 0 calc(50% - 10px);
+    max-width: calc(50% - 10px);
+  }
 }
