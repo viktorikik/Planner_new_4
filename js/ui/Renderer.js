@@ -5,6 +5,7 @@ import { DishStore } from '../stores/DishStore.js';
 import { RecipeStore } from '../stores/RecipeStore.js';
 import { showMessage } from '../utils/notifications.js';
 import { trapFocus } from '../utils/focusTrap.js';
+import { RecommendationEngine } from '../features/RecommendationEngine.js';
 
 export const Renderer = (function() {
   let currentView = 'week';
@@ -20,6 +21,12 @@ export const Renderer = (function() {
   let choiceFilterCategory = 'all';
   let choiceFilterOnlyFavorites = false;
   let choiceOffset = 0;
+  // Кэш отсортированного движком списка для экрана «Что приготовить?».
+  // Хранится между рендерами, чтобы «🎲 Другое» сдвигало окно по одному
+  // и тому же порядку, а не пересчитывало score заново (в score есть
+  // небольшой random jitter — без кэша порядок бы «прыгал»).
+  // Сбрасывается при смене фильтров и при изменении данных.
+  let choiceRankedCache = null;
 
   const els = {};
   for (const key in CONSTANTS.SELECTORS) {
@@ -196,11 +203,6 @@ export const Renderer = (function() {
     });
   }
 
-  // Карточка блюда. Обёртка .dish-swipe-wrap содержит:
-  //   - кнопку .dish-swipe-action со словом «Удалить» (сзади, справа);
-  //   - саму карточку .modal-dish (спереди, сдвигается свайпом влево).
-  // Кнопка «Удалить» невидима, пока карточка не сдвинута (класс .is-shifted
-  // на обёртке переключает её opacity через CSS).
   function buildDishElement(dish, dateStr) {
     const wrap = document.createElement('div');
     wrap.className = 'dish-swipe-wrap';
@@ -216,7 +218,6 @@ export const Renderer = (function() {
     dishDiv.className = `modal-dish ${dish.status}`;
     if (dish.liked) dishDiv.classList.add('liked');
 
-    // ---- Колонка 1: переключатель статуса ----
     const statusToggle = document.createElement('button');
     statusToggle.type = 'button';
     statusToggle.className = 'status-toggle-btn';
@@ -231,7 +232,6 @@ export const Renderer = (function() {
     });
     dishDiv.appendChild(statusToggle);
 
-    // ---- Колонка 2: название ----
     const nameSpan = document.createElement('span');
     nameSpan.className = 'dish-name';
     nameSpan.textContent = dish.name;
@@ -249,7 +249,6 @@ export const Renderer = (function() {
     });
     dishDiv.appendChild(nameSpan);
 
-    // ---- Колонка 3: рецепт ----
     const recipeCol = document.createElement('div');
     recipeCol.className = 'dish-recipe';
     if (dish.recipeId) {
@@ -269,7 +268,6 @@ export const Renderer = (function() {
     }
     dishDiv.appendChild(recipeCol);
 
-    // ---- Колонка 4: 👍 👎 ----
     const actions = document.createElement('div');
     actions.className = 'dish-actions';
 
@@ -308,9 +306,6 @@ export const Renderer = (function() {
 
     wrap.appendChild(dishDiv);
 
-    // ============================================================
-    // СВАЙП
-    // ============================================================
     let startX = 0, startY = 0;
     let currentShift = 0;
     let directionLocked = null;
@@ -318,8 +313,6 @@ export const Renderer = (function() {
     let opened = false;
     let movedBySwipe = false;
 
-    // Единая точка смены позиции карточки. Дополнительно переключает класс
-    // .is-shifted на обёртке — через него CSS показывает кнопку «Удалить».
     function applyShift(px, animate) {
       if (animate) {
         dishDiv.classList.remove('swiping');
@@ -385,8 +378,6 @@ export const Renderer = (function() {
       if (shift < -SWIPE_ACTION_WIDTH - 16) shift = -SWIPE_ACTION_WIDTH - 16;
       currentShift = shift;
       dishDiv.style.transform = `translateX(${shift}px)`;
-      // Кнопка «Удалить» появляется ровно в тот момент, когда карточка
-      // сдвинулась хоть на пиксель.
       wrap.classList.toggle('is-shifted', shift !== 0);
     }, { passive: false });
 
@@ -447,6 +438,7 @@ export const Renderer = (function() {
   // ============================================================
   // ЭКРАН «ЧТО ПРИГОТОВИТЬ?» (v4.0)
   // ============================================================
+
   function applyChoiceFilters(items) {
     const allDishes = DishStore.getAll();
     const result = [];
@@ -482,6 +474,24 @@ export const Renderer = (function() {
     return result;
   }
 
+  // Пересчитывает отсортированный движком список. Кэшируется в choiceRankedCache.
+  // Сбрасывается при смене фильтров или изменении данных.
+  function rebuildChoiceRanking() {
+    const allItems = DishStore.getAllUniqueWithLastDone();
+    const filtered = applyChoiceFilters(allItems);
+
+    const dishesByName = new Map();
+    DishStore.getAll().forEach(d => {
+      if (!dishesByName.has(d.name)) dishesByName.set(d.name, []);
+      dishesByName.get(d.name).push(d);
+    });
+
+    choiceRankedCache = RecommendationEngine.rank(filtered, {
+      mealType: choiceFilterMealType || null,
+      dishesByName
+    });
+  }
+
   function renderChoiceChips() {
     const chips = document.querySelectorAll('#choiceMealTypesChips .choice-chip');
     chips.forEach(chip => {
@@ -508,10 +518,15 @@ export const Renderer = (function() {
 
     container.innerHTML = '';
 
-    const allItems = DishStore.getAllUniqueWithLastDone();
-    const filtered = applyChoiceFilters(allItems);
+    // Ранкинг считаем один раз и кэшируем. Внутри score есть небольшой
+    // random jitter, поэтому без кэша порядок «прыгал» бы между рендерами.
+    if (!choiceRankedCache) {
+      rebuildChoiceRanking();
+    }
 
-    if (filtered.length === 0) {
+    const ranked = choiceRankedCache;
+
+    if (!ranked || ranked.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'choice-empty';
       empty.textContent = '😌 Ничего не найдено. Попробуйте ослабить фильтры.';
@@ -522,11 +537,11 @@ export const Renderer = (function() {
 
     if (rerollBtn) rerollBtn.hidden = false;
 
-    const total = filtered.length;
+    const total = ranked.length;
     const takeCount = Math.min(5, total);
     const limited = [];
     for (let i = 0; i < takeCount; i++) {
-      limited.push(filtered[(choiceOffset + i) % total]);
+      limited.push(ranked[(choiceOffset + i) % total]);
     }
 
     limited.forEach(item => {
@@ -555,12 +570,13 @@ export const Renderer = (function() {
       }
       row.appendChild(nameWrap);
 
-      const last = document.createElement('span');
-      last.className = 'choice-result-last';
-      last.textContent = item.lastDoneDate
-        ? Utils.daysAgo(item.lastDoneDate)
-        : 'ещё не готовили';
-      row.appendChild(last);
+      // Строка-объяснение: почему это блюдо предложено. Максимум две
+      // причины, чтобы не разрослось на узком экране.
+      const meta = document.createElement('span');
+      meta.className = 'choice-result-last';
+      const reasonsText = (item.reasons || []).slice(0, 2).join(' · ');
+      meta.textContent = reasonsText;
+      row.appendChild(meta);
 
       const handleSelect = () => {
         closeChoiceModal();
@@ -596,6 +612,7 @@ export const Renderer = (function() {
     choiceFilterCategory = 'all';
     choiceFilterOnlyFavorites = false;
     choiceOffset = 0;
+    choiceRankedCache = null;
 
     renderChoiceScreenDom();
 
@@ -618,6 +635,7 @@ export const Renderer = (function() {
   function setChoiceMealType(type) {
     choiceFilterMealType = type || '';
     choiceOffset = 0;
+    choiceRankedCache = null;
     renderChoiceChips();
     renderChoiceResults();
   }
@@ -625,21 +643,21 @@ export const Renderer = (function() {
   function setChoiceCategory(cat) {
     choiceFilterCategory = cat || 'all';
     choiceOffset = 0;
+    choiceRankedCache = null;
     renderChoiceResults();
   }
 
   function setChoiceOnlyFavorites(flag) {
     choiceFilterOnlyFavorites = !!flag;
     choiceOffset = 0;
+    choiceRankedCache = null;
     renderChoiceResults();
   }
 
   function rerollChoiceDish() {
-    const allItems = DishStore.getAllUniqueWithLastDone();
-    const filtered = applyChoiceFilters(allItems);
-    if (filtered.length === 0) return;
-
-    choiceOffset = (choiceOffset + 5) % filtered.length;
+    if (!choiceRankedCache || choiceRankedCache.length === 0) return;
+    // Сдвигаем окно на 5 по уже отсортированному списку.
+    choiceOffset = (choiceOffset + 5) % choiceRankedCache.length;
     renderChoiceResults();
   }
 
@@ -1700,6 +1718,8 @@ export const Renderer = (function() {
       renderToday();
       const choiceOverlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
       if (choiceOverlay && choiceOverlay.classList.contains('active')) {
+        // Данные изменились — кэш ранкинга устарел.
+        choiceRankedCache = null;
         renderChoiceResults();
       }
     });
