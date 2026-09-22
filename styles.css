@@ -3256,6 +3256,45 @@ body {
   color: var(--text-primary);
   letter-spacing: -0.3px;
 }
+
+.today-relative {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0;
+}
+
+.today-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 16px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: transparent;
+  border: 1.5px solid var(--text-muted);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  appearance: none;
+}
+.today-back-btn:hover {
+  background: var(--cell-bg);
+  border-color: var(--text-primary);
+}
+.today-back-btn:active {
+  transform: translateY(0);
+}
+.today-back-btn:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
 .today-count {
   font-size: 13px;
   font-weight: 400;
