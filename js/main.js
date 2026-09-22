@@ -37,25 +37,48 @@ import { printWeeklyMenu } from './features/Print.js';
   RecipeStore.init();
   DishStore.init();
 
-  // ---------- Bottom navigation + hash routing (v4.0) ----------
+  // ---------- Bottom navigation + hash routing ----------
+  // Табы «Сегодня» и «Меню» — обычные экраны.
+  // Табы «Рецепты» и «Покупки» — открывают модалку и не меняют содержимое таба.
   const TABS = ['today', 'menu', 'recipes', 'shopping'];
   const DEFAULT_TAB = 'menu';
+  const MODAL_TABS = ['recipes', 'shopping'];
 
   function getTabFromHash() {
     const raw = (window.location.hash || '').replace('#', '');
     return TABS.includes(raw) ? raw : DEFAULT_TAB;
   }
 
-  function setActiveTab(tab) {
+  function highlightBottomNav(tab) {
     const buttons = document.querySelectorAll(CONSTANTS.SELECTORS.bottomNavButtons);
     buttons.forEach(btn => {
       btn.classList.toggle('active', btn.dataset.tab === tab);
     });
+  }
+
+  function setActiveTab(tab) {
+    highlightBottomNav(tab);
     const app = document.querySelector('.app');
-    if (app) app.setAttribute('data-active-tab', tab);
+    // Для модальных табов «подложка» остаётся «Меню» —
+    // чтобы при закрытии модалки сразу показался нормальный экран.
+    const realTab = MODAL_TABS.includes(tab) ? 'menu' : tab;
+    if (app) app.setAttribute('data-active-tab', realTab);
 
     if (tab === 'today') {
       Renderer.renderToday();
+    }
+
+    if (tab === 'recipes') {
+      const overlay = document.getElementById(CONSTANTS.SELECTORS.recipesOverlay);
+      if (overlay && !overlay.classList.contains('active')) {
+        openRecipesModal();
+      }
+    }
+    if (tab === 'shopping') {
+      const overlay = document.getElementById(CONSTANTS.SELECTORS.shoppingListOverlay);
+      if (overlay && !overlay.classList.contains('active')) {
+        openShoppingList();
+      }
     }
   }
 
@@ -74,24 +97,36 @@ import { printWeeklyMenu } from './features/Print.js';
   document.querySelectorAll(CONSTANTS.SELECTORS.bottomNavButtons).forEach(btn => {
     btn.addEventListener('click', function() {
       const tab = this.dataset.tab;
+      // Для табов-модалок: если мы уже на этом табе и модалка открыта — не дёргаем.
+      if (MODAL_TABS.includes(tab)) {
+        if (window.location.hash === `#${tab}`) {
+          // уже открыто, модалку не переоткрываем
+          const overlayId = tab === 'recipes' ? CONSTANTS.SELECTORS.recipesOverlay : CONSTANTS.SELECTORS.shoppingListOverlay;
+          const overlay = document.getElementById(overlayId);
+          if (overlay && !overlay.classList.contains('active')) {
+            setActiveTab(tab);
+          }
+          return;
+        }
+        window.location.hash = tab;
+        return;
+      }
       if (window.location.hash === `#${tab}`) return;
       window.location.hash = tab;
     });
   });
 
-  // ---------- Кнопки-заглушки на табах «Рецепты» и «Покупки» ----------
-  const goToRecipesFromTab = document.getElementById('goToRecipesFromTab');
-  if (goToRecipesFromTab) {
-    goToRecipesFromTab.addEventListener('click', function() {
-      openRecipesModal();
-    });
-  }
-
-  const goToShoppingFromTab = document.getElementById('goToShoppingFromTab');
-  if (goToShoppingFromTab) {
-    goToShoppingFromTab.addEventListener('click', function() {
-      openShoppingList();
-    });
+  // После закрытия модалки табов «Рецепты»/«Покупки» — переключить обратно на «Меню».
+  function resetTabAfterModalClose() {
+    const currentTab = getTabFromHash();
+    if (!MODAL_TABS.includes(currentTab)) return;
+    const overlayId = currentTab === 'recipes'
+      ? CONSTANTS.SELECTORS.recipesOverlay
+      : CONSTANTS.SELECTORS.shoppingListOverlay;
+    const overlay = document.getElementById(overlayId);
+    if (overlay && !overlay.classList.contains('active')) {
+      window.location.hash = 'menu';
+    }
   }
 
   // ---------- Приветственное окно ----------
@@ -326,7 +361,10 @@ import { printWeeklyMenu } from './features/Print.js';
     }
   }
 
-  const modalObserver = new MutationObserver(syncModalHistory);
+  const modalObserver = new MutationObserver(() => {
+    syncModalHistory();
+    resetTabAfterModalClose();
+  });
   modalObserver.observe(document.body, {
     subtree: true,
     attributes: true,
@@ -415,16 +453,13 @@ import { printWeeklyMenu } from './features/Print.js';
   document.getElementById(CONSTANTS.SELECTORS.recipeFormClose).addEventListener('click', closeRecipeForm);
   document.getElementById(CONSTANTS.SELECTORS.shoppingListClose).addEventListener('click', closeShoppingList);
 
-  // ---------- Экран «Что приготовить?» (v4.0) ----------
-  // Кнопка в шапке Меню — открывает с дефолтными фильтрами
+  // ---------- Экран «Что приготовить?» ----------
   document.getElementById(CONSTANTS.SELECTORS.suggestBtn).addEventListener('click', function() {
     openChoiceScreen();
   });
 
-  // Кнопка закрытия
   document.getElementById(CONSTANTS.SELECTORS.choiceClose).addEventListener('click', closeChoiceModal);
 
-  // Чипы приёма пищи — одиночный выбор
   const choiceChips = document.querySelectorAll('#choiceMealTypesChips .choice-chip');
   choiceChips.forEach(chip => {
     chip.addEventListener('click', function() {
@@ -433,7 +468,6 @@ import { printWeeklyMenu } from './features/Print.js';
     });
   });
 
-  // Селект категории
   const choiceCategorySelect = document.getElementById('choiceCategorySelect');
   if (choiceCategorySelect) {
     choiceCategorySelect.addEventListener('change', function() {
@@ -441,7 +475,6 @@ import { printWeeklyMenu } from './features/Print.js';
     });
   }
 
-  // Чекбокс «Только любимые»
   const choiceFavCb = document.getElementById('choiceOnlyFavorites');
   if (choiceFavCb) {
     choiceFavCb.addEventListener('change', function() {
@@ -449,7 +482,6 @@ import { printWeeklyMenu } from './features/Print.js';
     });
   }
 
-  // Кнопка «🎲 Другое» — перелистывает окно результатов
   const choiceRerollBtn = document.getElementById('choiceRerollBtn');
   if (choiceRerollBtn) {
     choiceRerollBtn.addEventListener('click', function() {
@@ -457,12 +489,9 @@ import { printWeeklyMenu } from './features/Print.js';
     });
   }
 
-  // Кнопка «📖 Мои рецепты» — открывает модалку рецептов в режиме «из выбора»,
-  // чтобы кнопка «← Назад» вернула пользователя в текущий экран.
   const choiceOpenRecipesBtn = document.getElementById('choiceOpenRecipesBtn');
   if (choiceOpenRecipesBtn) {
     choiceOpenRecipesBtn.addEventListener('click', function() {
-      // закрываем choiceOverlay — рецепты поверх
       const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
       overlay.classList.remove('active');
       if (overlay._trapFocusCleanup) {
@@ -473,13 +502,7 @@ import { printWeeklyMenu } from './features/Print.js';
     });
   }
 
-  // ---------- Кнопки в шапке ----------
-  document.getElementById(CONSTANTS.SELECTORS.recipesBtn).addEventListener('click', function() {
-    openRecipesModal();
-  });
-  document.getElementById(CONSTANTS.SELECTORS.shoppingListBtn).addEventListener('click', openShoppingList);
-
-  // Печать меню на неделю
+  // ---------- Печать меню на неделю ----------
   document.getElementById('printBtn').addEventListener('click', printWeeklyMenu);
 
   // ---------- Глобальная модалка добавления блюда ----------
@@ -608,7 +631,7 @@ import { printWeeklyMenu } from './features/Print.js';
         .register('./sw.js', { updateViaCache: 'none' })
         .then(function(reg) { return reg.update(); })
         .catch(function() {
-          // Тихо игнорируем — офлайн-режим не критичен для работы приложения.
+          // Тихо игнорируем — офлайн-режим не критичен.
         });
     });
 
