@@ -1226,7 +1226,7 @@ export const Renderer = (function() {
 
     const labelSpan = document.createElement('span');
     labelSpan.className = 'today-hints-label';
-    labelSpan.textContent = 'Что означают значки?';
+    labelSpan.textContent = 'Как это работает?';
     summary.appendChild(labelSpan);
 
     const chevron = document.createElement('span');
