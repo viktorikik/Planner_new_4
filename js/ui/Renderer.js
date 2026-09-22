@@ -21,11 +21,6 @@ export const Renderer = (function() {
   let choiceFilterCategory = 'all';
   let choiceFilterOnlyFavorites = false;
   let choiceOffset = 0;
-  // Кэш отсортированного движком списка для экрана «Что приготовить?».
-  // Хранится между рендерами, чтобы «🎲 Другое» сдвигало окно по одному
-  // и тому же порядку, а не пересчитывало score заново (в score есть
-  // небольшой random jitter — без кэша порядок бы «прыгал»).
-  // Сбрасывается при смене фильтров и при изменении данных.
   let choiceRankedCache = null;
 
   const els = {};
@@ -134,7 +129,7 @@ export const Renderer = (function() {
   }
 
   // ============================================================
-  // ГРУППИРОВКА БЛЮД ПО ПРИЁМУ ПИЩИ И СТАТУСУ (v4.0)
+  // ГРУППИРОВКА БЛЮД ПО ПРИЁМУ ПИЩИ И СТАТУСУ
   // ============================================================
   function groupDishesByMealType(dishes) {
     const ORDER = { breakfast: 0, lunch: 1, dinner: 2, snack: 3 };
@@ -436,7 +431,7 @@ export const Renderer = (function() {
   }
 
   // ============================================================
-  // ЭКРАН «ЧТО ПРИГОТОВИТЬ?» (v4.0)
+  // ЭКРАН «ЧТО ПРИГОТОВИТЬ?»
   // ============================================================
 
   function applyChoiceFilters(items) {
@@ -474,8 +469,6 @@ export const Renderer = (function() {
     return result;
   }
 
-  // Пересчитывает отсортированный движком список. Кэшируется в choiceRankedCache.
-  // Сбрасывается при смене фильтров или изменении данных.
   function rebuildChoiceRanking() {
     const allItems = DishStore.getAllUniqueWithLastDone();
     const filtered = applyChoiceFilters(allItems);
@@ -518,8 +511,6 @@ export const Renderer = (function() {
 
     container.innerHTML = '';
 
-    // Ранкинг считаем один раз и кэшируем. Внутри score есть небольшой
-    // random jitter, поэтому без кэша порядок «прыгал» бы между рендерами.
     if (!choiceRankedCache) {
       rebuildChoiceRanking();
     }
@@ -570,8 +561,6 @@ export const Renderer = (function() {
       }
       row.appendChild(nameWrap);
 
-      // Строка-объяснение: почему это блюдо предложено. Максимум две
-      // причины, чтобы не разрослось на узком экране.
       const meta = document.createElement('span');
       meta.className = 'choice-result-last';
       const reasonsText = (item.reasons || []).slice(0, 2).join(' · ');
@@ -632,6 +621,17 @@ export const Renderer = (function() {
     }
   }
 
+  // Возврат в «Что приготовить?» из вложенной модалки (Мои рецепты).
+  // Фильтры и кэш ранкинга при этом не сбрасываются — пользователь
+  // возвращается туда же, откуда ушёл.
+  function returnToChoice() {
+    const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
+    if (!overlay) return;
+    overlay.classList.add('active');
+    trapFocus(overlay, closeChoiceModal);
+    renderChoiceResults();
+  }
+
   function setChoiceMealType(type) {
     choiceFilterMealType = type || '';
     choiceOffset = 0;
@@ -656,7 +656,6 @@ export const Renderer = (function() {
 
   function rerollChoiceDish() {
     if (!choiceRankedCache || choiceRankedCache.length === 0) return;
-    // Сдвигаем окно на 5 по уже отсортированному списку.
     choiceOffset = (choiceOffset + 5) % choiceRankedCache.length;
     renderChoiceResults();
   }
@@ -1198,10 +1197,19 @@ export const Renderer = (function() {
     });
   }
 
+  // Подсказки на экране «Сегодня» — свёрнуты в <details>,
+  // чтобы не отъедать экран. Разворачиваются по тапу.
   function buildTodayHints() {
-    const hints = document.createElement('div');
-    hints.className = 'today-hints';
-    hints.setAttribute('aria-label', 'Обозначения');
+    const details = document.createElement('details');
+    details.className = 'today-hints';
+
+    const summary = document.createElement('summary');
+    summary.className = 'today-hints-summary';
+    summary.textContent = 'Что означают значки?';
+    details.appendChild(summary);
+
+    const body = document.createElement('div');
+    body.className = 'today-hints-body';
 
     const rows = [
       ['📅', 'Планирую. Когда приготовишь — тапни календарик, и статус сменится на «Приготовлено».'],
@@ -1224,10 +1232,11 @@ export const Renderer = (function() {
       textSpan.textContent = text;
       row.appendChild(textSpan);
 
-      hints.appendChild(row);
+      body.appendChild(row);
     });
 
-    return hints;
+    details.appendChild(body);
+    return details;
   }
 
   function renderToday() {
@@ -1718,7 +1727,6 @@ export const Renderer = (function() {
       renderToday();
       const choiceOverlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
       if (choiceOverlay && choiceOverlay.classList.contains('active')) {
-        // Данные изменились — кэш ранкинга устарел.
         choiceRankedCache = null;
         renderChoiceResults();
       }
@@ -1778,6 +1786,7 @@ export const Renderer = (function() {
     closeRepeatMenuModal,
     openChoiceScreen,
     closeChoiceModal,
+    returnToChoice,
     setChoiceMealType,
     setChoiceCategory,
     setChoiceOnlyFavorites,
