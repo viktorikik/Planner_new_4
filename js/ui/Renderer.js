@@ -13,6 +13,11 @@ export const Renderer = (function() {
   let searchQuery = '', statusFilter = 'all', categoryFilter = 'all';
   let currentModalDate = null;
 
+  // Какая дата сейчас показывается на вкладке «Сегодня».
+  // Меняется свайпом влево/вправо. Сбрасывается в реальное «сегодня»
+  // при переходе на вкладку и по кнопке «↺ К сегодня».
+  let todayViewDate = new Date();
+
   let touchDragActive = false;
   let openSwipeCard = null;
   let activeUndoSnackbar = null;
@@ -83,6 +88,21 @@ export const Renderer = (function() {
     if (mod10 === 1 && mod100 !== 11) return one;
     if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return few;
     return many;
+  }
+
+  // Короткая подпись для дня относительно «сегодня»: «вчера», «завтра»,
+  // «через 3 дня», «5 дней назад». Используется на экране «Сегодня».
+  function relativeDayLabel(date, baseDate) {
+    const MS_PER_DAY = 24 * 60 * 60 * 1000;
+    const d1 = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const d2 = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate());
+    const diff = Math.round((d1 - d2) / MS_PER_DAY);
+    if (diff === 0) return 'сегодня';
+    if (diff === 1) return 'завтра';
+    if (diff === -1) return 'вчера';
+    if (diff > 1) return `через ${diff} ${pluralizeRu(diff, 'день', 'дня', 'дней')}`;
+    const absDiff = Math.abs(diff);
+    return `${absDiff} ${pluralizeRu(absDiff, 'день', 'дня', 'дней')} назад`;
   }
 
   // ============================================================
@@ -221,7 +241,7 @@ export const Renderer = (function() {
     const statusToggle = document.createElement('button');
     statusToggle.type = 'button';
     statusToggle.className = 'status-toggle-btn';
-    statusToggle.textContent = dish.status === STATUSES.DONE ? '✅' : '📅';
+    statusToggle.textContent = dish.status === STATUSES.DONE ? '✅' : '🗓️';
     statusToggle.title = dish.status === STATUSES.DONE
       ? 'Отметить как запланированное'
       : 'Отметить как приготовленное';
@@ -705,7 +725,7 @@ export const Renderer = (function() {
     [STATUSES.PLANNED, STATUSES.DONE].forEach(val => {
       const opt = document.createElement('option');
       opt.value = val;
-      opt.textContent = val === STATUSES.PLANNED ? '📅 Планирую' : '✅ Приготовлено';
+      opt.textContent = val === STATUSES.PLANNED ? '🗓️ Планирую' : '✅ Приготовлено';
       statusSelect.appendChild(opt);
     });
     addForm.appendChild(statusSelect);
@@ -1200,7 +1220,7 @@ export const Renderer = (function() {
 
         const badge = document.createElement('span');
         badge.className = 'status-badge';
-        badge.textContent = dish.status === STATUSES.DONE ? '✅' : '📅';
+        badge.textContent = dish.status === STATUSES.DONE ? '✅' : '🗓️';
         item.appendChild(badge);
 
         group.appendChild(item);
@@ -1239,32 +1259,9 @@ export const Renderer = (function() {
 
     const body = document.createElement('div');
     body.className = 'today-hints-body';
-
-    const rows = [
-      ['📅', 'Планирую. Когда приготовишь — тапни календарик, и статус сменится на «Приготовлено».'],
-      ['✅', 'Приготовлено — блюдо уже готовили.'],
-      ['👍', 'Ставь палец вверх — блюдо попадёт в любимые и будет участвовать в рекомендациях «Что приготовить?».'],
-      ['👎', 'Не понравилось? Поставь палец вниз — больше не увидишь это блюдо в рекомендациях.']
-    ];
-
-    rows.forEach(([icon, text]) => {
-      const row = document.createElement('div');
-      row.className = 'today-hint-row';
-
-      const iconEl = document.createElement('span');
-      iconEl.className = 'today-hint-icon';
-      iconEl.textContent = icon;
-      iconEl.setAttribute('aria-hidden', 'true');
-      row.appendChild(iconEl);
-
-      const textEl = document.createElement('span');
-      textEl.textContent = text;
-      row.appendChild(textEl);
-
-      body.appendChild(row);
-    });
-
+    body.textContent = 'Планируй блюда → отмечай приготовленные (🗓️/✅) → оценивай что понравилось, а что нет. Со временем рекомендации становятся точнее.';
     details.appendChild(body);
+
     return details;
   }
 
@@ -1273,8 +1270,10 @@ export const Renderer = (function() {
     if (!container) return;
     container.innerHTML = '';
 
-    const today = new Date();
-    const dateStr = Utils.formatDateLocal(today);
+    const realToday = new Date();
+    const todayStr = Utils.formatDateLocal(realToday);
+    const dateStr = Utils.formatDateLocal(todayViewDate);
+    const isToday = dateStr === todayStr;
     const dayDishes = DishStore.getForDate(dateStr);
 
     const header = document.createElement('div');
@@ -1282,7 +1281,13 @@ export const Renderer = (function() {
 
     const dateEl = document.createElement('div');
     dateEl.className = 'today-date';
-    dateEl.textContent = Utils.formatDate(today);
+    dateEl.textContent = Utils.formatDate(todayViewDate);
+    if (!isToday) {
+      const relEl = document.createElement('span');
+      relEl.className = 'today-relative';
+      relEl.textContent = relativeDayLabel(todayViewDate, realToday);
+      dateEl.appendChild(relEl);
+    }
     header.appendChild(dateEl);
 
     const countEl = document.createElement('div');
@@ -1297,6 +1302,19 @@ export const Renderer = (function() {
 
     container.appendChild(header);
 
+    // Если ушли с сегодня — покажем кнопку возврата.
+    if (!isToday) {
+      const backBtn = document.createElement('button');
+      backBtn.type = 'button';
+      backBtn.className = 'today-back-btn';
+      backBtn.textContent = '↺ К сегодня';
+      backBtn.addEventListener('click', () => {
+        todayViewDate = new Date();
+        renderToday();
+      });
+      container.appendChild(backBtn);
+    }
+
     if (dayDishes.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'today-empty';
@@ -1309,7 +1327,9 @@ export const Renderer = (function() {
 
       const text = document.createElement('p');
       text.className = 'today-empty-text';
-      text.textContent = 'На сегодня пока ничего не запланировано.';
+      text.textContent = isToday
+        ? 'На сегодня пока ничего не запланировано.'
+        : 'На этот день пока ничего не запланировано.';
       empty.appendChild(text);
 
       container.appendChild(empty);
@@ -1811,6 +1831,18 @@ export const Renderer = (function() {
     getCurrentView: () => currentView,
     setCurrentDate: (d) => { currentDate = d; },
     setCurrentView: (v) => { currentView = v; },
+    getTodayViewDate: () => todayViewDate,
+    setTodayViewDate: (d) => { todayViewDate = d; },
+    shiftTodayViewDate: (days) => {
+      const d = new Date(todayViewDate);
+      d.setDate(d.getDate() + days);
+      todayViewDate = d;
+      renderToday();
+    },
+    resetTodayViewDate: () => {
+      todayViewDate = new Date();
+      renderToday();
+    },
     showRecipeCard,
     closeEditDishModal,
     closeRepeatMenuModal,
