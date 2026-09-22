@@ -21,6 +21,11 @@ export const Renderer = (function() {
   let choiceFilterCategory = 'all';
   let choiceFilterOnlyFavorites = false;
   let choiceOffset = 0;
+  // Кэш отсортированного движком списка для экрана «Что приготовить?».
+  // Хранится между рендерами, чтобы «🎲 Другое» сдвигало окно по одному
+  // и тому же порядку, а не пересчитывало score заново (в score есть
+  // небольшой random jitter — без кэша порядок бы «прыгал»).
+  // Сбрасывается при смене фильтров и при изменении данных.
   let choiceRankedCache = null;
 
   const els = {};
@@ -469,6 +474,8 @@ export const Renderer = (function() {
     return result;
   }
 
+  // Пересчитывает отсортированный движком список. Кэшируется в choiceRankedCache.
+  // Сбрасывается при смене фильтров или изменении данных.
   function rebuildChoiceRanking() {
     const allItems = DishStore.getAllUniqueWithLastDone();
     const filtered = applyChoiceFilters(allItems);
@@ -511,6 +518,8 @@ export const Renderer = (function() {
 
     container.innerHTML = '';
 
+    // Ранкинг считаем один раз и кэшируем. Внутри score есть небольшой
+    // random jitter, поэтому без кэша порядок «прыгал» бы между рендерами.
     if (!choiceRankedCache) {
       rebuildChoiceRanking();
     }
@@ -561,6 +570,8 @@ export const Renderer = (function() {
       }
       row.appendChild(nameWrap);
 
+      // Строка-объяснение: почему это блюдо предложено. Максимум две
+      // причины, чтобы не разрослось на узком экране.
       const meta = document.createElement('span');
       meta.className = 'choice-result-last';
       const reasonsText = (item.reasons || []).slice(0, 2).join(' · ');
@@ -621,9 +632,9 @@ export const Renderer = (function() {
     }
   }
 
-  // Возврат в «Что приготовить?» из вложенной модалки (Мои рецепты).
-  // Фильтры и кэш ранкинга при этом не сбрасываются — пользователь
-  // возвращается туда же, откуда ушёл.
+  // Возврат в «Что приготовить?» из вложенной модалки «Мои рецепты».
+  // Фильтры и кэш ранкинга сохраняются — пользователь возвращается туда,
+  // откуда ушёл.
   function returnToChoice() {
     const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
     if (!overlay) return;
@@ -656,6 +667,7 @@ export const Renderer = (function() {
 
   function rerollChoiceDish() {
     if (!choiceRankedCache || choiceRankedCache.length === 0) return;
+    // Сдвигаем окно на 5 по уже отсортированному списку.
     choiceOffset = (choiceOffset + 5) % choiceRankedCache.length;
     renderChoiceResults();
   }
@@ -1205,7 +1217,24 @@ export const Renderer = (function() {
 
     const summary = document.createElement('summary');
     summary.className = 'today-hints-summary';
-    summary.textContent = 'Что означают значки?';
+
+    const iconSpan = document.createElement('span');
+    iconSpan.className = 'today-hints-icon';
+    iconSpan.setAttribute('aria-hidden', 'true');
+    iconSpan.textContent = '💡';
+    summary.appendChild(iconSpan);
+
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'today-hints-label';
+    labelSpan.textContent = 'Что означают значки?';
+    summary.appendChild(labelSpan);
+
+    const chevron = document.createElement('span');
+    chevron.className = 'today-hints-chevron';
+    chevron.setAttribute('aria-hidden', 'true');
+    chevron.textContent = '▾';
+    summary.appendChild(chevron);
+
     details.appendChild(summary);
 
     const body = document.createElement('div');
@@ -1222,15 +1251,15 @@ export const Renderer = (function() {
       const row = document.createElement('div');
       row.className = 'today-hint-row';
 
-      const iconSpan = document.createElement('span');
-      iconSpan.className = 'today-hint-icon';
-      iconSpan.textContent = icon;
-      iconSpan.setAttribute('aria-hidden', 'true');
-      row.appendChild(iconSpan);
+      const iconEl = document.createElement('span');
+      iconEl.className = 'today-hint-icon';
+      iconEl.textContent = icon;
+      iconEl.setAttribute('aria-hidden', 'true');
+      row.appendChild(iconEl);
 
-      const textSpan = document.createElement('span');
-      textSpan.textContent = text;
-      row.appendChild(textSpan);
+      const textEl = document.createElement('span');
+      textEl.textContent = text;
+      row.appendChild(textEl);
 
       body.appendChild(row);
     });
@@ -1727,6 +1756,7 @@ export const Renderer = (function() {
       renderToday();
       const choiceOverlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
       if (choiceOverlay && choiceOverlay.classList.contains('active')) {
+        // Данные изменились — кэш ранкинга устарел.
         choiceRankedCache = null;
         renderChoiceResults();
       }
