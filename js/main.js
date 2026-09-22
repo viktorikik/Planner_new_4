@@ -37,12 +37,11 @@ import { printWeeklyMenu } from './features/Print.js';
   RecipeStore.init();
   DishStore.init();
 
-  // ---------- Bottom navigation + hash routing ----------
-  // Табы «Сегодня» и «Меню» — обычные экраны.
-  // Табы «Рецепты» и «Покупки» — открывают модалку и не меняют содержимое таба.
-  const TABS = ['today', 'menu', 'recipes', 'shopping'];
+  // ---------- Hash routing: только для «Сегодня» и «Меню» ----------
+  // Табы «Рецепты» и «Покупки» открывают модалки поверх текущего экрана
+  // и hash не трогают. Так hardware back корректно закрывает модалку.
+  const TABS = ['today', 'menu'];
   const DEFAULT_TAB = 'menu';
-  const MODAL_TABS = ['recipes', 'shopping'];
 
   function getTabFromHash() {
     const raw = (window.location.hash || '').replace('#', '');
@@ -59,26 +58,10 @@ import { printWeeklyMenu } from './features/Print.js';
   function setActiveTab(tab) {
     highlightBottomNav(tab);
     const app = document.querySelector('.app');
-    // Для модальных табов «подложка» остаётся «Меню» —
-    // чтобы при закрытии модалки сразу показался нормальный экран.
-    const realTab = MODAL_TABS.includes(tab) ? 'menu' : tab;
-    if (app) app.setAttribute('data-active-tab', realTab);
+    if (app) app.setAttribute('data-active-tab', tab);
 
     if (tab === 'today') {
       Renderer.renderToday();
-    }
-
-    if (tab === 'recipes') {
-      const overlay = document.getElementById(CONSTANTS.SELECTORS.recipesOverlay);
-      if (overlay && !overlay.classList.contains('active')) {
-        openRecipesModal();
-      }
-    }
-    if (tab === 'shopping') {
-      const overlay = document.getElementById(CONSTANTS.SELECTORS.shoppingListOverlay);
-      if (overlay && !overlay.classList.contains('active')) {
-        openShoppingList();
-      }
     }
   }
 
@@ -97,37 +80,23 @@ import { printWeeklyMenu } from './features/Print.js';
   document.querySelectorAll(CONSTANTS.SELECTORS.bottomNavButtons).forEach(btn => {
     btn.addEventListener('click', function() {
       const tab = this.dataset.tab;
-      // Для табов-модалок: если мы уже на этом табе и модалка открыта — не дёргаем.
-      if (MODAL_TABS.includes(tab)) {
-        if (window.location.hash === `#${tab}`) {
-          // уже открыто, модалку не переоткрываем
-          const overlayId = tab === 'recipes' ? CONSTANTS.SELECTORS.recipesOverlay : CONSTANTS.SELECTORS.shoppingListOverlay;
-          const overlay = document.getElementById(overlayId);
-          if (overlay && !overlay.classList.contains('active')) {
-            setActiveTab(tab);
-          }
-          return;
-        }
-        window.location.hash = tab;
+
+      if (tab === 'recipes') {
+        const overlay = document.getElementById(CONSTANTS.SELECTORS.recipesOverlay);
+        if (overlay && !overlay.classList.contains('active')) openRecipesModal();
         return;
       }
+
+      if (tab === 'shopping') {
+        const overlay = document.getElementById(CONSTANTS.SELECTORS.shoppingListOverlay);
+        if (overlay && !overlay.classList.contains('active')) openShoppingList();
+        return;
+      }
+
       if (window.location.hash === `#${tab}`) return;
       window.location.hash = tab;
     });
   });
-
-  // После закрытия модалки табов «Рецепты»/«Покупки» — переключить обратно на «Меню».
-  function resetTabAfterModalClose() {
-    const currentTab = getTabFromHash();
-    if (!MODAL_TABS.includes(currentTab)) return;
-    const overlayId = currentTab === 'recipes'
-      ? CONSTANTS.SELECTORS.recipesOverlay
-      : CONSTANTS.SELECTORS.shoppingListOverlay;
-    const overlay = document.getElementById(overlayId);
-    if (overlay && !overlay.classList.contains('active')) {
-      window.location.hash = 'menu';
-    }
-  }
 
   // ---------- Приветственное окно ----------
   function showWelcome() {
@@ -361,10 +330,7 @@ import { printWeeklyMenu } from './features/Print.js';
     }
   }
 
-  const modalObserver = new MutationObserver(() => {
-    syncModalHistory();
-    resetTabAfterModalClose();
-  });
+  const modalObserver = new MutationObserver(syncModalHistory);
   modalObserver.observe(document.body, {
     subtree: true,
     attributes: true,
