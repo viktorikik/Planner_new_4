@@ -61,7 +61,8 @@ import { printWeeklyMenu } from './features/Print.js';
     if (app) app.setAttribute('data-active-tab', tab);
 
     if (tab === 'today') {
-      Renderer.renderToday();
+      // При переходе на «Сегодня» всегда показываем реальный сегодняшний день.
+      Renderer.resetTodayViewDate();
     }
   }
 
@@ -90,6 +91,12 @@ import { printWeeklyMenu } from './features/Print.js';
       if (tab === 'shopping') {
         const overlay = document.getElementById(CONSTANTS.SELECTORS.shoppingListOverlay);
         if (overlay && !overlay.classList.contains('active')) openShoppingList();
+        return;
+      }
+
+      // Тап по уже активной вкладке «Сегодня» — вернуться к сегодня.
+      if (tab === 'today' && window.location.hash === '#today') {
+        Renderer.resetTodayViewDate();
         return;
       }
 
@@ -587,6 +594,34 @@ import { printWeeklyMenu } from './features/Print.js';
       Renderer.renderCalendar(view, newDate);
     }
   }, { passive: true });
+
+  // ---------- Свайпы для экрана «Сегодня» (вчера / завтра) ----------
+  // Свайп влево — следующий день, свайп вправо — предыдущий.
+  // Жест не срабатывает, если палец начал движение на карточке блюда —
+  // там своё свайп-удаление и мы не должны ему мешать.
+  const todayWrap = document.getElementById(CONSTANTS.SELECTORS.todayContent);
+  if (todayWrap) {
+    let todayTouchStartX = 0;
+    let todayTouchStartY = 0;
+    let todaySwipeStartedOnCard = false;
+
+    todayWrap.addEventListener('touchstart', (e) => {
+      const t = e.changedTouches[0];
+      todayTouchStartX = t.screenX;
+      todayTouchStartY = t.screenY;
+      todaySwipeStartedOnCard = !!e.target.closest('.dish-swipe-wrap');
+    }, { passive: true });
+
+    todayWrap.addEventListener('touchend', (e) => {
+      if (todaySwipeStartedOnCard) return;
+      const t = e.changedTouches[0];
+      const dx = todayTouchStartX - t.screenX;
+      const dy = todayTouchStartY - t.screenY;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        Renderer.shiftTodayViewDate(dx > 0 ? 1 : -1);
+      }
+    }, { passive: true });
+  }
 
   // ---------- Service Worker (PWA) ----------
   if ('serviceWorker' in navigator) {
