@@ -4510,3 +4510,10 @@ body.dark-theme .today-hints {
   opacity: 1;
   pointer-events: auto;
 }
+
+/* Причины под названием блюда в «Что приготовить?» — вместо старой
+   строки с датой. Может занимать до двух строк, поэтому разрешаем перенос. */
+.choice-result-last {
+  white-space: normal;
+  line-height: 1.3;
+}
