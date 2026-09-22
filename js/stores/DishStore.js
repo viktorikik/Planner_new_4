@@ -133,7 +133,6 @@ export const DishStore = (function() {
     if (!name || !status || !date || !category) return false;
     const id = generateId();
     const normalized = normalizeMealTypes(mealTypes);
-    // Взаимоисключение: если disliked=true, liked принудительно false.
     const finalLiked = disliked ? false : !!liked;
     dishes.push({
       id, name, status, date, category,
@@ -221,10 +220,15 @@ export const DishStore = (function() {
     return true;
   }
 
+  // Проверка: последняя по дате запись с этим именем, у которой вообще есть
+  // оценка (👍 или 👎), помечена как «не нравится»? Если у записи нет оценки —
+  // она не участвует в проверке, и решение принимает предыдущая оценённая
+  // запись. Так 👎 «прилипает» к названию блюда: поставила один раз — блюдо
+  // скрыто из рекомендаций, пока ты явно не поставишь 👍 (или не снимешь 👎).
   function isDishNameDisliked(name) {
-    const entries = dishes.filter(d => d.name === name);
-    if (entries.length === 0) return false;
-    const sorted = entries.slice().sort((a, b) => b.date.localeCompare(a.date));
+    const rated = dishes.filter(d => d.name === name && (d.liked || d.disliked));
+    if (rated.length === 0) return false;
+    const sorted = rated.slice().sort((a, b) => b.date.localeCompare(a.date));
     return sorted[0].disliked === true;
   }
 
