@@ -977,7 +977,7 @@ export const Renderer = (function() {
 
     const hint = document.createElement('div');
     hint.className = 'week-drag-hint';
-    hint.textContent = '🔄 Перетащите блюдо на другой день (на мобильном: удерживайте палец)';
+    hint.textContent = 'Перетащите блюдо на другой день (на мобильном: удерживайте палец)';
     list.appendChild(hint);
 
     const dayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
