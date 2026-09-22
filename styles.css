@@ -594,7 +594,7 @@ textarea:focus-visible {
 }
 
 .week-row .date-col {
-  font-weight: 700;
+  font-weight: 600;
   font-size: 16px;
   color: var(--text-primary);
   text-align: center;
@@ -893,16 +893,16 @@ textarea:focus-visible {
 
 .day-group-title {
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.3px;
   color: var(--accent-color);
   margin-bottom: 4px;
 }
 
 .day-group-status-label {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-muted);
   margin: 10px 0 4px;
   letter-spacing: 0.2px;
