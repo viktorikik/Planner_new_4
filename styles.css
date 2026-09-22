@@ -38,11 +38,11 @@
   --search-bg: #ffffff;
   --search-border: #d9cfc2;
 
-  --spacing-xs: 4px;
+    --spacing-xs: 4px;
   --spacing-sm: 8px;
-  --spacing-md: 12px;
-  --spacing-lg: 20px;
-  --spacing-xl: 28px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
   --radius-sm: 12px;
   --radius-md: 24px;
   --radius-lg: 40px;
@@ -382,7 +382,7 @@ textarea:focus-visible {
 .calendar-view-switch {
   display: flex;
   justify-content: center;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   padding: 0 4px;
 }
 
@@ -407,7 +407,7 @@ textarea:focus-visible {
 .month-nav-wrapper {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex: 1 1 auto;
   justify-content: center;
   min-width: 0;
@@ -725,11 +725,11 @@ textarea:focus-visible {
   font-weight: 700;
   font-size: 18px;
   color: var(--text-primary);
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .menu-group {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 .menu-date {
   font-weight: 600;
@@ -739,7 +739,7 @@ textarea:focus-visible {
 }
 
 .menu-item {
-  padding: 6px 14px;
+  padding: 8px 12px;
   border-radius: var(--radius-sm);
   background: var(--menu-item-bg);
   margin-bottom: 4px;
@@ -841,7 +841,7 @@ textarea:focus-visible {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
 .modal-header h3 {
   font-size: 22px;
@@ -915,7 +915,7 @@ textarea:focus-visible {
   font-size: 13px;
   font-weight: 500;
   color: var(--text-muted);
-  margin: 10px 0 4px;
+  margin: 8px 0 4px;
   letter-spacing: 0.2px;
 }
 
@@ -924,7 +924,7 @@ textarea:focus-visible {
   grid-template-columns: auto minmax(0, 1fr) auto auto;
   gap: 4px 12px;
   align-items: center;
-  padding: 10px 4px;
+  padding: 8px 4px;
   background: transparent;
   border: none;
   border-bottom: 1px dashed var(--cell-border);
