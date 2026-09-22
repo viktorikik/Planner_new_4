@@ -1806,13 +1806,13 @@ body.dark-theme .modal-dish .recipe-chip:hover {
 .recipe-view-modal .recipe-view-header {
   align-items: flex-start;
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 .recipe-view-titlerow {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   flex: 1 1 auto;
   min-width: 0;
 }
@@ -1852,7 +1852,7 @@ body.dark-theme .modal-dish .recipe-chip:hover {
 
 .recipe-view-modal .recipe-section {
   margin-bottom: 16px;
-  padding-bottom: 14px;
+  padding-bottom: 16px;
   border-bottom: 1px solid var(--cell-border);
 }
 .recipe-view-modal .recipe-section:last-of-type {
@@ -2185,7 +2185,7 @@ body.dark-theme .recipe-category-header:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 14px;
+  padding: 8px 12px;
   border-bottom: 1px solid var(--cell-border);
   border-radius: var(--radius-sm);
   transition: var(--transition-fast);
@@ -2242,7 +2242,7 @@ body.dark-theme .recipe-category-header:hover {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 10px;
+  gap: 8px 12px;
   margin-bottom: 12px;
 }
 .shopping-dates-row label {
@@ -2326,10 +2326,10 @@ body.dark-theme .recipe-category-header:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 14px;
+  padding: 10px 16px;
   background: var(--card-bg);
   border-radius: var(--radius-md);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   border: 1px solid var(--cell-border);
   cursor: pointer;
   transition: var(--transition-fast);
@@ -2358,7 +2358,7 @@ body.dark-theme .recipe-category-header:hover {
 .shopping-list-view {
   background: rgba(128, 128, 140, 0.05);
   border-radius: var(--radius-md);
-  padding: 12px 14px;
+  padding: 12px 16px;
   margin-bottom: 12px;
   max-height: 50vh;
   overflow-y: auto;
@@ -2668,7 +2668,7 @@ body.dark-theme #savedListsContainer h4 {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 14px;
+  padding: 10px 16px;
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.03);
   color: var(--text-secondary);
@@ -2705,7 +2705,7 @@ body.dark-theme #savedListsContainer h4 {
 
 .today-hints-body {
   margin-top: 8px;
-  padding: 12px 14px;
+  padding: 12px 16px;
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.03);
 }
@@ -2729,7 +2729,7 @@ body.dark-theme .today-hints-body {
 }
 
 .today-hint-row + .today-hint-row {
-  margin-top: 6px;
+  margin-top: 8px;
 }
 
 .today-hint-icon {
@@ -2747,7 +2747,7 @@ body.dark-theme .today-hints-body {
   display: block;
   width: 100%;
   margin: 12px 0;
-  padding: 10px 16px;
+  padding: 12px 16px;
   border-radius: var(--radius-md);
   border: 1.5px dashed var(--accent-color);
   background: var(--accent-light);
@@ -3051,7 +3051,7 @@ body.dark-theme .onboarding-modal {
   border: 1px solid var(--cell-border);
   border-radius: var(--radius-md);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
-  padding: 6px;
+  padding: 8px;
   z-index: 1500;
   display: flex;
   flex-direction: column;
