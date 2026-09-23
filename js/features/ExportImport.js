@@ -17,14 +17,29 @@ function validateDish(dish, index) {
   return null;
 }
 
+// Валидация рецепта. Принимает схему v1 (ингредиенты — массив строк)
+// и схему v2 (ингредиенты — массив объектов { name, amount, unit }).
+// Остальные поля (id, category, servings и т.д.) — опциональны:
+// RecipeStore.normalizeRecipe дозаполнит их сам.
 function validateRecipe(recipe, index) {
   if (!recipe || typeof recipe !== 'object') return `Рецепт №${index+1}: не объект`;
-  if (typeof recipe.name !== 'string' || recipe.name.trim() === '') return `Рецепт №${index+1}: отсутствует или некорректное name`;
-  if (!Array.isArray(recipe.ingredients) || !recipe.ingredients.every(i => typeof i === 'string')) return `Рецепт №${index+1}: ингредиенты должны быть массивом строк`;
-  if (recipe.instructions !== undefined && typeof recipe.instructions !== 'string') return `Рецепт №${index+1}: instructions должен быть строкой`;
-  const validCategories = Object.values(CATEGORIES);
-  if (!validCategories.includes(recipe.category)) return `Рецепт №${index+1}: недопустимая категория`;
-  if (typeof recipe.id !== 'number') return `Рецепт №${index+1}: отсутствует или некорректный id`;
+  if (typeof recipe.name !== 'string' || recipe.name.trim() === '') {
+    return `Рецепт №${index+1}: отсутствует или некорректное name`;
+  }
+  if (recipe.ingredients !== undefined) {
+    if (!Array.isArray(recipe.ingredients)) {
+      return `Рецепт №${index+1}: ingredients должен быть массивом`;
+    }
+    for (let j = 0; j < recipe.ingredients.length; j++) {
+      const ing = recipe.ingredients[j];
+      if (typeof ing === 'string') continue;
+      if (ing && typeof ing === 'object' && typeof ing.name === 'string') continue;
+      return `Рецепт №${index+1}, ингредиент №${j+1}: должен быть строкой или объектом с полем name`;
+    }
+  }
+  if (recipe.instructions !== undefined && typeof recipe.instructions !== 'string') {
+    return `Рецепт №${index+1}: instructions должен быть строкой`;
+  }
   return null;
 }
 
@@ -55,7 +70,11 @@ export function exportData(format) {
   if (!data.length) { showMessage('Нет данных для экспорта.'); return; }
 
   if (format === 'json') {
-    const json = JSON.stringify({ dishes: data, recipes: RecipeStore.getAll() }, null, 2);
+    const json = JSON.stringify({
+      schemaVersion: 2,
+      dishes: data,
+      recipes: RecipeStore.getAll()
+    }, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -185,10 +204,12 @@ export function importData(file) {
         return;
       }
 
-      if (confirm(`Будет импортировано ${dishes.length} блюд и ${recipes ? recipes.length : 0} рецептов. Текущие данные будут заменены. Продолжить?`)) {
+      const recipesCount = recipes ? recipes.length : 0;
+      if (confirm(`Будет импортировано ${dishes.length} блюд и ${recipesCount} рецептов. Текущие данные будут заменены. Продолжить?`)) {
+        // Рецепты прогоняются через normalizeRecipe внутри replaceAll —
+        // старые бэкапы (v1) автоматически конвертируются в схему v2.
         if (recipes) {
-          localStorage.setItem(CONSTANTS.STORAGE_KEYS.RECIPES, JSON.stringify(recipes));
-          RecipeStore.init();
+          RecipeStore.replaceAll(recipes);
         }
         DishStore.replaceAll(dishes);
         showMessage('✅ Данные успешно импортированы!');
@@ -206,7 +227,7 @@ export function exportRecipesAsJson() {
     showMessage('Нет рецептов для экспорта.');
     return;
   }
-  const json = JSON.stringify({ recipes }, null, 2);
+  const json = JSON.stringify({ schemaVersion: 2, recipes }, null, 2);
   const filename = `recipes_backup_${new Date().toISOString().slice(0,10)}.json`;
   downloadFile(json, filename, 'application/json');
 }
@@ -264,7 +285,10 @@ export function exportRecipesAsTxt() {
       if (recipe.ingredients && recipe.ingredients.length > 0) {
         text += `   Ингредиенты:\n`;
         recipe.ingredients.forEach(ing => {
-          text += `   • ${ing}\n`;
+          // ing — объект { name, amount, unit } или строка (на случай, если
+          // где-то ещё остались не мигрированные данные).
+          const line2 = Utils.formatIngredient(ing);
+          if (line2) text += `   • ${line2}\n`;
         });
       }
 
@@ -323,12 +347,36 @@ export function importRecipesOnly(file, onDone) {
           r => r.name.toLowerCase() === incoming.name.toLowerCase()
         );
 
-        const ingredientsStr = incoming.ingredients.join('\n');
-        const instructions = incoming.instructions || '';
-        const category = incoming.category;
+        // Прокидываем весь набор полей v2 через extra-объект.
+        // RecipeStore.add/update сами нормализуют и дозаполнят отсутствующее.
+        const extra = {
+          servings: incoming.servings,
+          cookTime: incoming.cookTime,
+          activeTime: incoming.activeTime,
+          nutrition: incoming.nutrition,
+          difficulty: incoming.difficulty,
+          spiciness: incoming.spiciness,
+          cuisine: incoming.cuisine,
+          allergens: incoming.allergens,
+          mealTypes: incoming.mealTypes,
+          liked: incoming.liked,
+          disliked: incoming.disliked,
+          builtIn: incoming.builtIn
+        };
+        // Удаляем undefined, чтобы normalizeRecipe не перетёр существующие
+        // значения при обновлении.
+        Object.keys(extra).forEach(k => {
+          if (extra[k] === undefined) delete extra[k];
+        });
 
         if (!existing) {
-          RecipeStore.add(incoming.name, ingredientsStr, instructions, category);
+          RecipeStore.add(
+            incoming.name,
+            incoming.ingredients || [],
+            incoming.instructions || '',
+            incoming.category,
+            extra
+          );
           added++;
         } else {
           const answer = confirm(
@@ -337,7 +385,14 @@ export function importRecipesOnly(file, onDone) {
             `Отмена — пропустить.`
           );
           if (answer) {
-            RecipeStore.update(existing.id, incoming.name, ingredientsStr, instructions, category);
+            RecipeStore.update(
+              existing.id,
+              incoming.name,
+              incoming.ingredients || [],
+              incoming.instructions || '',
+              incoming.category,
+              extra
+            );
             replaced++;
           } else {
             skipped++;
