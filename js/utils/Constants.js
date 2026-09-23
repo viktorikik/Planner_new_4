@@ -31,10 +31,140 @@ export const MEAL_TYPES = {
 };
 
 export const MEAL_TYPE_LABELS = {
-  [MEAL_TYPES.BREAKFAST]: '🌅 Завтрак',
-  [MEAL_TYPES.LUNCH]: '☀️ Обед',
-  [MEAL_TYPES.DINNER]: '🌙 Ужин',
-  [MEAL_TYPES.SNACK]: '🍎 Перекус'
+  [MEAL_TYPES.BREAKFAST]: 'Завтрак',
+  [MEAL_TYPES.LUNCH]: 'Обед',
+  [MEAL_TYPES.DINNER]: 'Ужин',
+  [MEAL_TYPES.SNACK]: 'Перекус'
+};
+
+// Кухни (для карточки рецепта, v6.0)
+// Ключи латиницей, подписи — русские.
+export const CUISINES = {
+  RUSSIAN: 'russian',
+  UKRAINIAN: 'ukrainian',
+  CAUCASIAN: 'caucasian',
+  ITALIAN: 'italian',
+  FRENCH: 'french',
+  MEDITERRANEAN: 'mediterranean',
+  GREEK: 'greek',
+  AMERICAN: 'american',
+  MEXICAN: 'mexican',
+  CHINESE: 'chinese',
+  JAPANESE: 'japanese',
+  KOREAN: 'korean',
+  INDIAN: 'indian',
+  ASIAN: 'asian',
+  INTERNATIONAL: 'international'
+};
+
+export const CUISINE_LABELS = {
+  [CUISINES.RUSSIAN]: 'Русская',
+  [CUISINES.UKRAINIAN]: 'Украинская',
+  [CUISINES.CAUCASIAN]: 'Кавказская',
+  [CUISINES.ITALIAN]: 'Итальянская',
+  [CUISINES.FRENCH]: 'Французская',
+  [CUISINES.MEDITERRANEAN]: 'Средиземноморская',
+  [CUISINES.GREEK]: 'Греческая',
+  [CUISINES.AMERICAN]: 'Американская',
+  [CUISINES.MEXICAN]: 'Мексиканская',
+  [CUISINES.CHINESE]: 'Китайская',
+  [CUISINES.JAPANESE]: 'Японская',
+  [CUISINES.KOREAN]: 'Корейская',
+  [CUISINES.INDIAN]: 'Индийская',
+  [CUISINES.ASIAN]: 'Азиатская',
+  [CUISINES.INTERNATIONAL]: 'Международная'
+};
+
+// Аллергены (для карточки рецепта, v6.0)
+// Ключи латиницей, подписи — русские.
+// Список соответствует европейскому стандарту (14 аллергенов) плюс клубника и пищевые добавки.
+export const ALLERGENS = {
+  NUTS: 'nuts',
+  EGGS: 'eggs',
+  GLUTEN: 'gluten',
+  FISH: 'fish',
+  MILK: 'milk',
+  PEANUT: 'peanut',
+  ADDITIVES: 'additives',
+  MUSTARD: 'mustard',
+  SESAME: 'sesame',
+  MOLLUSCS: 'molluscs',
+  CRUSTACEANS: 'crustaceans',
+  STRAWBERRY: 'strawberry',
+  SOY: 'soy',
+  CELERY: 'celery',
+  LUPIN: 'lupin'
+};
+
+export const ALLERGEN_LABELS = {
+  [ALLERGENS.NUTS]: 'Орехи',
+  [ALLERGENS.EGGS]: 'Яйцо',
+  [ALLERGENS.GLUTEN]: 'Злаки, содержащие глютен',
+  [ALLERGENS.FISH]: 'Рыба',
+  [ALLERGENS.MILK]: 'Белок коровьего молока',
+  [ALLERGENS.PEANUT]: 'Арахис',
+  [ALLERGENS.ADDITIVES]: 'Пищевые добавки',
+  [ALLERGENS.MUSTARD]: 'Горчица',
+  [ALLERGENS.SESAME]: 'Кунжут',
+  [ALLERGENS.MOLLUSCS]: 'Моллюски',
+  [ALLERGENS.CRUSTACEANS]: 'Ракообразные',
+  [ALLERGENS.STRAWBERRY]: 'Клубника',
+  [ALLERGENS.SOY]: 'Соя',
+  [ALLERGENS.CELERY]: 'Сельдерей',
+  [ALLERGENS.LUPIN]: 'Люпин и продукты его переработки'
+};
+
+// Единицы измерения ингредиентов (v6.0)
+// Используются в структурированных ингредиентах { name, amount, unit }.
+// Весовые единицы (g, kg, ml, l) при пересчёте порций масштабируются,
+// штучные (pcs, tbsp, tsp, pinch, clove, bunch) — не пересчитываются.
+export const UNITS = {
+  G: 'g',
+  KG: 'kg',
+  ML: 'ml',
+  L: 'l',
+  PCS: 'pcs',
+  TBSP: 'tbsp',
+  TSP: 'tsp',
+  PINCH: 'pinch',
+  CLOVE: 'clove',
+  BUNCH: 'bunch'
+};
+
+export const UNIT_LABELS = {
+  [UNITS.G]: 'г',
+  [UNITS.KG]: 'кг',
+  [UNITS.ML]: 'мл',
+  [UNITS.L]: 'л',
+  [UNITS.PCS]: 'шт',
+  [UNITS.TBSP]: 'ст.л.',
+  [UNITS.TSP]: 'ч.л.',
+  [UNITS.PINCH]: 'щепотка',
+  [UNITS.CLOVE]: 'зубчик',
+  [UNITS.BUNCH]: 'пучок'
+};
+
+// Единицы, которые НЕ масштабируются при изменении числа порций.
+// Всё остальное (g, kg, ml, l) — масштабируется.
+export const NON_SCALABLE_UNITS = [
+  UNITS.PCS, UNITS.TBSP, UNITS.TSP, UNITS.PINCH, UNITS.CLOVE, UNITS.BUNCH
+];
+
+// Шкалы для карточки рецепта (v6.0)
+export const DIFFICULTY_LABELS = {
+  1: 'Очень просто',
+  2: 'Просто',
+  3: 'Средне',
+  4: 'Сложно',
+  5: 'Очень сложно'
+};
+
+export const SPICINESS_LABELS = {
+  1: 'Не остро',
+  2: 'Слегка остро',
+  3: 'Средне остро',
+  4: 'Остро',
+  5: 'Очень остро'
 };
 
 // Список продуктов для распознавания ингредиентов
@@ -80,7 +210,8 @@ export const PRODUCT_WORDS = [
 // Объект с ключами хранилища, событиями и селекторами
 export const CONSTANTS = {
   STORAGE_KEYS: {
-    RECIPES: 'smartMenuRecipes_v1',
+    RECIPES: 'smartMenuRecipes_v2',
+    RECIPES_LEGACY: 'smartMenuRecipes_v1',
     DISHES: 'smartMenuDishes_v5',
     THEME: 'mealPlannerTheme',
     ONBOARDING_SHOWN: 'smartMenuOnboardingShown_v1',
