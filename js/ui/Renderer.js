@@ -1709,8 +1709,12 @@ export const Renderer = (function() {
     const ingredientsList = document.createElement('ul');
     ingredientsList.className = 'recipe-ingredients-list';
     recipe.ingredients.forEach(ing => {
+      // ing — объект { name, amount, unit } (схема v2) или строка (старые данные).
+      // Utils.formatIngredient умеет и то, и другое.
+      const line = Utils.formatIngredient(ing);
+      if (!line) return;
       const li = document.createElement('li');
-      li.textContent = ing;
+      li.textContent = line;
       ingredientsList.appendChild(li);
     });
     ingredientsDiv.appendChild(ingredientsList);
