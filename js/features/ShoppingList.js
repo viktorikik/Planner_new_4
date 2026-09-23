@@ -136,6 +136,8 @@ function matchWord(text, kw) {
   }
 }
 
+// Классифицирует ингредиент по отделам магазина.
+// На вход приходит строка (после Utils.formatIngredient).
 function classifyIngredient(ingredient) {
   const lower = normalize(ingredient);
   for (const [department, keywords] of Object.entries(DEPARTMENTS)) {
@@ -413,7 +415,13 @@ export function generateShoppingList() {
     if (dish.recipeId) {
       const recipe = RecipeStore.getById(dish.recipeId);
       if (recipe) {
-        recipe.ingredients.forEach(ing => items.push(ing));
+        // Ингредиенты в рецепте — массив объектов { name, amount, unit }.
+        // Для списка покупок переводим в человекочитаемую строку
+        // («Свинина — 1,2 кг»). Хранение структуры в группах — задача Блока 3.
+        recipe.ingredients.forEach(ing => {
+          const line = Utils.formatIngredient(ing);
+          if (line) items.push(line);
+        });
       }
     }
   });
