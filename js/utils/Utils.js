@@ -1,4 +1,98 @@
-import { CATEGORIES, PRODUCT_WORDS } from './Constants.js';
+import { CATEGORIES, PRODUCT_WORDS, UNITS, UNIT_LABELS } from './Constants.js';
+
+// ============================================================
+// ВНУТРЕННИЕ ХЕЛПЕРЫ ПАРСЕРА ИНГРЕДИЕНТОВ (не экспортируются)
+// ============================================================
+
+// Заголовки блоков — не ингредиенты, не попадают в массив.
+const HEADER_KEYWORDS = /^(ингредиенты|состав|продукты|для\s+(теста|начинки|соуса|крема|украшения|подачи|заливки|глазури|маринада|панировки|обжарки))$/i;
+
+function isHeaderLine(line) {
+  if (!line) return true;
+  const trimmed = line.trim();
+  if (!trimmed) return true;
+  // Короткая строка без цифр с двоеточием на конце — «Ингредиенты:», «Для теста:».
+  if (/:\s*$/.test(trimmed) && trimmed.length < 60 && !/\d/.test(trimmed)) return true;
+  // «Ингредиенты», «Состав» без двоеточия.
+  const clean = trimmed.toLowerCase().replace(/[:.]/g, '').trim();
+  if (HEADER_KEYWORDS.test(clean)) return true;
+  return false;
+}
+
+// Нормализация русской единицы измерения в ключ из UNITS.
+// «грамм», «гр», «г» → 'g'; «ст.л.», «столовая ложка» → 'tbsp' и т.д.
+function normalizeUnit(raw) {
+  const u = String(raw).toLowerCase().replace(/\./g, '').replace(/\s+/g, ' ').trim();
+  if (/^(кг|килограмм|килограмма|килограммов)/.test(u)) return UNITS.KG;
+  if (/^(г|гр|грамм|грамма|граммов)/.test(u)) return UNITS.G;
+  if (/^(мл|миллилитр|миллилитра|миллилитров)/.test(u)) return UNITS.ML;
+  if (/^(л|литр|литра|литров)/.test(u)) return UNITS.L;
+  if (/^(шт|штук|штука|штуки)/.test(u)) return UNITS.PCS;
+  if (/^(ст л|столовая ложка|столовых ложек|столовые ложки)/.test(u)) return UNITS.TBSP;
+  if (/^(ч л|чайная ложка|чайных ложек|чайные ложки)/.test(u)) return UNITS.TSP;
+  if (/^(щепотк|щепоть)/.test(u)) return UNITS.PINCH;
+  if (/^(зубчик|зубчика|зубчиков)/.test(u)) return UNITS.CLOVE;
+  if (/^(пучок|пучка|пучков)/.test(u)) return UNITS.BUNCH;
+  return null;
+}
+
+// Регулярка для поиска единицы в строке (только распознавание, не нормализация).
+// Экранирование: в строке JS двойной слэш, в regex — одинарный.
+const UNIT_REGEX = '(кг|килограмм[аов]*|гр|грамм[аов]*|г|мл|миллилитр[аов]*|литр[аов]*|л|штук[аи]?|шт|ст\\.?\\s*л\\.?|столов[а-я]+\\s+ложк[а-я]+|ч\\.?\\s*л\\.?|чайн[а-я]+\\s+ложк[а-я]+|щепотк[а-я]*|щепоть|зубчик[аов]*|пучок|пучка|пучков|пуч)';
+
+// Убирает мусорные хвосты и «по вкусу» из имени ингредиента.
+function cleanupName(name) {
+  return String(name || '')
+    .replace(/\s+/g, ' ')
+    .replace(/\s+по\s+(вкусу|желанию)\s*/gi, ' ')
+    .replace(/^[\s\-–—,;:.]+|[\s\-–—,;:.]+$/g, '')
+    .trim();
+}
+
+// Разбирает одну строку ингредиента в { name, amount, unit }.
+// Возвращает объект всегда — даже если строка не похожа на ингредиент.
+function parseIngredientLine(line) {
+  // Нормализуем тире, убираем маркер списка и нумерацию.
+  let s = String(line)
+    .replace(/[–—]/g, '-')
+    .replace(/^[•\-*]\s*/, '')
+    .replace(/^\d+[.)]\s+/, '')
+    .trim();
+
+  // Попытка 1: «число + единица» — «Свинина 1,2кг», «Лук 1 шт».
+  const withNumber = new RegExp('(\\d+(?:[.,]\\d+)?)\\s*' + UNIT_REGEX, 'i');
+  const m1 = s.match(withNumber);
+  if (m1) {
+    let num = parseFloat(m1[1].replace(',', '.'));
+    let unit = normalizeUnit(m1[2]);
+    if (unit === UNITS.KG) { num = num * 1000; unit = UNITS.G; }
+    else if (unit === UNITS.L) { num = num * 1000; unit = UNITS.ML; }
+    const name = cleanupName(s.replace(m1[0], ''));
+    return { name: name || cleanupName(s), amount: num, unit };
+  }
+
+  // Попытка 2: только единица, без числа — «Сахар коричневый ст.л.».
+  const onlyUnit = new RegExp('\\s*' + UNIT_REGEX + '\\s*\\.?\\s*$', 'i');
+  const m2 = s.match(onlyUnit);
+  if (m2) {
+    const unit = normalizeUnit(m2[1]);
+    const name = cleanupName(s.replace(m2[0], ''));
+    return { name: name || cleanupName(s), amount: null, unit };
+  }
+
+  // Ничего не нашли — только имя.
+  return { name: cleanupName(s), amount: null, unit: null };
+}
+
+// Форматирует число: целые — как есть, дробные — через запятую.
+function formatNumber(n) {
+  if (Number.isInteger(n)) return String(n);
+  return String(n).replace('.', ',');
+}
+
+// ============================================================
+// ПУБЛИЧНЫЙ ОБЪЕКТ UTILS
+// ============================================================
 
 export const Utils = {
   formatDate(date) {
@@ -86,31 +180,76 @@ export const Utils = {
     return score >= 2;
   },
 
+  // Разбирает текст ингредиентов в структурированный вид.
+  // Возвращает { title, ingredients: [{ name, amount, unit }] }.
+  // Заголовки блоков («Ингредиенты:», «Для теста:») отбрасываются.
+  // Все остальные непустые строки становятся ингредиентами — даже если
+  // не удалось распознать количество и единицу.
   parseRecipeText(text) {
-    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    const lines = String(text || '')
+      .split('\n')
+      .map(l => l.trim())
+      .filter(l => l.length > 0);
+
+    const ingredients = [];
+    for (const line of lines) {
+      if (isHeaderLine(line)) continue;
+      if (line.length > 150) continue; // явно не ингредиент
+      const parsed = parseIngredientLine(line);
+      if (parsed.name) ingredients.push(parsed);
+    }
+
+    // Попытка найти заголовок рецепта в первых строках.
+    // Заголовок — короткая строка без цифр, которая не похожа на ингредиент.
     let title = '';
-    let ingredients = [];
     for (let i = 0; i < Math.min(lines.length, 5); i++) {
-      const line = lines[i];
-      if (line.length > 2 && line.length < 80 && !/\d/.test(line) && !this.isIngredientLine(line)) {
-        title = line;
+      const candidate = lines[i];
+      if (isHeaderLine(candidate)) continue;
+      if (candidate.length < 3 || candidate.length > 80) continue;
+      if (/\d/.test(candidate)) continue;
+      if (!this.isIngredientLine(candidate)) {
+        title = candidate;
         break;
       }
     }
     if (!title && lines.length > 0) title = lines[0];
-    for (const line of lines) {
-      if (this.isIngredientLine(line) && line.length < 100) {
-        ingredients.push(line);
+
+    return { title, ingredients };
+  },
+
+  // Форматирует один ингредиент обратно в человекочитаемую строку.
+  // «Свинина — 1,2 кг», «Имбирь», «Соль».
+  formatIngredient(ing) {
+    if (!ing) return '';
+    if (typeof ing === 'string') return ing;
+    const name = ing.name || '';
+    if (ing.amount == null) {
+      if (ing.unit) {
+        const label = UNIT_LABELS[ing.unit] || ing.unit;
+        return `${name} — ${label}`.trim();
       }
+      return name;
     }
-    if (ingredients.length === 0) {
-      for (const line of lines) {
-        if (/\d/.test(line) && line.length < 100 && line.length > 3) {
-          ingredients.push(line);
-        }
-      }
+    // Для веса и объёма — показываем в «кг» и «л», если >= 1000 базовых единиц.
+    if (ing.unit === UNITS.G && ing.amount >= 1000) {
+      return `${name} — ${formatNumber(ing.amount / 1000)} кг`.trim();
     }
-    return { title, ingredients: ingredients.join('\n') };
+    if (ing.unit === UNITS.ML && ing.amount >= 1000) {
+      return `${name} — ${formatNumber(ing.amount / 1000)} л`.trim();
+    }
+    const label = UNIT_LABELS[ing.unit] || '';
+    const amountStr = formatNumber(ing.amount);
+    return label ? `${name} — ${amountStr} ${label}`.trim() : `${name} — ${amountStr}`.trim();
+  },
+
+  // Форматирует массив ингредиентов обратно в текст для textarea.
+  // Принимает и объекты, и строки (совместимость со старыми данными).
+  formatIngredientsToText(ingredients) {
+    if (!Array.isArray(ingredients)) return '';
+    return ingredients
+      .map(ing => this.formatIngredient(ing))
+      .filter(s => s.length > 0)
+      .join('\n');
   },
 
   debounce(func, delay = 300) {
