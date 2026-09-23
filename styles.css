@@ -536,23 +536,29 @@ textarea:focus-visible {
   margin-bottom: 2px;
 }
 
-.day-cell.has-done {
-  background: var(--done-bg);
-  border-color: var(--done-color);
+/* Статус дня — тонкая полоска внизу клетки, а не заливка.
+   Зелёная = есть приготовленные, оранжевая = есть запланированные,
+   двухцветная = и то, и другое. Цвет цифры и фон клетки больше
+   не зависят от статуса — их несёт только «сегодня». */
+.day-cell.has-done::after,
+.day-cell.has-planned::after,
+.day-cell.has-both::after {
+  content: '';
+  position: absolute;
+  left: 25%;
+  right: 25%;
+  bottom: 6px;
+  height: 3px;
+  border-radius: 2px;
 }
-.day-cell.has-done .day-number {
-  color: var(--done-color);
+.day-cell.has-done::after {
+  background: var(--done-color);
 }
-.day-cell.has-planned {
-  background: var(--planned-bg);
-  border-color: var(--planned-color);
+.day-cell.has-planned::after {
+  background: var(--planned-color);
 }
-.day-cell.has-planned .day-number {
-  color: var(--planned-color);
-}
-.day-cell.has-both {
-  background: linear-gradient(135deg, var(--done-bg) 50%, var(--planned-bg) 50%);
-  border-color: var(--done-color);
+.day-cell.has-both::after {
+  background: linear-gradient(to right, var(--done-color) 50%, var(--planned-color) 50%);
 }
 .day-cell.today {
   border-color: var(--accent-color);
@@ -653,10 +659,7 @@ textarea:focus-visible {
 .meal-chip.planned {
   border-left-color: var(--planned-color);
 }
-.meal-chip.liked {
-  border-left-color: var(--done-color);
-  background: rgba(16, 185, 129, 0.08);
-}
+
 .meal-chip .recipe-badge {
   font-size: 12px;
   cursor: pointer;
@@ -753,18 +756,7 @@ textarea:focus-visible {
 .menu-item.planned {
   border-left-color: var(--planned-color);
 }
-.menu-item.category-soup {
-  border-left-color: var(--color-soup);
-}
-.menu-item.category-salad {
-  border-left-color: var(--color-salad);
-}
-.menu-item.category-main {
-  border-left-color: var(--color-main);
-}
-.menu-item.category-bakery {
-  border-left-color: var(--color-bakery);
-}
+
 .menu-item .status-badge {
   font-size: 12px;
   color: var(--text-muted);
@@ -1053,9 +1045,7 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   border-radius: 4px;
 }
 
-.modal-dish.liked .dish-name {
-  color: var(--liked-color);
-}
+
 
 .dish-note {
   font-size: 12px;
