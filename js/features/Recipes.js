@@ -259,7 +259,9 @@ function openRecipeForm(recipeId = null) {
     if (!recipe) return;
     formId.value = recipeId;
     nameInput.value = recipe.name;
-    ingrInput.value = recipe.ingredients.join('\n');
+    // Ингредиенты — массив объектов { name, amount, unit }.
+    // Для textarea собираем обратно в человекочитаемый текст.
+    ingrInput.value = Utils.formatIngredientsToText(recipe.ingredients);
     instrInput.value = recipe.instructions || '';
     categorySelect.value = recipe.category || Utils.guessCategory(recipe.name);
     document.getElementById(CONSTANTS.SELECTORS.recipeFormTitle).textContent = '✎ Редактировать рецепт';
@@ -294,6 +296,8 @@ function saveRecipeForm() {
   if (!name) { showMessage('Введите название рецепта', 'error'); return; }
   if (!ingredients) { showMessage('Введите ингредиенты', 'error'); return; }
 
+  // RecipeStore.add/update принимают строку и сами нормализуют её
+  // в массив объектов { name, amount, unit } через parseRecipeText.
   if (id) {
     RecipeStore.update(Number(id), name, ingredients, instructions, category);
   } else {
@@ -311,8 +315,11 @@ function parseRecipeTextFromForm() {
     const cat = Utils.guessCategory(result.title);
     document.getElementById(CONSTANTS.SELECTORS.recipeCategory).value = cat;
   }
-  if (result.ingredients) {
-    document.getElementById(CONSTANTS.SELECTORS.recipeIngredients).value = result.ingredients;
+  // result.ingredients — массив объектов { name, amount, unit }.
+  // Для textarea собираем обратно в человекочитаемый текст.
+  if (Array.isArray(result.ingredients) && result.ingredients.length > 0) {
+    document.getElementById(CONSTANTS.SELECTORS.recipeIngredients).value =
+      Utils.formatIngredientsToText(result.ingredients);
   } else {
     showMessage('Не удалось распознать ингредиенты. Попробуйте вручную.', 'error');
   }
