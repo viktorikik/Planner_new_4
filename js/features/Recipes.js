@@ -7,17 +7,16 @@ import { showMessage } from '../utils/notifications.js';
 import { trapFocus } from '../utils/focusTrap.js';
 import { exportRecipesAsJson, exportRecipesAsTxt, importRecipesOnly } from './ExportImport.js';
 
-// ---------- Состояние фильтров модалки «Мои рецепты» ----------
+// ---------- Состояние фильтров таба «Рецепты» ----------
 let recipesSearchQuery = '';
 let recipesCategoryFilter = 'all';
 
-// ---------- Контекст открытия модалки ----------
-// true — модалка открыта из «Что приготовить?» → «Из моих рецептов».
-// В этом случае кнопка «Назад» ведёт обратно в choiceOverlay, а не на главный экран.
+// ---------- Контекст открытия таба ----------
+// true — таб открыт из «Что приготовить?» → «Мои рецепты».
+// В этом случае кнопка «Назад» ведёт обратно в choiceOverlay.
 let openedFromChoice = false;
 
 // ---------- Состояние свёрнутых категорий ----------
-// { soup: true, salad: false, ... }
 let collapsedCategories = loadCollapsedState();
 
 function loadCollapsedState() {
@@ -35,12 +34,11 @@ function saveCollapsedState() {
   try {
     localStorage.setItem(CONSTANTS.STORAGE_KEYS.RECIPES_COLLAPSED, JSON.stringify(collapsedCategories));
   } catch (e) {
-    // Если localStorage недоступен — молча игнорируем: состояние не сохранится между сессиями,
-    // но приложение продолжит работать.
+    // Если localStorage недоступен — молча игнорируем.
   }
 }
 
-// ---------- Счётчик в заголовке модалки ----------
+// ---------- Заголовок таба со счётчиком ----------
 function updateRecipesTitle(total, found, isFiltered) {
   const title = document.getElementById(CONSTANTS.SELECTORS.recipesTitle);
   if (!title) return;
@@ -51,51 +49,31 @@ function updateRecipesTitle(total, found, isFiltered) {
   }
 }
 
-export function openRecipesModal(fromChoice = false) {
-  openedFromChoice = !!fromChoice;
-
-  const overlay = document.getElementById(CONSTANTS.SELECTORS.recipesOverlay);
-  overlay.classList.add('active');
-
-  // Кнопка «Назад» видна только когда пришли из «Что приготовить?»
+function updateBackBtnVisibility() {
   const backBtn = document.getElementById(CONSTANTS.SELECTORS.recipesBackBtn);
   if (backBtn) backBtn.hidden = !openedFromChoice;
+}
 
-  // Сбрасываем фильтры при каждом открытии
-  recipesSearchQuery = '';
-  recipesCategoryFilter = 'all';
-  const searchInput = document.getElementById(CONSTANTS.SELECTORS.recipesSearchInput);
-  const categorySelect = document.getElementById(CONSTANTS.SELECTORS.recipesCategoryFilter);
-  if (searchInput) searchInput.value = '';
-  if (categorySelect) categorySelect.value = 'all';
-
+// Открывает таб «Рецепты». Из main.js вызывается при переключении на таб,
+// а также при клике «Мои рецепты» из «Что приготовить?».
+// fromChoice = true, если открыто из «Что приготовить?» — покажем «← Назад».
+export function openRecipesTab(fromChoice = false) {
+  if (fromChoice) openedFromChoice = true;
+  updateBackBtnVisibility();
   renderRecipesList();
-  trapFocus(overlay, closeRecipesModal);
 }
 
-export function closeRecipesModal() {
-  const overlay = document.getElementById(CONSTANTS.SELECTORS.recipesOverlay);
-  overlay.classList.remove('active');
-  if (overlay._trapFocusCleanup) {
-    overlay._trapFocusCleanup();
-    delete overlay._trapFocusCleanup;
-  }
-
-  // Скрываем кнопку «Назад» для следующего открытия
-  const backBtn = document.getElementById(CONSTANTS.SELECTORS.recipesBackBtn);
-  if (backBtn) backBtn.hidden = true;
-
-  // Запоминаем контекст ДО сброса флага и при необходимости возвращаемся в «Что приготовить?»
-  const wasFromChoice = openedFromChoice;
+// Сброс контекста. Вызывается при переходе на другой таб или при возврате
+// в «Что приготовить?».
+export function resetOpenedFromChoice() {
   openedFromChoice = false;
-
-  if (wasFromChoice) {
-    Renderer.returnToChoice();
-  }
+  updateBackBtnVisibility();
 }
 
+// ---------- Отрисовка списка рецептов ----------
 export function renderRecipesList() {
   const list = document.getElementById(CONSTANTS.SELECTORS.recipesList);
+  if (!list) return;
   const allRecipes = RecipeStore.getAll();
   list.innerHTML = '';
 
@@ -110,7 +88,6 @@ export function renderRecipesList() {
     recipes = recipes.filter(r => (r.category || Utils.guessCategory(r.name)) === recipesCategoryFilter);
   }
 
-  // Обновляем счётчик в заголовке ДО всех ранних return
   updateRecipesTitle(allRecipes.length, recipes.length, isFiltered);
 
   if (allRecipes.length === 0) {
@@ -141,8 +118,6 @@ export function renderRecipesList() {
     return categoryOrder.indexOf(a) - categoryOrder.indexOf(b);
   });
 
-  // При активном фильтре/поиске разворачиваем всё принудительно,
-  // чтобы результаты были видны пользователю.
   const forceExpand = isFiltered;
 
   sortedCategories.forEach(cat => {
@@ -153,7 +128,6 @@ export function renderRecipesList() {
     section.className = 'recipe-category-section';
     if (isCollapsed) section.classList.add('collapsed');
 
-    // ----- Заголовок-кнопка -----
     const header = document.createElement('button');
     header.type = 'button';
     header.className = 'recipe-category-header';
@@ -185,7 +159,6 @@ export function renderRecipesList() {
 
     section.appendChild(header);
 
-    // ----- Список рецептов -----
     const ul = document.createElement('ul');
     ul.className = 'recipe-list';
 
@@ -246,6 +219,7 @@ export function renderRecipesList() {
   });
 }
 
+// ---------- Форма рецепта (модалка) ----------
 function openRecipeForm(recipeId = null) {
   const overlay = document.getElementById(CONSTANTS.SELECTORS.recipeFormOverlay);
   const formId = document.getElementById(CONSTANTS.SELECTORS.recipeFormId);
@@ -259,8 +233,6 @@ function openRecipeForm(recipeId = null) {
     if (!recipe) return;
     formId.value = recipeId;
     nameInput.value = recipe.name;
-    // Ингредиенты — массив объектов { name, amount, unit }.
-    // Для textarea собираем обратно в человекочитаемый текст.
     ingrInput.value = Utils.formatIngredientsToText(recipe.ingredients);
     instrInput.value = recipe.instructions || '';
     categorySelect.value = recipe.category || Utils.guessCategory(recipe.name);
@@ -296,8 +268,6 @@ function saveRecipeForm() {
   if (!name) { showMessage('Введите название рецепта', 'error'); return; }
   if (!ingredients) { showMessage('Введите ингредиенты', 'error'); return; }
 
-  // RecipeStore.add/update принимают строку и сами нормализуют её
-  // в массив объектов { name, amount, unit } через parseRecipeText.
   if (id) {
     RecipeStore.update(Number(id), name, ingredients, instructions, category);
   } else {
@@ -315,8 +285,6 @@ function parseRecipeTextFromForm() {
     const cat = Utils.guessCategory(result.title);
     document.getElementById(CONSTANTS.SELECTORS.recipeCategory).value = cat;
   }
-  // result.ingredients — массив объектов { name, amount, unit }.
-  // Для textarea собираем обратно в человекочитаемый текст.
   if (Array.isArray(result.ingredients) && result.ingredients.length > 0) {
     document.getElementById(CONSTANTS.SELECTORS.recipeIngredients).value =
       Utils.formatIngredientsToText(result.ingredients);
@@ -325,9 +293,7 @@ function parseRecipeTextFromForm() {
   }
 }
 
-// ============================================================
-// МОДАЛКА ВЫБОРА ФОРМАТА ЭКСПОРТА РЕЦЕПТОВ
-// ============================================================
+// ---------- Модалка выбора формата экспорта рецептов ----------
 function openRecipeExportModal() {
   const overlay = document.getElementById(CONSTANTS.SELECTORS.recipeExportOverlay);
   if (!overlay) return;
@@ -346,14 +312,22 @@ function closeRecipeExportModal() {
 }
 
 // ============================================================
-// ИНИЦИАЛИЗАЦИЯ ОБРАБОТЧИКОВ МОДАЛКИ «МОИ РЕЦЕПТЫ»
+// ИНИЦИАЛИЗАЦИЯ ОБРАБОТЧИКОВ ТАБА «РЕЦЕПТЫ»
 // ============================================================
 export function initRecipesHandlers() {
   // Кнопка «← Назад» — видна только при открытии из «Что приготовить?».
-  // closeRecipesModal сам решает, вернуться в choiceOverlay или просто закрыться.
+  // Возврат: переключаемся на таб «Меню» и заново открываем «Что приготовить?».
   const backBtn = document.getElementById(CONSTANTS.SELECTORS.recipesBackBtn);
   if (backBtn) {
-    backBtn.addEventListener('click', closeRecipesModal);
+    backBtn.addEventListener('click', function() {
+      const wasFromChoice = openedFromChoice;
+      openedFromChoice = false;
+      updateBackBtnVisibility();
+      window.location.hash = 'menu';
+      if (wasFromChoice) {
+        Renderer.returnToChoice();
+      }
+    });
   }
 
   // «➕ Добавить» — открыть пустую форму
@@ -404,12 +378,10 @@ export function initRecipesHandlers() {
     const closeBtn = document.getElementById(CONSTANTS.SELECTORS.recipeExportClose);
     if (closeBtn) closeBtn.addEventListener('click', closeRecipeExportModal);
 
-    // Клик по затемнённому фону — закрыть
     exportOverlay.addEventListener('click', function(e) {
       if (e.target === this) closeRecipeExportModal();
     });
 
-    // Кнопки формата
     exportOverlay.querySelectorAll(CONSTANTS.SELECTORS.recipeExportOptions).forEach(btn => {
       btn.addEventListener('click', function() {
         const format = this.dataset.format;
