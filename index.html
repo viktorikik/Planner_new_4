@@ -16,7 +16,7 @@
   <meta name="apple-mobile-web-app-title" content="Меню и рецепты">
   <link rel="apple-touch-icon" href="icon.svg">
 
-  <link rel="stylesheet" href="styles.css?v=5.1.9">
+  <link rel="stylesheet" href="styles.css?v=5.2.0">
 </head>
 <body>
 
@@ -56,13 +56,6 @@
 
   <!-- ============ ТАБ: МЕНЮ ============ -->
   <div class="tab-view" data-tab-view="menu">
-    <section class="actions">
-      <div class="btn-row">
-        <button class="btn btn-primary" id="suggestBtn">🤔 Что приготовить?</button>
-        <button class="btn btn-done" id="addDishBtn">➕ Добавить блюдо</button>
-      </div>
-    </section>
-
     <section class="calendar-wrap" id="calendarWrap">
       <div class="calendar-view-switch">
         <div class="view-toggle" id="viewToggle" role="group" aria-label="Переключение вида календаря">
@@ -127,29 +120,68 @@
     </section>
   </div>
 
-  <!-- ============ ТАБ: РЕЦЕПТЫ (заготовка) ============ -->
+  <!-- ============ ТАБ: РЕЦЕПТЫ ============ -->
   <div class="tab-view" data-tab-view="recipes">
-    <div class="tab-placeholder">
-      <span class="tab-placeholder-icon" aria-hidden="true">📖</span>
-      <div class="tab-placeholder-title">Мои рецепты</div>
-      <p class="tab-placeholder-text">
-        Здесь появится список рецептов с поиском и фильтрами.<br>
-        Пока они открываются в модальном окне.
-      </p>
-      <button class="tab-placeholder-btn" id="goToRecipesFromTab" type="button">Открыть мои рецепты</button>
+    <div class="recipes-tab">
+      <div class="recipes-tab-header">
+        <h2 id="recipesTitle">📖 Мои рецепты</h2>
+      </div>
+
+      <button id="recipesBackBtn" class="recipes-back-btn" type="button" hidden>← Назад</button>
+
+      <div class="recipes-toolbar">
+        <button class="btn-done" id="addRecipeBtn">➕ Добавить</button>
+        <button class="btn-secondary" id="exportRecipesBtn">📤 Экспорт</button>
+        <button class="btn-secondary" id="importRecipesBtn">📥 Импорт</button>
+      </div>
+
+      <div class="recipes-filters">
+        <input type="text" id="recipesSearchInput" placeholder="🔍 Поиск рецепта..." aria-label="Поиск по названию рецепта">
+        <select id="recipesCategoryFilter" aria-label="Фильтр по категории рецептов">
+          <option value="all">Все категории</option>
+          <option value="soup">Супы</option>
+          <option value="salad">Салаты</option>
+          <option value="main">Основные</option>
+          <option value="bakery">Выпечка</option>
+          <option value="other">Другое</option>
+        </select>
+      </div>
+
+      <input type="file" id="importRecipesFileInput" class="import-hidden" accept=".json" aria-label="Загрузить файл с рецептами">
+
+      <div id="recipesList"></div>
     </div>
   </div>
 
-  <!-- ============ ТАБ: ПОКУПКИ (заготовка) ============ -->
+  <!-- ============ ТАБ: ПОКУПКИ ============ -->
   <div class="tab-view" data-tab-view="shopping">
-    <div class="tab-placeholder">
-      <span class="tab-placeholder-icon" aria-hidden="true">🛒</span>
-      <div class="tab-placeholder-title">Список покупок</div>
-      <p class="tab-placeholder-text">
-        Здесь появится список покупок с группировкой по отделам магазина.<br>
-        Пока он открывается в модальном окне.
-      </p>
-      <button class="tab-placeholder-btn" id="goToShoppingFromTab" type="button">Открыть список покупок</button>
+    <div class="shopping-tab">
+      <h2 class="shopping-tab-title">🛒 Список покупок</h2>
+
+      <div class="shopping-dates-row">
+        <label for="shoppingDateFrom">От:</label>
+        <input type="date" id="shoppingDateFrom">
+        <label for="shoppingDateTo">До:</label>
+        <input type="date" id="shoppingDateTo">
+      </div>
+      <button class="btn-primary shopping-generate-btn" id="generateShoppingListBtn">🛒 Собрать список</button>
+
+      <div id="savedListsContainer" class="shopping-saved-block">
+        <h4>💾 Сохранённые списки</h4>
+        <div id="savedListsList"></div>
+      </div>
+
+      <div id="shoppingListDisplay" style="display:none;">
+        <button id="backToSavedListsBtn" class="btn-secondary shopping-back-btn">← Назад к спискам</button>
+        <div id="shoppingListView" class="shopping-list-view"></div>
+        <textarea id="shoppingListResult" placeholder="Сгенерированный список появится здесь."></textarea>
+        <div class="shopping-actions-row">
+          <button id="shoppingListEditBtn" class="btn-secondary">✎ Редактировать вручную</button>
+          <button id="saveCurrentListBtn" class="btn-done">💾 Сохранить</button>
+          <button id="deleteCurrentListBtn" class="btn-secondary">🗑️ Удалить</button>
+          <button id="exportShoppingListTxtBtn" class="btn-secondary">📄 .txt</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -208,19 +240,19 @@
       <div class="meal-types-group" id="newDishMealTypesGroup">
         <label class="meal-type-checkbox">
           <input type="checkbox" data-meal-type="breakfast">
-          <span>🌅 Завтрак</span>
+          <span>Завтрак</span>
         </label>
         <label class="meal-type-checkbox">
           <input type="checkbox" data-meal-type="lunch">
-          <span>☀️ Обед</span>
+          <span>Обед</span>
         </label>
         <label class="meal-type-checkbox">
           <input type="checkbox" data-meal-type="dinner">
-          <span>🌙 Ужин</span>
+          <span>Ужин</span>
         </label>
         <label class="meal-type-checkbox">
           <input type="checkbox" data-meal-type="snack">
-          <span>🍎 Перекус</span>
+          <span>Перекус</span>
         </label>
       </div>
     </div>
@@ -270,19 +302,19 @@
       <div class="meal-types-group" id="editDishMealTypesGroup">
         <label class="meal-type-checkbox">
           <input type="checkbox" data-meal-type="breakfast">
-          <span>🌅 Завтрак</span>
+          <span>Завтрак</span>
         </label>
         <label class="meal-type-checkbox">
           <input type="checkbox" data-meal-type="lunch">
-          <span>☀️ Обед</span>
+          <span>Обед</span>
         </label>
         <label class="meal-type-checkbox">
           <input type="checkbox" data-meal-type="dinner">
-          <span>🌙 Ужин</span>
+          <span>Ужин</span>
         </label>
         <label class="meal-type-checkbox">
           <input type="checkbox" data-meal-type="snack">
-          <span>🍎 Перекус</span>
+          <span>Перекус</span>
         </label>
       </div>
     </div>
@@ -324,7 +356,7 @@
   </div>
 </div>
 
-<!-- Модалка экспорта -->
+<!-- Модалка экспорта данных -->
 <div class="modal-overlay export-modal" id="exportModalOverlay" role="dialog" aria-modal="true" aria-labelledby="exportModalTitle">
   <div class="modal">
     <div class="modal-header">
@@ -366,27 +398,22 @@
   </div>
 </div>
 
-<!-- ============ МОДАЛКА «ЧТО ПРИГОТОВИТЬ?» (v4.0, новая версия) ============ -->
-<!-- Вместо 4 кнопок-стратегий — фильтры (приём пищи, категория, любимые)
-     и список результатов. Дизлайки исключены всегда. Сортировка — «давно
-     не готовили». Кнопка «🎲 Другое» выбирает случайное из отфильтрованного. -->
+<!-- Модалка «Что приготовить?» -->
 <div class="choice-overlay" id="choiceOverlay" role="dialog" aria-modal="true" aria-labelledby="choiceTitle">
   <div class="choice-modal">
     <h2 id="choiceTitle">🤔 Что приготовить?</h2>
 
-    <!-- Фильтр: приём пищи (одиночный выбор, чипы) -->
     <div class="choice-filter-group">
       <div class="choice-filter-label">Приём пищи</div>
       <div class="choice-chips" id="choiceMealTypesChips" role="group" aria-label="Фильтр по приёму пищи">
         <button type="button" class="choice-chip active" data-meal-type="">Все</button>
-        <button type="button" class="choice-chip" data-meal-type="breakfast">🌅 Завтрак</button>
-        <button type="button" class="choice-chip" data-meal-type="lunch">☀️ Обед</button>
-        <button type="button" class="choice-chip" data-meal-type="dinner">🌙 Ужин</button>
-        <button type="button" class="choice-chip" data-meal-type="snack">🍎 Перекус</button>
+        <button type="button" class="choice-chip" data-meal-type="breakfast">Завтрак</button>
+        <button type="button" class="choice-chip" data-meal-type="lunch">Обед</button>
+        <button type="button" class="choice-chip" data-meal-type="dinner">Ужин</button>
+        <button type="button" class="choice-chip" data-meal-type="snack">Перекус</button>
       </div>
     </div>
 
-    <!-- Фильтр: категория -->
     <div class="choice-filter-group">
       <div class="choice-filter-label">Категория</div>
       <select id="choiceCategorySelect" class="choice-category-select" aria-label="Фильтр по категории">
@@ -399,16 +426,13 @@
       </select>
     </div>
 
-    <!-- Фильтр: только любимые -->
     <label class="choice-favorite-toggle">
       <input type="checkbox" id="choiceOnlyFavorites">
       <span>👍 Только любимые</span>
     </label>
 
-    <!-- Список результатов -->
     <div class="choice-results" id="choiceResults"></div>
 
-    <!-- Действия -->
     <div class="choice-actions">
       <button type="button" class="choice-action-btn choice-action-reroll" id="choiceRerollBtn">🎲 Другое</button>
       <button type="button" class="choice-action-btn choice-action-recipes" id="choiceOpenRecipesBtn">📖 Мои рецепты</button>
@@ -456,14 +480,14 @@
       <section class="onboarding-slide">
         <span class="onboarding-icon" aria-hidden="true">➕</span>
         <h2 class="onboarding-title">Добавить блюдо</h2>
-        <p class="onboarding-text">Нажмите <strong>«➕ Добавить блюдо»</strong> на главном экране. Заполните название, выберите дату и статус — блюдо появится в календаре на выбранный день.</p>
+        <p class="onboarding-text">Нажмите на любой день в календаре и добавьте блюдо. Заполните название, выберите дату и статус — блюдо появится в календаре на выбранный день.</p>
         <p class="onboarding-text">Клик по названию блюда открывает редактирование, клик по статус-плашке — переключает статус.</p>
       </section>
 
       <section class="onboarding-slide">
         <span class="onboarding-icon" aria-hidden="true">📖</span>
         <h2 class="onboarding-title">Добавить рецепт</h2>
-        <p class="onboarding-text">Откройте <strong>«📖 Мои рецепты»</strong> и нажмите <strong>«➕ Добавить»</strong>. Сохраните ингредиенты и инструкцию — потом сможете привязать рецепт к блюду и быстро находить его.</p>
+        <p class="onboarding-text">Откройте вкладку <strong>«📖 Рецепты»</strong> и нажмите <strong>«➕ Добавить»</strong>. Сохраните ингредиенты и инструкцию — потом сможете привязать рецепт к блюду и быстро находить его.</p>
         <p class="onboarding-text">Рецепты можно искать, фильтровать по категориям, экспортировать в JSON или TXT.</p>
       </section>
 
@@ -483,7 +507,7 @@
       <section class="onboarding-slide">
         <span class="onboarding-icon" aria-hidden="true">🛒</span>
         <h2 class="onboarding-title">Список покупок</h2>
-        <p class="onboarding-text">Нажмите <strong>«🛒 Список покупок»</strong>, выберите период и нажмите «Собрать список». Ингредиенты из рецептов сгруппируются по отделам магазина.</p>
+        <p class="onboarding-text">Откройте вкладку <strong>«🛒 Покупки»</strong>, выберите период и нажмите «Собрать список». Ингредиенты из рецептов сгруппируются по отделам магазина.</p>
         <p class="onboarding-text">Список можно отредактировать вручную, сохранить и экспортировать в TXT.</p>
       </section>
 
@@ -497,37 +521,6 @@
         <button class="onboarding-btn onboarding-btn-secondary" id="onboardingPrev" type="button">Назад</button>
         <button class="onboarding-btn onboarding-btn-primary" id="onboardingNext" type="button">Далее</button>
       </div>
-    </div>
-  </div>
-</div>
-
-<!-- Модалка "Мои рецепты" -->
-<div class="modal-overlay rec-modal" id="recipesOverlay" role="dialog" aria-modal="true" aria-labelledby="recipesTitle">
-  <div class="modal">
-    <div class="modal-header">
-      <h3 id="recipesTitle">📖 Мои рецепты</h3>
-      <button class="modal-close" id="recipesClose" aria-label="Закрыть">✕</button>
-    </div>
-    <div id="recipesContent">
-      <button id="recipesBackBtn" class="recipes-back-btn" type="button" hidden>← Назад</button>
-      <div class="recipes-toolbar">
-        <button class="btn-done" id="addRecipeBtn">➕ Добавить</button>
-        <button class="btn-secondary" id="exportRecipesBtn">📤 Экспорт</button>
-        <button class="btn-secondary" id="importRecipesBtn">📥 Импорт</button>
-      </div>
-      <div class="recipes-filters">
-        <input type="text" id="recipesSearchInput" placeholder="🔍 Поиск рецепта..." aria-label="Поиск по названию рецепта">
-        <select id="recipesCategoryFilter" aria-label="Фильтр по категории рецептов">
-          <option value="all">Все категории</option>
-          <option value="soup">Супы</option>
-          <option value="salad">Салаты</option>
-          <option value="main">Основные</option>
-          <option value="bakery">Выпечка</option>
-          <option value="other">Другое</option>
-        </select>
-      </div>
-      <input type="file" id="importRecipesFileInput" class="import-hidden" accept=".json" aria-label="Загрузить файл с рецептами">
-      <div id="recipesList"></div>
     </div>
   </div>
 </div>
@@ -573,49 +566,13 @@
   </div>
 </div>
 
-<!-- Модалка "Список покупок" -->
-<div class="modal-overlay rec-modal" id="shoppingListOverlay" role="dialog" aria-modal="true" aria-labelledby="shoppingListTitle">
-  <div class="modal">
-    <div class="modal-header">
-      <h3 id="shoppingListTitle">🛒 Список покупок</h3>
-      <button class="modal-close" id="shoppingListClose" aria-label="Закрыть">✕</button>
-    </div>
-    <div>
-      <div class="shopping-dates-row">
-        <label for="shoppingDateFrom">От:</label>
-        <input type="date" id="shoppingDateFrom">
-        <label for="shoppingDateTo">До:</label>
-        <input type="date" id="shoppingDateTo">
-      </div>
-      <button class="btn-primary shopping-generate-btn" id="generateShoppingListBtn">🛒 Собрать список</button>
-
-      <div id="savedListsContainer" class="shopping-saved-block">
-        <h4>💾 Сохранённые списки</h4>
-        <div id="savedListsList"></div>
-      </div>
-
-      <div id="shoppingListDisplay" style="display:none;">
-        <button id="backToSavedListsBtn" class="btn-secondary shopping-back-btn">← Назад к спискам</button>
-        <div id="shoppingListView" class="shopping-list-view"></div>
-        <textarea id="shoppingListResult" placeholder="Сгенерированный список появится здесь."></textarea>
-        <div class="shopping-actions-row">
-          <button id="shoppingListEditBtn" class="btn-secondary">✎ Редактировать вручную</button>
-          <button id="saveCurrentListBtn" class="btn-done">💾 Сохранить</button>
-          <button id="deleteCurrentListBtn" class="btn-secondary">🗑️ Удалить</button>
-          <button id="exportShoppingListTxtBtn" class="btn-secondary">📄 .txt</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- Live region -->
 <div id="liveRegion" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
 <!-- Печатная область -->
 <div id="printArea" aria-hidden="true"></div>
 
-<!-- Нижняя навигация (v4.0) -->
+<!-- Нижняя навигация -->
 <nav class="bottom-nav" id="bottomNav" aria-label="Основная навигация">
   <button class="bottom-nav-btn" data-tab="today" type="button">
     <span class="bottom-nav-icon" aria-hidden="true">📅</span>
