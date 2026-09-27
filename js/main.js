@@ -305,6 +305,10 @@ import { printWeeklyMenu } from './features/Print.js';
   // ---------- History integration для модалок ----------
   let historyEntryPushed = false;
   let closingViaHistory = false;
+  // Если при закрытии модалки нужно переключиться на другой таб —
+  // делаем это после того, как observer сделает history.back() и придёт popstate.
+  // Иначе hashchange конфликтует с back и откатывает таб назад.
+  let pendingTabAfterModalClose = null;
 
   function hasActiveModal() {
     return !!document.querySelector(
@@ -335,6 +339,13 @@ import { printWeeklyMenu } from './features/Print.js';
     if (closingViaHistory) {
       closingViaHistory = false;
       historyEntryPushed = false;
+      // Если при закрытии модалки было отложено переключение на другой таб —
+      // выполняем его сейчас, когда запись модалки уже удалена.
+      if (pendingTabAfterModalClose) {
+        const tab = pendingTabAfterModalClose;
+        pendingTabAfterModalClose = null;
+        window.location.hash = tab;
+      }
       return;
     }
 
@@ -446,10 +457,20 @@ import { printWeeklyMenu } from './features/Print.js';
   const choiceOpenRecipesBtn = document.getElementById('choiceOpenRecipesBtn');
   if (choiceOpenRecipesBtn) {
     choiceOpenRecipesBtn.addEventListener('click', function() {
-      // Закрываем оверлей «Что приготовить?» и переключаемся на таб «Рецепты».
-      closeChoiceModal();
+      // Ставим флаг «пришли из Что приготовить?» заранее.
       openRecipesTab(true);
-      window.location.hash = 'recipes';
+
+      // Сообщаем флагом, что после закрытия модалки нужно уйти на таб «Рецепты».
+      // Сам переход выполнится в popstate, когда observer сделает history.back()
+      // и запись модалки будет удалена из стека.
+      if (historyEntryPushed) {
+        pendingTabAfterModalClose = 'recipes';
+        closeChoiceModal();
+      } else {
+        // Резервный путь: записи в history нет — закрываем модалку и сразу меняем hash.
+        closeChoiceModal();
+        window.location.hash = 'recipes';
+      }
     });
   }
 
