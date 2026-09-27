@@ -22,7 +22,6 @@ export const CATEGORY_LABELS = {
 };
 
 // Приёмы пищи (v4.0)
-// null = не указан. Старые блюда остаются null без миграции.
 export const MEAL_TYPES = {
   BREAKFAST: 'breakfast',
   LUNCH: 'lunch',
@@ -38,7 +37,6 @@ export const MEAL_TYPE_LABELS = {
 };
 
 // Кухни (для карточки рецепта, v6.0)
-// Ключи латиницей, подписи — русские.
 export const CUISINES = {
   RUSSIAN: 'russian',
   UKRAINIAN: 'ukrainian',
@@ -76,8 +74,6 @@ export const CUISINE_LABELS = {
 };
 
 // Аллергены (для карточки рецепта, v6.0)
-// Ключи латиницей, подписи — русские.
-// Список соответствует европейскому стандарту (14 аллергенов) плюс клубника и пищевые добавки.
 export const ALLERGENS = {
   NUTS: 'nuts',
   EGGS: 'eggs',
@@ -115,9 +111,6 @@ export const ALLERGEN_LABELS = {
 };
 
 // Единицы измерения ингредиентов (v6.0)
-// Используются в структурированных ингредиентах { name, amount, unit }.
-// Весовые единицы (g, kg, ml, l) при пересчёте порций масштабируются,
-// штучные (pcs, tbsp, tsp, pinch, clove, bunch) — не пересчитываются.
 export const UNITS = {
   G: 'g',
   KG: 'kg',
@@ -144,13 +137,10 @@ export const UNIT_LABELS = {
   [UNITS.BUNCH]: 'пучок'
 };
 
-// Единицы, которые НЕ масштабируются при изменении числа порций.
-// Всё остальное (g, kg, ml, l) — масштабируется.
 export const NON_SCALABLE_UNITS = [
   UNITS.PCS, UNITS.TBSP, UNITS.TSP, UNITS.PINCH, UNITS.CLOVE, UNITS.BUNCH
 ];
 
-// Шкалы для карточки рецепта (v6.0)
 export const DIFFICULTY_LABELS = {
   1: 'Очень просто',
   2: 'Просто',
@@ -272,11 +262,10 @@ export const CONSTANTS = {
     choiceClose: 'choiceClose',
     welcomeOverlay: 'welcomeOverlay',
     welcomeStartBtn: 'welcomeStartBtn',
-    recipesOverlay: 'recipesOverlay',
-    recipesClose: 'recipesClose',
     todayContent: 'todayContent',
-    recipesBackBtn: 'recipesBackBtn',
+    // ---- Таб «Рецепты» ----
     recipesTitle: 'recipesTitle',
+    recipesBackBtn: 'recipesBackBtn',
     recipesList: 'recipesList',
     addRecipeBtn: 'addRecipeBtn',
     exportRecipesBtn: 'exportRecipesBtn',
@@ -298,8 +287,7 @@ export const CONSTANTS = {
     recipeFormCancel: 'recipeFormCancel',
     recipeFormSave: 'recipeFormSave',
     recipeParseBtn: 'recipeParseBtn',
-    shoppingListOverlay: 'shoppingListOverlay',
-    shoppingListClose: 'shoppingListClose',
+    // ---- Таб «Покупки» ----
     shoppingDateFrom: 'shoppingDateFrom',
     shoppingDateTo: 'shoppingDateTo',
     generateShoppingListBtn: 'generateShoppingListBtn',
@@ -313,13 +301,10 @@ export const CONSTANTS = {
     exportShoppingListTxtBtn: 'exportShoppingListTxtBtn',
     shoppingListView: 'shoppingListView',
     shoppingListEditBtn: 'shoppingListEditBtn',
+    // ---- Импорт/экспорт данных ----
     importFileInput: 'importFileInput',
     importBtn: 'importBtn',
     exportBtn: 'exportBtn',
-    suggestBtn: 'suggestBtn',
-    recipesBtn: 'recipesBtn',
-    shoppingListBtn: 'shoppingListBtn',
-    addDishBtn: 'addDishBtn',
     prevMonth: 'prevMonth',
     nextMonth: 'nextMonth',
     todayBtn: 'todayBtn',
