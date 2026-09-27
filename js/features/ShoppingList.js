@@ -3,14 +3,10 @@ import { Utils } from '../utils/Utils.js';
 import { DishStore } from '../stores/DishStore.js';
 import { RecipeStore } from '../stores/RecipeStore.js';
 import { showMessage } from '../utils/notifications.js';
-import { trapFocus } from '../utils/focusTrap.js';
 
 // ============================================================
 // КАТЕГОРИИ ПРОДУКТОВ (отделы магазина)
 // ============================================================
-// Ключи пишем через «е», а не «ё» — нормализация делается в classifyIngredient.
-// Внутри одного отдела ключи могут пересекаться (например, «перец» и «сладкий перец») —
-// при проверке сначала идут более длинные ключи, чтобы «сладкий перец» не терялся.
 const DEPARTMENTS = {
   'Овощи, зелень': [
     'болгарский перец', 'сладкий перец', 'цветная капуста', 'брюссельская капуста',
@@ -97,7 +93,6 @@ const DEPARTMENTS = {
   ]
 };
 
-// Порядок отделов «как в магазине»
 const DEPARTMENT_ORDER = [
   'Овощи, зелень',
   'Фрукты, ягоды',
@@ -117,12 +112,10 @@ const DEPARTMENT_ORDER = [
   'Прочее'
 ];
 
-// Нормализация строки: нижний регистр, ё → е, обрезка
 function normalize(str) {
   return String(str).toLowerCase().replace(/ё/g, 'е').trim();
 }
 
-// Проверка: слово kw встречается в text как отдельное слово (по границам)
 function matchWord(text, kw) {
   let from = 0;
   while (true) {
@@ -136,16 +129,12 @@ function matchWord(text, kw) {
   }
 }
 
-// Классифицирует ингредиент по отделам магазина.
-// На вход приходит строка (после Utils.formatIngredient).
 function classifyIngredient(ingredient) {
   const lower = normalize(ingredient);
   for (const [department, keywords] of Object.entries(DEPARTMENTS)) {
-    // Сортируем ключи по длине: длинные проверяются раньше (важно для «сладкий перец» и т.п.)
     const sorted = keywords.slice().sort((a, b) => b.length - a.length);
     for (const rawKw of sorted) {
       const kw = normalize(rawKw);
-      // Многословные ключи ищутся как подстрока
       if (kw.includes(' ')) {
         if (lower.includes(kw)) return department;
       } else {
@@ -195,9 +184,6 @@ function parseTextToGroups(text) {
   return groups;
 }
 
-// ============================================================
-// РЕНДЕР HTML-ВИДА СПИСКА
-// ============================================================
 function renderGroupsHtml(groups, container) {
   container.innerHTML = '';
   if (!groups || Object.keys(groups).length === 0) {
@@ -242,7 +228,6 @@ function renderGroupsHtml(groups, container) {
   });
 }
 
-// Рендер верхнего заголовка списка (дата/период)
 function setHeaderLabel(label) {
   const view = document.getElementById(CONSTANTS.SELECTORS.shoppingListView);
   if (!view) return;
@@ -283,29 +268,25 @@ function getPeriodLabel(key) {
 }
 
 // ============================================================
-// ОТКРЫТИЕ / ЗАКРЫТИЕ МОДАЛКИ
+// ИНИЦИАЛИЗАЦИЯ ТАБА «ПОКУПКИ»
 // ============================================================
-export function openShoppingList() {
-  const overlay = document.getElementById(CONSTANTS.SELECTORS.shoppingListOverlay);
-  overlay.classList.add('active');
-  document.getElementById(CONSTANTS.SELECTORS.shoppingListDisplay).style.display = 'none';
-  document.getElementById(CONSTANTS.SELECTORS.savedListsContainer).style.display = 'block';
-  renderSavedLists();
-  const today = new Date();
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  document.getElementById(CONSTANTS.SELECTORS.shoppingDateFrom).value = Utils.formatDateLocal(today);
-  document.getElementById(CONSTANTS.SELECTORS.shoppingDateTo).value = Utils.formatDateLocal(tomorrow);
-  trapFocus(overlay, closeShoppingList);
-}
-
-export function closeShoppingList() {
-  const overlay = document.getElementById(CONSTANTS.SELECTORS.shoppingListOverlay);
-  overlay.classList.remove('active');
-  if (overlay._trapFocusCleanup) {
-    overlay._trapFocusCleanup();
-    delete overlay._trapFocusCleanup;
+export function initShoppingTab() {
+  // Дефолтные даты — только если поля ещё пусты.
+  const fromInput = document.getElementById(CONSTANTS.SELECTORS.shoppingDateFrom);
+  const toInput = document.getElementById(CONSTANTS.SELECTORS.shoppingDateTo);
+  if (fromInput && !fromInput.value) {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    fromInput.value = Utils.formatDateLocal(today);
+    toInput.value = Utils.formatDateLocal(tomorrow);
   }
+  // Возвращаемся к списку сохранённых.
+  const display = document.getElementById(CONSTANTS.SELECTORS.shoppingListDisplay);
+  if (display) display.style.display = 'none';
+  const savedBlock = document.getElementById(CONSTANTS.SELECTORS.savedListsContainer);
+  if (savedBlock) savedBlock.style.display = 'block';
+  renderSavedLists();
 }
 
 // ============================================================
@@ -313,6 +294,7 @@ export function closeShoppingList() {
 // ============================================================
 export function renderSavedLists() {
   const container = document.getElementById(CONSTANTS.SELECTORS.savedListsList);
+  if (!container) return;
   const keys = getSavedShoppingListKeys();
   container.innerHTML = '';
   if (keys.length === 0) {
@@ -375,12 +357,9 @@ export function loadShoppingList(key) {
   const view = document.getElementById(CONSTANTS.SELECTORS.shoppingListView);
   const groups = parseTextToGroups(text);
   renderGroupsHtml(groups, view);
-  // Явно возвращаем view в видимое состояние — если до этого был режим
-  // редактирования, он мог оставить view скрытым (display: none).
   view.style.display = 'block';
   setHeaderLabel('Список на ' + getPeriodLabel(key));
 
-  // Кнопка «Редактировать вручную» — снова «✎»
   const editBtn = document.getElementById(CONSTANTS.SELECTORS.shoppingListEditBtn);
   if (editBtn) {
     editBtn.textContent = '✎ Редактировать вручную';
@@ -415,9 +394,6 @@ export function generateShoppingList() {
     if (dish.recipeId) {
       const recipe = RecipeStore.getById(dish.recipeId);
       if (recipe) {
-        // Ингредиенты в рецепте — массив объектов { name, amount, unit }.
-        // Для списка покупок переводим в человекочитаемую строку
-        // («Свинина — 1,2 кг»). Хранение структуры в группах — задача Блока 3.
         recipe.ingredients.forEach(ing => {
           const line = Utils.formatIngredient(ing);
           if (line) items.push(line);
@@ -450,8 +426,6 @@ export function generateShoppingList() {
 
   const view = document.getElementById(CONSTANTS.SELECTORS.shoppingListView);
   renderGroupsHtml(grouped, view);
-  // То же самое: возвращаем view в видимое состояние после возможного
-  // режима редактирования.
   view.style.display = 'block';
 
   const periodLabel = fromDate === toDate
@@ -473,7 +447,7 @@ export function generateShoppingList() {
 }
 
 // ============================================================
-// РЕЖИМ РЕДАКТИРОВАНИЯ (переключение textarea ⇄ HTML)
+// РЕЖИМ РЕДАКТИРОВАНИЯ
 // ============================================================
 export function toggleShoppingListEdit() {
   const btn = document.getElementById(CONSTANTS.SELECTORS.shoppingListEditBtn);
@@ -481,27 +455,19 @@ export function toggleShoppingListEdit() {
   const view = document.getElementById(CONSTANTS.SELECTORS.shoppingListView);
 
   if (btn.dataset.mode === 'edit') {
-    // Заканчиваем редактирование: парсим текст → рендерим HTML
     const text = textarea.value;
     const groups = parseTextToGroups(text);
     renderGroupsHtml(groups, view);
-    // Обновляем textarea нормализованным текстом
     textarea.value = groupsToText(groups);
-    // Явный 'none' / 'block' — не полагаемся на пустую строку,
-    // которую может перебить правило из styles.css.
     textarea.style.display = 'none';
     view.style.display = 'block';
     btn.textContent = '✎ Редактировать вручную';
     btn.dataset.mode = 'view';
   } else {
-    // Переходим в режим редактирования
-    // Явный 'block' — важно, иначе CSS-правило display: none на textarea
-    // оставит его невидимым, и пользователь увидит пустое окно.
     textarea.style.display = 'block';
     view.style.display = 'none';
     btn.textContent = '✓ Готово';
     btn.dataset.mode = 'edit';
-    // Фокус после отрисовки — на случай, если браузер ещё не пересчитал layout.
     setTimeout(() => textarea.focus(), 0);
   }
 }
