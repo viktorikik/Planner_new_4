@@ -16,15 +16,14 @@ import {
 } from './ui/Renderer.js';
 import { exportData, importData } from './features/ExportImport.js';
 import {
-  openRecipesModal,
-  closeRecipesModal,
+  openRecipesTab,
+  resetOpenedFromChoice,
   renderRecipesList,
   closeRecipeForm,
   initRecipesHandlers
 } from './features/Recipes.js';
 import {
-  openShoppingList,
-  closeShoppingList,
+  initShoppingTab,
   initShoppingListHandlers
 } from './features/ShoppingList.js';
 import { Onboarding } from './features/Onboarding.js';
@@ -37,10 +36,8 @@ import { printWeeklyMenu } from './features/Print.js';
   RecipeStore.init();
   DishStore.init();
 
-  // ---------- Hash routing: только для «Сегодня» и «Меню» ----------
-  // Табы «Рецепты» и «Покупки» открывают модалки поверх текущего экрана
-  // и hash не трогают. Так hardware back корректно закрывает модалку.
-  const TABS = ['today', 'menu'];
+  // ---------- Hash routing: все четыре таба ----------
+  const TABS = ['today', 'menu', 'recipes', 'shopping'];
   const DEFAULT_TAB = 'menu';
 
   function getTabFromHash() {
@@ -61,8 +58,14 @@ import { printWeeklyMenu } from './features/Print.js';
     if (app) app.setAttribute('data-active-tab', tab);
 
     if (tab === 'today') {
-      // При переходе на «Сегодня» всегда показываем реальный сегодняшний день.
       Renderer.resetTodayViewDate();
+    } else if (tab === 'recipes') {
+      renderRecipesList();
+    } else if (tab === 'shopping') {
+      initShoppingTab();
+    } else {
+      // Ушли с таба «Рецепты» — сбрасываем контекст «Что приготовить?».
+      resetOpenedFromChoice();
     }
   }
 
@@ -82,25 +85,11 @@ import { printWeeklyMenu } from './features/Print.js';
     btn.addEventListener('click', function() {
       const tab = this.dataset.tab;
 
-      if (tab === 'recipes') {
-        const overlay = document.getElementById(CONSTANTS.SELECTORS.recipesOverlay);
-        if (overlay && !overlay.classList.contains('active')) openRecipesModal();
+      // Тап по активному табу: для «Сегодня» — сброс даты, для остальных — ничего.
+      if (window.location.hash === `#${tab}`) {
+        if (tab === 'today') Renderer.resetTodayViewDate();
         return;
       }
-
-      if (tab === 'shopping') {
-        const overlay = document.getElementById(CONSTANTS.SELECTORS.shoppingListOverlay);
-        if (overlay && !overlay.classList.contains('active')) openShoppingList();
-        return;
-      }
-
-      // Тап по уже активной вкладке «Сегодня» — вернуться к сегодня.
-      if (tab === 'today' && window.location.hash === '#today') {
-        Renderer.resetTodayViewDate();
-        return;
-      }
-
-      if (window.location.hash === `#${tab}`) return;
       window.location.hash = tab;
     });
   });
@@ -133,7 +122,7 @@ import { printWeeklyMenu } from './features/Print.js';
     Onboarding.open();
   });
 
-  // ---------- Тема (светлая/тёмная) ----------
+  // ---------- Тема ----------
   let theme = localStorage.getItem(CONSTANTS.STORAGE_KEYS.THEME);
   if (!theme) {
     theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -145,7 +134,7 @@ import { printWeeklyMenu } from './features/Print.js';
     localStorage.setItem(CONSTANTS.STORAGE_KEYS.THEME, document.body.classList.contains('dark-theme') ? 'dark' : 'light');
   });
 
-  // ---------- Меню «⋯» в шапке ----------
+  // ---------- Меню «⋯» ----------
   const moreMenuBtn = document.getElementById('moreMenuBtn');
   const moreMenu = document.getElementById('moreMenu');
 
@@ -200,7 +189,7 @@ import { printWeeklyMenu } from './features/Print.js';
     Renderer.setCategoryFilter(this.value);
   });
 
-  // ---------- Drag-and-drop для десктопа (HTML5) ----------
+  // ---------- Drag-and-drop для десктопа ----------
   let draggedDishId = null, draggedFromDate = null;
   document.addEventListener('dragstart', function(e) {
     const target = e.target.closest('.meal-chip');
@@ -240,7 +229,7 @@ import { printWeeklyMenu } from './features/Print.js';
     draggedDishId = null; draggedFromDate = null;
   });
 
-  // ---------- Первичная отрисовка календаря ----------
+  // ---------- Первичная отрисовка ----------
   const now = new Date();
   Renderer.setCurrentDate(now);
   Renderer.setCurrentView('week');
@@ -300,9 +289,7 @@ import { printWeeklyMenu } from './features/Print.js';
     },
     { overlay: document.getElementById(CONSTANTS.SELECTORS.choiceOverlay), close: closeChoiceModal },
     { overlay: document.getElementById(CONSTANTS.SELECTORS.welcomeOverlay), close: hideWelcome },
-    { overlay: document.getElementById(CONSTANTS.SELECTORS.recipesOverlay), close: closeRecipesModal },
-    { overlay: document.getElementById(CONSTANTS.SELECTORS.recipeFormOverlay), close: closeRecipeForm },
-    { overlay: document.getElementById(CONSTANTS.SELECTORS.shoppingListOverlay), close: closeShoppingList }
+    { overlay: document.getElementById(CONSTANTS.SELECTORS.recipeFormOverlay), close: closeRecipeForm }
   ];
 
   modals.forEach(({ overlay, close }) => {
@@ -315,7 +302,7 @@ import { printWeeklyMenu } from './features/Print.js';
     });
   });
 
-  // ---------- History integration для модалок (Android hardware back) ----------
+  // ---------- History integration для модалок ----------
   let historyEntryPushed = false;
   let closingViaHistory = false;
 
@@ -422,15 +409,9 @@ import { printWeeklyMenu } from './features/Print.js';
       delete overlay._trapFocusCleanup;
     }
   });
-  document.getElementById(CONSTANTS.SELECTORS.recipesClose).addEventListener('click', closeRecipesModal);
   document.getElementById(CONSTANTS.SELECTORS.recipeFormClose).addEventListener('click', closeRecipeForm);
-  document.getElementById(CONSTANTS.SELECTORS.shoppingListClose).addEventListener('click', closeShoppingList);
 
   // ---------- Экран «Что приготовить?» ----------
-  document.getElementById(CONSTANTS.SELECTORS.suggestBtn).addEventListener('click', function() {
-    openChoiceScreen();
-  });
-
   document.getElementById(CONSTANTS.SELECTORS.choiceClose).addEventListener('click', closeChoiceModal);
 
   const choiceChips = document.querySelectorAll('#choiceMealTypesChips .choice-chip');
@@ -465,13 +446,10 @@ import { printWeeklyMenu } from './features/Print.js';
   const choiceOpenRecipesBtn = document.getElementById('choiceOpenRecipesBtn');
   if (choiceOpenRecipesBtn) {
     choiceOpenRecipesBtn.addEventListener('click', function() {
-      const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
-      overlay.classList.remove('active');
-      if (overlay._trapFocusCleanup) {
-        overlay._trapFocusCleanup();
-        delete overlay._trapFocusCleanup;
-      }
-      openRecipesModal(true);
+      // Закрываем оверлей «Что приготовить?» и переключаемся на таб «Рецепты».
+      closeChoiceModal();
+      openRecipesTab(true);
+      window.location.hash = 'recipes';
     });
   }
 
@@ -479,7 +457,6 @@ import { printWeeklyMenu } from './features/Print.js';
   document.getElementById('printBtn').addEventListener('click', printWeeklyMenu);
 
   // ---------- Глобальная модалка добавления блюда ----------
-  document.getElementById(CONSTANTS.SELECTORS.addDishBtn).addEventListener('click', Renderer.openAddModal);
   document.getElementById(CONSTANTS.SELECTORS.addModalSave).addEventListener('click', function() {
     const nameInput = document.getElementById(CONSTANTS.SELECTORS.newDishName);
     const noteInput = document.getElementById(CONSTANTS.SELECTORS.newDishNote);
@@ -550,16 +527,15 @@ import { printWeeklyMenu } from './features/Print.js';
     }
   });
 
-  // ---------- Модалка рецептов ----------
+  // ---------- Обработчики табов «Рецепты» и «Покупки» ----------
   initRecipesHandlers();
-
-  // ---------- Список покупок ----------
   initShoppingListHandlers();
 
   // ---------- Подписка на изменения рецептов ----------
   EventBus.on(CONSTANTS.EVENTS.RECIPES_CHANGED, () => {
-    const recipesOverlay = document.getElementById(CONSTANTS.SELECTORS.recipesOverlay);
-    if (recipesOverlay && recipesOverlay.classList.contains('active')) {
+    // Список рецептов рендерится, если таб «Рецепты» сейчас активен.
+    const app = document.querySelector('.app');
+    if (app && app.getAttribute('data-active-tab') === 'recipes') {
       renderRecipesList();
     }
   });
@@ -595,10 +571,7 @@ import { printWeeklyMenu } from './features/Print.js';
     }
   }, { passive: true });
 
-  // ---------- Свайпы для экрана «Сегодня» (вчера / завтра) ----------
-  // Свайп влево — следующий день, свайп вправо — предыдущий.
-  // Жест не срабатывает, если палец начал движение на карточке блюда —
-  // там своё свайп-удаление и мы не должны ему мешать.
+  // ---------- Свайпы для экрана «Сегодня» ----------
   const todayWrap = document.getElementById(CONSTANTS.SELECTORS.todayContent);
   if (todayWrap) {
     let todayTouchStartX = 0;
