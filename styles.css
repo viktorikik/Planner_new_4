@@ -1229,12 +1229,7 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   margin-top: 12px;
 }
 
-/* ============================================================
-   14. МОДАЛКА «МОИ РЕЦЕПТЫ» И «СПИСОК ПОКУПОК» — общая ширина
-   ============================================================ */
-.rec-modal .modal {
-  max-width: 480px;
-}
+
 
 /* ============================================================
    15. МОДАЛКИ ДОБАВЛЕНИЯ / РЕДАКТИРОВАНИЯ — ФОРМА
@@ -1950,8 +1945,22 @@ body.dark-theme .modal-dish .recipe-chip:hover {
 }
 
 /* ============================================================
-   20. МОДАЛКА «МОИ РЕЦЕПТЫ» — ПАНЕЛЬ, ФИЛЬТРЫ, СПИСОК
+   20. ТАБ «РЕЦЕПТЫ» — ПАНЕЛЬ, ФИЛЬТРЫ, СПИСОК
    ============================================================ */
+.recipes-tab {
+  /* контейнер таба — весь отступ уже даёт .app */
+}
+.recipes-tab-header {
+  margin-bottom: 16px;
+}
+.recipes-tab-header h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+  margin: 0;
+}
+
 .recipes-back-btn {
   display: inline-block;
   padding: 6px 14px;
@@ -2224,8 +2233,19 @@ body.dark-theme .recipe-category-header:hover {
 }
 
 /* ============================================================
-   21. СПИСОК ПОКУПОК
+   21. ТАБ «ПОКУПКИ»
    ============================================================ */
+.shopping-tab {
+  /* контейнер таба — весь отступ уже даёт .app */
+}
+.shopping-tab-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+  margin: 0 0 16px 0;
+}
+
 .shopping-dates-row {
   display: flex;
   flex-wrap: wrap;
@@ -2490,7 +2510,14 @@ body.dark-theme #savedListsList .saved-list-item {
   color: var(--text-primary);
 }
 
-body.dark-theme #shoppingListOverlay .form-group label,
+body.dark-theme .saved-list-item .list-date,
+body.dark-theme #savedListsList .saved-list-item {
+  color: var(--text-primary);
+}
+
+body.dark-theme .shopping-tab h4 {
+  color: var(--text-primary);
+}
 body.dark-theme #shoppingListOverlay h4,
 body.dark-theme #savedListsContainer h4 {
   color: var(--text-primary);
@@ -3171,62 +3198,7 @@ body {
   display: block;
 }
 
-/* ============================================================
-   31. ЭКРАНЫ-ЗАГЛУШКИ ВКЛАДОК
-   ============================================================ */
-.tab-placeholder {
-  padding: 40px 20px;
-  text-align: center;
-  background: var(--card-bg);
-  border-radius: var(--radius-md);
-  border: 1px dashed var(--cell-border);
-  margin-top: var(--spacing-md);
-}
-.tab-placeholder-icon {
-  font-size: 56px;
-  display: block;
-  margin-bottom: 12px;
-  line-height: 1;
-}
-.tab-placeholder-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 8px;
-  letter-spacing: -0.3px;
-}
-.tab-placeholder-text {
-  font-size: 14px;
-  color: var(--text-muted);
-  margin-bottom: 20px;
-  line-height: 1.55;
-}
-.tab-placeholder-btn {
-  padding: 10px 22px;
-  border-radius: var(--radius-lg);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  border: none;
-  background: var(--accent-color);
-  color: var(--accent-text);
-  transition: var(--transition-fast);
-  appearance: none;
-  font-family: inherit;
-  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.25);
-}
-.tab-placeholder-btn:hover {
-  filter: brightness(1.05);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(255, 107, 53, 0.3);
-}
-.tab-placeholder-btn:active {
-  transform: translateY(0);
-}
-.tab-placeholder-btn:focus-visible {
-  outline: 2px solid var(--accent-color);
-  outline-offset: 2px;
-}
+
 
 /* ============================================================
    32. ЭКРАН «СЕГОДНЯ»
