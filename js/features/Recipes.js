@@ -60,11 +60,11 @@ function updateBackBtnVisibility() {
 export function openRecipesTab(fromChoice = false) {
   if (fromChoice) openedFromChoice = true;
   updateBackBtnVisibility();
-  renderRecipesList();
+  // Рендер списка выполняет setActiveTab('recipes') в main.js —
+  // там же обрабатывается hashchange. Здесь только флаг и кнопка «← Назад».
 }
 
-// Сброс контекста. Вызывается при переходе на другой таб или при возврате
-// в «Что приготовить?».
+// Сброс контекста. Вызывается при переходе на другой таб.
 export function resetOpenedFromChoice() {
   openedFromChoice = false;
   updateBackBtnVisibility();
@@ -323,9 +323,15 @@ export function initRecipesHandlers() {
       const wasFromChoice = openedFromChoice;
       openedFromChoice = false;
       updateBackBtnVisibility();
+
+      // Переходим на таб «Меню».
+      // Ожидаем, что после смены таба (setActiveTab в main.js) откроется
+      // модалка «Что приготовить?» — если пришли оттуда.
+      // Смена hash асинхронна (событие hashchange), поэтому возврат в «Что приготовить?»
+      // выполняем в следующем тике, чтобы таб точно переключился.
       window.location.hash = 'menu';
       if (wasFromChoice) {
-        Renderer.returnToChoice();
+        setTimeout(() => { Renderer.returnToChoice(); }, 0);
       }
     });
   }
