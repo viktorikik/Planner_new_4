@@ -343,7 +343,9 @@ textarea:focus-visible {
 /* Специфичность поднята, чтобы перебить `.add-modal .form-group input`
    из раздела 15 — иначе appearance убивался и чекбокс превращался в круг. */
 .add-modal .form-group .meal-types-group .meal-type-checkbox input[type="checkbox"],
-.meal-types-group .meal-type-checkbox input[type="checkbox"] {
+.add-modal .form-group .allergens-group .meal-type-checkbox input[type="checkbox"],
+.meal-types-group .meal-type-checkbox input[type="checkbox"],
+.allergens-group .meal-type-checkbox input[type="checkbox"] {
   width: 18px;
   height: 18px;
   min-width: 18px;
@@ -360,7 +362,9 @@ textarea:focus-visible {
 }
 
 .add-modal .form-group .meal-types-group .meal-type-checkbox input[type="checkbox"]:focus,
-.meal-types-group .meal-type-checkbox input[type="checkbox"]:focus {
+.add-modal .form-group .allergens-group .meal-type-checkbox input[type="checkbox"]:focus,
+.meal-types-group .meal-type-checkbox input[type="checkbox"]:focus,
+.allergens-group .meal-type-checkbox input[type="checkbox"]:focus {
   outline: 2px solid var(--accent-color);
   outline-offset: 2px;
   box-shadow: 0 0 0 3px var(--accent-light);
