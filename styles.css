@@ -1237,6 +1237,10 @@ body.dark-theme .modal-dish .recipe-chip:hover {
 .add-modal .modal {
   max-width: 400px;
 }
+/* Модалка формы рецепта — шире обычной: там таблица ингредиентов, сетки полей. */
+.add-modal .modal.recipe-form-modal {
+  max-width: 540px;
+}
 .add-modal .form-group {
   margin-bottom: 16px;
 }
@@ -3897,5 +3901,238 @@ body {
   .modal-add-new .field-half {
     flex: 0 0 calc(50% - 10px);
     max-width: calc(50% - 10px);
+  }
+}
+
+/* ============================================================
+   40. ФОРМА РЕЦЕПТА v2 (v6.3)
+   ============================================================ */
+
+/* Двухколоночные строки формы: «Категория + Кухня», «Время + Активное» и т.п. */
+.add-modal .recipe-form-modal .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.add-modal .recipe-form-modal .form-row .form-group {
+  margin-bottom: 0;
+}
+
+/* ---- Таблица ингредиентов ---- */
+.add-modal .recipe-form-modal .ingredients-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.add-modal .recipe-form-modal .ingredient-row {
+  display: grid;
+  grid-template-columns: 1fr 80px 90px 32px;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Поля ингредиента. Специфичность поднята, чтобы перебить
+   `.add-modal .form-group input` из раздела 15 — иначе padding и
+   font-size 15px ломают сетку. */
+.add-modal .recipe-form-modal .ingredient-row input,
+.add-modal .recipe-form-modal .ingredient-row select {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--cell-border);
+  background: var(--input-bg);
+  color: var(--text-primary);
+  outline: none;
+  appearance: none;
+  font-family: inherit;
+  transition: var(--transition-fast);
+}
+.add-modal .recipe-form-modal .ingredient-row input:focus,
+.add-modal .recipe-form-modal .ingredient-row select:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+.add-modal .recipe-form-modal .ingredient-row .ingredient-remove {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  appearance: none;
+  transition: var(--transition-fast);
+}
+.add-modal .recipe-form-modal .ingredient-row .ingredient-remove:hover {
+  background: var(--cell-bg);
+  color: #e55a5a;
+}
+.add-modal .recipe-form-modal .ingredient-row .ingredient-remove:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+/* Кнопки под таблицей: «+ Добавить ингредиент» / «🔍 Парсить из текста» */
+.add-modal .recipe-form-modal .ingredients-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.add-modal .recipe-form-modal .ingredients-actions .btn-secondary {
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  background: var(--card-bg);
+  border: 1.5px solid var(--cell-border);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-family: inherit;
+  appearance: none;
+  transition: var(--transition-fast);
+}
+.add-modal .recipe-form-modal .ingredients-actions .btn-secondary:hover {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+  background: var(--card-hover-bg);
+}
+.add-modal .recipe-form-modal .ingredients-actions .btn-secondary:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+/* ---- Свёрнутый блок «Дополнительно» ---- */
+.add-modal .recipe-form-modal .recipe-form-details {
+  margin-bottom: 16px;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid var(--cell-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.add-modal .recipe-form-modal .recipe-form-details-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.add-modal .recipe-form-modal .recipe-form-details-summary::-webkit-details-marker {
+  display: none;
+}
+
+.add-modal .recipe-form-modal .recipe-form-details-icon {
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.add-modal .recipe-form-modal .recipe-form-details-label {
+  flex: 1 1 auto;
+}
+
+.add-modal .recipe-form-modal .recipe-form-details-chevron {
+  font-size: 12px;
+  color: var(--text-muted);
+  transition: transform 0.18s ease;
+}
+.add-modal .recipe-form-modal .recipe-form-details[open] .recipe-form-details-chevron {
+  transform: rotate(180deg);
+}
+
+.add-modal .recipe-form-modal .recipe-form-details-body {
+  padding: 16px;
+  border-top: 1px solid var(--cell-border);
+}
+.add-modal .recipe-form-modal .recipe-form-details-body .form-group:last-child {
+  margin-bottom: 0;
+}
+
+body.dark-theme .add-modal .recipe-form-modal .recipe-form-details {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* ---- Аллергены (сетка, как приёмы пищи) ---- */
+.add-modal .recipe-form-modal .allergens-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* ---- КБЖУ на 1 порцию: 4 поля в строку ---- */
+.add-modal .recipe-form-modal .nutrition-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.add-modal .recipe-form-modal .nutrition-row input {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--cell-border);
+  background: var(--input-bg);
+  color: var(--text-primary);
+  outline: none;
+  appearance: none;
+  font-family: inherit;
+  transition: var(--transition-fast);
+}
+.add-modal .recipe-form-modal .nutrition-row input:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+/* ---- Мобильная адаптация формы рецепта ---- */
+@media (max-width: 480px) {
+  .add-modal .recipe-form-modal .form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .add-modal .recipe-form-modal .form-row .form-group {
+    margin-bottom: 16px;
+  }
+
+  .add-modal .recipe-form-modal .ingredient-row {
+    grid-template-columns: 1fr 66px 76px 28px;
+    gap: 6px;
+  }
+  .add-modal .recipe-form-modal .ingredient-row input,
+  .add-modal .recipe-form-modal .ingredient-row select {
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+  .add-modal .recipe-form-modal .ingredient-row .ingredient-remove {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    font-size: 14px;
+  }
+
+  .add-modal .recipe-form-modal .nutrition-row {
+    grid-template-columns: 1fr 1fr;
   }
 }
