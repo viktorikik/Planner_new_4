@@ -525,44 +525,251 @@
   </div>
 </div>
 
-<!-- Модалка добавления/редактирования рецепта -->
-<div class="modal-overlay add-modal" id="recipeFormOverlay" role="dialog" aria-modal="true" aria-labelledby="recipeFormTitle">
-  <div class="modal">
+<!-- ============================================================
+     МОДАЛКА ДОБАВЛЕНИЯ / РЕДАКТИРОВАНИЯ РЕЦЕПТА (v6.3, схема v2)
+     ============================================================ -->
+<div class="modal-overlay add-modal recipe-form-overlay" id="recipeFormOverlay" role="dialog" aria-modal="true" aria-labelledby="recipeFormTitle">
+  <div class="modal recipe-form-modal">
     <div class="modal-header">
       <h3 id="recipeFormTitle">📝 Рецепт</h3>
       <button class="modal-close" id="recipeFormClose" aria-label="Закрыть">✕</button>
     </div>
+
+    <!-- ===== ОСНОВНОЕ ===== -->
     <div class="form-group">
       <label for="recipeName">Название</label>
-      <input type="text" id="recipeName" placeholder="Название блюда">
+      <input type="text" id="recipeName" placeholder="Например, Свинина в соевом соусе">
     </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="recipeCategory">Категория</label>
+        <select id="recipeCategory">
+          <option value="soup">🍲 Суп</option>
+          <option value="salad">🥗 Салат</option>
+          <option value="main">🍖 Основное</option>
+          <option value="bakery">🥐 Выпечка</option>
+          <option value="other">🍽️ Другое</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="recipeCuisine">Кухня</label>
+        <select id="recipeCuisine">
+          <option value="">— не указана —</option>
+          <option value="russian">Русская</option>
+          <option value="ukrainian">Украинская</option>
+          <option value="caucasian">Кавказская</option>
+          <option value="italian">Итальянская</option>
+          <option value="french">Французская</option>
+          <option value="mediterranean">Средиземноморская</option>
+          <option value="greek">Греческая</option>
+          <option value="american">Американская</option>
+          <option value="mexican">Мексиканская</option>
+          <option value="chinese">Китайская</option>
+          <option value="japanese">Японская</option>
+          <option value="korean">Корейская</option>
+          <option value="indian">Индийская</option>
+          <option value="asian">Азиатская</option>
+          <option value="international">Международная</option>
+        </select>
+      </div>
+    </div>
+
     <div class="form-group">
-      <label for="recipeCategory">Категория</label>
-      <select id="recipeCategory">
-        <option value="soup">🍲 Суп</option>
-        <option value="salad">🥗 Салат</option>
-        <option value="main">🍖 Основное</option>
-        <option value="bakery">🥐 Выпечка</option>
-        <option value="other">🍽️ Другое</option>
-      </select>
+      <label for="recipeServings">Порций</label>
+      <input type="number" id="recipeServings" min="1" step="1" value="1">
     </div>
+
+    <!-- ===== ВРЕМЯ И СЛОЖНОСТЬ ===== -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="recipeCookTime">Время, мин</label>
+        <input type="number" id="recipeCookTime" min="0" step="1" placeholder="—">
+      </div>
+      <div class="form-group">
+        <label for="recipeActiveTime">Активное, мин</label>
+        <input type="number" id="recipeActiveTime" min="0" step="1" placeholder="—">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="recipeDifficulty">Сложность</label>
+        <select id="recipeDifficulty">
+          <option value="">— не указана —</option>
+          <option value="1">Очень просто</option>
+          <option value="2">Просто</option>
+          <option value="3">Средне</option>
+          <option value="4">Сложно</option>
+          <option value="5">Очень сложно</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="recipeSpiciness">Острота</label>
+        <select id="recipeSpiciness">
+          <option value="">— не указана —</option>
+          <option value="1">Не остро</option>
+          <option value="2">Слегка остро</option>
+          <option value="3">Средне остро</option>
+          <option value="4">Остро</option>
+          <option value="5">Очень остро</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- ===== ИНГРЕДИЕНТЫ ===== -->
     <div class="form-group">
-      <label for="recipeIngredients">Ингредиенты (каждый с новой строки)</label>
-      <textarea id="recipeIngredients" rows="5" placeholder="Курица – 500 г&#10;Лук – 1 шт."></textarea>
+      <label>Ингредиенты</label>
+      <div class="ingredients-list" id="recipeIngredientsList"></div>
+      <div class="ingredients-actions">
+        <button type="button" class="btn-secondary btn-sm" id="recipeAddIngredientBtn">+ Добавить ингредиент</button>
+        <button type="button" class="btn-secondary btn-sm" id="recipeParseBtn">🔍 Парсить из текста</button>
+      </div>
     </div>
+
+    <!-- ===== ПРИЁМЫ ПИЩИ ===== -->
+    <div class="form-group">
+      <label>Приёмы пищи</label>
+      <div class="meal-types-group" id="recipeMealTypesGroup">
+        <label class="meal-type-checkbox">
+          <input type="checkbox" data-meal-type="breakfast">
+          <span>Завтрак</span>
+        </label>
+        <label class="meal-type-checkbox">
+          <input type="checkbox" data-meal-type="lunch">
+          <span>Обед</span>
+        </label>
+        <label class="meal-type-checkbox">
+          <input type="checkbox" data-meal-type="dinner">
+          <span>Ужин</span>
+        </label>
+        <label class="meal-type-checkbox">
+          <input type="checkbox" data-meal-type="snack">
+          <span>Перекус</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- ===== ИНСТРУКЦИЯ ===== -->
     <div class="form-group">
       <label for="recipeInstructions">Инструкция (необязательно)</label>
-      <textarea id="recipeInstructions" rows="3" placeholder="Пошаговое приготовление..."></textarea>
+      <textarea id="recipeInstructions" rows="4" placeholder="Пошаговое приготовление..."></textarea>
     </div>
-    <div class="form-group" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-      <button class="btn-secondary" id="recipeParseBtn">🔍 Парсить из текста</button>
-      <span style="font-size:12px; color:var(--text-muted);">Вставьте текст рецепта в поле "Ингредиенты" и нажмите кнопку</span>
-    </div>
+
+    <!-- ===== ДОПОЛНИТЕЛЬНО (свёрнуто) ===== -->
+    <details class="recipe-form-details">
+      <summary class="recipe-form-details-summary">
+        <span class="recipe-form-details-icon" aria-hidden="true">💡</span>
+        <span class="recipe-form-details-label">Дополнительно</span>
+        <span class="recipe-form-details-chevron" aria-hidden="true">▾</span>
+      </summary>
+
+      <div class="recipe-form-details-body">
+
+        <div class="form-group">
+          <label>Аллергены</label>
+          <div class="allergens-group" id="recipeAllergensGroup">
+            <label class="meal-type-checkbox">
+              <input type="checkbox" data-allergen="nuts">
+              <span>Орехи</span>
+            </label>
+            <label class="meal-type-checkbox">
+              <input type="checkbox" data-allergen="eggs">
+              <span>Яйцо</span>
+            </label>
+            <label class="meal-type-checkbox">
+              <input type="checkbox" data-allergen="gluten">
+              <span>Глютен</span>
+            </label>
+            <label class="meal-type-checkbox">
+              <input type="checkbox" data-allergen="fish">
+              <span>Рыба</span>
+            </label>
+            <label class="meal-type-checkbox">
+              <input type="checkbox" data-allergen="milk">
+              <span>Молоко</span>
+            </label>
+            <label class="meal-type-checkbox">
+              <input type="checkbox" data-allergen="peanut">
+              <span>Арахис</span>
+            </label>
+            <label class="meal-type-checkbox">
+              <input type="checkbox" data-allergen="additives">
+              <span>Добавки</span>
+            </label>
+            <label class="meal-type-checkbox">
+              <input type="checkbox" data-allergen="mustard">
+              <span>Горчица</span>
+            </label>
+            <label class="meal-type-checkbox">
+              <input type="checkbox" data-allergen="sesame">
+              <span>Кунжут</span>
+            </label>
+            <label class="meal-type-checkbox">
+              <input type="checkbox" data-allergen="molluscs">
+              <span>Моллюски</span>
+            </label>
+            <label class="meal-type-checkbox">
+              <input type="checkbox" data-allergen="crustaceans">
+              <span>Ракообразные</span>
+            </label>
+            <label class="meal-type-checkbox">
+              <input type="checkbox" data-allergen="strawberry">
+              <span>Клубника</span>
+            </label>
+            <label class="meal-type-checkbox">
+              <input type="checkbox" data-allergen="soy">
+              <span>Соя</span>
+            </label>
+            <label class="meal-type-checkbox">
+              <input type="checkbox" data-allergen="celery">
+              <span>Сельдерей</span>
+            </label>
+            <label class="meal-type-checkbox">
+              <input type="checkbox" data-allergen="lupin">
+              <span>Люпин</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>КБЖУ на 1 порцию</label>
+          <div class="nutrition-row">
+            <input type="number" id="recipeNutritionKcal" placeholder="ккал" min="0" step="any" inputmode="decimal">
+            <input type="number" id="recipeNutritionProtein" placeholder="белки" min="0" step="any" inputmode="decimal">
+            <input type="number" id="recipeNutritionFat" placeholder="жиры" min="0" step="any" inputmode="decimal">
+            <input type="number" id="recipeNutritionCarbs" placeholder="углеводы" min="0" step="any" inputmode="decimal">
+          </div>
+        </div>
+
+      </div>
+    </details>
+
     <div class="form-actions">
       <button class="btn-secondary" id="recipeFormCancel">Отмена</button>
       <button class="btn-primary" id="recipeFormSave">Сохранить</button>
     </div>
     <input type="hidden" id="recipeFormId" value="">
+  </div>
+</div>
+
+<!-- ============================================================
+     МОДАЛКА ПАРСЕРА ИНГРЕДИЕНТОВ (v6.3)
+     ============================================================ -->
+<div class="modal-overlay add-modal" id="recipeParserOverlay" role="dialog" aria-modal="true" aria-labelledby="recipeParserTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="recipeParserTitle">🔍 Разобрать текст</h3>
+      <button class="modal-close" id="recipeParserClose" aria-label="Закрыть">✕</button>
+    </div>
+    <p class="modal-desc">Вставь список ингредиентов — по одной позиции на строку. Понимает форматы «Свинина 1,2 кг», «Лук — 1 шт», «Соль по вкусу».</p>
+    <div class="form-group">
+      <textarea id="recipeParserTextarea" rows="8" placeholder="Свинина 1,2 кг&#10;Лук 1 шт&#10;Соль по вкусу"></textarea>
+    </div>
+    <div class="form-actions">
+      <button class="btn-secondary" id="recipeParserCancel">Отмена</button>
+      <button class="btn-primary" id="recipeParserApply">Разобрать</button>
+    </div>
   </div>
 </div>
 
