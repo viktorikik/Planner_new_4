@@ -1677,23 +1677,30 @@ export const Renderer = (function() {
   }
 
   // Пересчитывает ингредиент при изменении числа порций.
-  // Весовые (g, ml) масштабируются, граммы и миллилитры округляются до 5.
-  // Штучные (pcs, tbsp, tsp, pinch, clove, bunch) не пересчитываются.
+  // Весовые (g, ml) — округление до 5, минимум 1.
+  // Штучные и прочие (pcs, tbsp, tsp, pinch, clove, bunch) — округление до 0,25, минимум 0,25.
+  // Без количества (соль «по вкусу») — не пересчитывается.
   function scaleIngredient(ing, baseServings, currentServings) {
     if (!ing || typeof ing !== 'object') return ing;
     const name = ing.name || '';
     const amount = ing.amount;
     const unit = ing.unit || null;
 
+    // Без количества или без единицы — не пересчитываем.
     if (amount == null || !isFinite(amount)) return { name, amount, unit };
-    if (NON_SCALABLE_UNITS.includes(unit)) return { name, amount, unit };
+    if (!unit) return { name, amount, unit };
 
     const factor = currentServings / baseServings;
     let scaled = amount * factor;
 
     if (unit === UNITS.G || unit === UNITS.ML) {
+      // Весовые: округление до 5.
       scaled = Math.round(scaled / 5) * 5;
       if (scaled < 1) scaled = 1;
+    } else {
+      // Штучные и прочие: округление до 0,25.
+      scaled = Math.round(scaled * 4) / 4;
+      if (scaled < 0.25) scaled = 0.25;
     }
 
     return { name, amount: scaled, unit };
