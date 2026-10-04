@@ -1,4 +1,8 @@
-import { STATUSES, CATEGORIES, MEAL_TYPES, MEAL_TYPE_LABELS, CONSTANTS } from '../utils/Constants.js';
+import {
+  STATUSES, CATEGORIES, MEAL_TYPES, MEAL_TYPE_LABELS, CONSTANTS,
+  CUISINE_LABELS, ALLERGEN_LABELS, UNITS,
+  NON_SCALABLE_UNITS, DIFFICULTY_LABELS, SPICINESS_LABELS
+} from '../utils/Constants.js';
 import { Utils } from '../utils/Utils.js';
 import { EventBus } from '../utils/EventBus.js';
 import { DishStore } from '../stores/DishStore.js';
@@ -1660,6 +1664,69 @@ export const Renderer = (function() {
   function setStatusFilter(f) { statusFilter = f; renderMenu(); }
   function setCategoryFilter(f) { categoryFilter = f; renderMenu(); }
 
+  // ============================================================
+  // КАРТОЧКА РЕЦЕПТА (расширенная, v6.4)
+  // ============================================================
+
+  // Форматирует число КБЖУ: целое — без запятой, дробное — через запятую.
+  function formatNutriValue(n) {
+    if (n == null || !isFinite(n)) return '—';
+    const rounded = Math.round(n * 10) / 10;
+    if (Number.isInteger(rounded)) return String(rounded);
+    return String(rounded).replace('.', ',');
+  }
+
+  // Пересчитывает ингредиент при изменении числа порций.
+  // Весовые (g, ml) масштабируются, граммы и миллилитры округляются до 5.
+  // Штучные (pcs, tbsp, tsp, pinch, clove, bunch) не пересчитываются.
+  function scaleIngredient(ing, baseServings, currentServings) {
+    if (!ing || typeof ing !== 'object') return ing;
+    const name = ing.name || '';
+    const amount = ing.amount;
+    const unit = ing.unit || null;
+
+    if (amount == null || !isFinite(amount)) return { name, amount, unit };
+    if (NON_SCALABLE_UNITS.includes(unit)) return { name, amount, unit };
+
+    const factor = currentServings / baseServings;
+    let scaled = amount * factor;
+
+    if (unit === UNITS.G || unit === UNITS.ML) {
+      scaled = Math.round(scaled / 5) * 5;
+      if (scaled < 1) scaled = 1;
+    }
+
+    return { name, amount: scaled, unit };
+  }
+
+  // Создаёт строку шкалы: «Сложность [●●●○○] Просто».
+  function buildScaleRow(label, level, labelsMap) {
+    const row = document.createElement('div');
+    row.className = 'recipe-scale-row';
+
+    const labelEl = document.createElement('span');
+    labelEl.className = 'recipe-scale-label';
+    labelEl.textContent = label + ':';
+    row.appendChild(labelEl);
+
+    const dots = document.createElement('span');
+    dots.className = 'recipe-scale-dots';
+    for (let i = 1; i <= 5; i++) {
+      const dot = document.createElement('span');
+      dot.className = 'recipe-scale-dot';
+      if (i <= level) dot.classList.add('active');
+      dots.appendChild(dot);
+    }
+    row.appendChild(dots);
+
+    const textEl = document.createElement('span');
+    textEl.className = 'recipe-scale-text';
+    textEl.textContent = labelsMap[level] || '';
+    row.appendChild(textEl);
+
+    return row;
+  }
+
   function showRecipeCard(recipe) {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay active';
@@ -1671,6 +1738,7 @@ export const Renderer = (function() {
     const modal = document.createElement('div');
     modal.className = 'modal recipe-view-modal';
 
+    // ===== Заголовок =====
     const header = document.createElement('div');
     header.className = 'modal-header recipe-view-header';
 
@@ -1682,22 +1750,268 @@ export const Renderer = (function() {
     title.textContent = '📖 ' + recipe.name;
     titleRow.appendChild(title);
 
+    // Бейджи: категория + кухня
+    const badgesRow = document.createElement('div');
+    badgesRow.className = 'recipe-view-badges';
+
     const cat = recipe.category || Utils.guessCategory(recipe.name);
     const categoryBadge = document.createElement('span');
     categoryBadge.className = `recipe-category-badge category-${cat}`;
     categoryBadge.textContent = `${CATEGORY_EMOJI[cat] || '🍽️'} ${CATEGORY_NAMES[cat] || 'Другое'}`;
-    titleRow.appendChild(categoryBadge);
+    badgesRow.appendChild(categoryBadge);
+
+    if (recipe.cuisine && CUISINE_LABELS[recipe.cuisine]) {
+      const cuisineBadge = document.createElement('span');
+      cuisineBadge.className = 'recipe-cuisine-badge';
+      cuisineBadge.textContent = CUISINE_LABELS[recipe.cuisine];
+      badgesRow.appendChild(cuisineBadge);
+    }
+
+    titleRow.appendChild(badgesRow);
 
     const closeButton = document.createElement('button');
     closeButton.className = 'modal-close';
-    closeButton.id = 'recipeCardClose';
-    closeButton.textContent = '✕';
     closeButton.setAttribute('aria-label', 'Закрыть');
+    closeButton.textContent = '✕';
 
     header.appendChild(titleRow);
     header.appendChild(closeButton);
     modal.appendChild(header);
 
+    // ===== Состояние калькулятора порций =====
+    const baseServings = (typeof recipe.servings === 'number' && recipe.servings > 0) ? recipe.servings : 1;
+    let currentServings = baseServings;
+
+    // Ссылки на элементы, которые перерисовываются при изменении порций.
+    let ingredientsListEl = null;
+    let nutritionValueEls = null;   // { kcal, protein, fat, carbs }
+    let servingsCurrentEl = null;
+    let nutritionCaptionEl = null;
+
+    // Перерисовывает всё, что зависит от текущего числа порций.
+    function rerender() {
+      if (servingsCurrentEl) servingsCurrentEl.textContent = String(currentServings);
+
+      // Ингредиенты — с пересчётом
+      if (ingredientsListEl) {
+        ingredientsListEl.innerHTML = '';
+        const list = Array.isArray(recipe.ingredients) ? recipe.ingredients : [];
+        list.forEach(ing => {
+          const scaled = scaleIngredient(ing, baseServings, currentServings);
+          const line = Utils.formatIngredient(scaled);
+          if (!line) return;
+          const li = document.createElement('li');
+          li.textContent = line;
+          ingredientsListEl.appendChild(li);
+        });
+      }
+
+      // КБЖУ — умножаем на текущее число порций
+      if (nutritionValueEls) {
+        const n = recipe.nutrition || {};
+        const f = currentServings;
+        const kcal = (n.kcal != null)    ? n.kcal * f    : null;
+        const protein = (n.protein != null) ? n.protein * f : null;
+        const fat = (n.fat != null)     ? n.fat * f     : null;
+        const carbs = (n.carbs != null) ? n.carbs * f   : null;
+
+        nutritionValueEls.kcal.textContent = formatNutriValue(kcal);
+        nutritionValueEls.protein.textContent = formatNutriValue(protein);
+        nutritionValueEls.fat.textContent = formatNutriValue(fat);
+        nutritionValueEls.carbs.textContent = formatNutriValue(carbs);
+      }
+
+      // Подпись под КБЖУ
+      if (nutritionCaptionEl) {
+        if (currentServings === 1) {
+          nutritionCaptionEl.textContent = 'На 1 порцию';
+        } else {
+          nutritionCaptionEl.textContent = `На ${currentServings} ${pluralizeRu(currentServings, 'порцию', 'порции', 'порций')}`;
+        }
+      }
+    }
+
+    // ===== Калькулятор порций =====
+    const calcRow = document.createElement('div');
+    calcRow.className = 'recipe-servings-row';
+
+    const calcLabel = document.createElement('span');
+    calcLabel.className = 'recipe-servings-label';
+    calcLabel.textContent = 'Порций:';
+    calcRow.appendChild(calcLabel);
+
+    const minusBtn = document.createElement('button');
+    minusBtn.type = 'button';
+    minusBtn.className = 'recipe-servings-btn';
+    minusBtn.textContent = '−';
+    minusBtn.setAttribute('aria-label', 'Меньше порций');
+    minusBtn.addEventListener('click', () => {
+      if (currentServings > 1) {
+        currentServings--;
+        rerender();
+      }
+    });
+    calcRow.appendChild(minusBtn);
+
+    servingsCurrentEl = document.createElement('span');
+    servingsCurrentEl.className = 'recipe-servings-current';
+    servingsCurrentEl.textContent = String(currentServings);
+    servingsCurrentEl.setAttribute('aria-live', 'polite');
+    calcRow.appendChild(servingsCurrentEl);
+
+    const plusBtn = document.createElement('button');
+    plusBtn.type = 'button';
+    plusBtn.className = 'recipe-servings-btn';
+    plusBtn.textContent = '+';
+    plusBtn.setAttribute('aria-label', 'Больше порций');
+    plusBtn.addEventListener('click', () => {
+      if (currentServings < 30) {
+        currentServings++;
+        rerender();
+      }
+    });
+    calcRow.appendChild(plusBtn);
+
+    modal.appendChild(calcRow);
+
+    // ===== КБЖУ =====
+    const n = recipe.nutrition || {};
+    const hasNutrition = [n.kcal, n.protein, n.fat, n.carbs].some(v => v != null && isFinite(v));
+
+    if (hasNutrition) {
+      const nutritionBlock = document.createElement('div');
+      nutritionBlock.className = 'recipe-nutrition';
+
+      const cells = [
+        { key: 'kcal',    label: 'Калории' },
+        { key: 'protein', label: 'Белки' },
+        { key: 'fat',     label: 'Жиры' },
+        { key: 'carbs',   label: 'Углеводы' }
+      ];
+
+      nutritionValueEls = {};
+
+      cells.forEach(cell => {
+        const cellEl = document.createElement('div');
+        cellEl.className = 'recipe-nutrition-cell';
+
+        const cellLabel = document.createElement('div');
+        cellLabel.className = 'recipe-nutrition-label';
+        cellLabel.textContent = cell.label;
+        cellEl.appendChild(cellLabel);
+
+        const cellValue = document.createElement('div');
+        cellValue.className = 'recipe-nutrition-value';
+        cellValue.textContent = '—';
+        cellEl.appendChild(cellValue);
+
+        nutritionValueEls[cell.key] = cellValue;
+        nutritionBlock.appendChild(cellEl);
+      });
+
+      modal.appendChild(nutritionBlock);
+
+      nutritionCaptionEl = document.createElement('div');
+      nutritionCaptionEl.className = 'recipe-nutrition-caption';
+      nutritionCaptionEl.textContent = 'На 1 порцию';
+      modal.appendChild(nutritionCaptionEl);
+    }
+
+    // ===== Время =====
+    const cookTime = recipe.cookTime;
+    const activeTime = recipe.activeTime;
+    const hasCookTime = cookTime != null && isFinite(cookTime);
+    const hasActiveTime = activeTime != null && isFinite(activeTime);
+
+    if (hasCookTime || hasActiveTime) {
+      const timeBlock = document.createElement('div');
+      timeBlock.className = 'recipe-times';
+
+      if (hasCookTime) {
+        const timeItem = document.createElement('div');
+        timeItem.className = 'recipe-time-item';
+
+        const timeLabel = document.createElement('span');
+        timeLabel.className = 'recipe-time-label';
+        timeLabel.textContent = '⏱ Готовить';
+        timeItem.appendChild(timeLabel);
+
+        const timeValue = document.createElement('span');
+        timeValue.className = 'recipe-time-value';
+        timeValue.textContent = `${cookTime} мин`;
+        timeItem.appendChild(timeValue);
+
+        timeBlock.appendChild(timeItem);
+      }
+
+      if (hasActiveTime) {
+        const timeItem = document.createElement('div');
+        timeItem.className = 'recipe-time-item';
+
+        const timeLabel = document.createElement('span');
+        timeLabel.className = 'recipe-time-label';
+        timeLabel.textContent = '👨‍🍳 На кухне';
+        timeItem.appendChild(timeLabel);
+
+        const timeValue = document.createElement('span');
+        timeValue.className = 'recipe-time-value';
+        timeValue.textContent = `${activeTime} мин`;
+        timeItem.appendChild(timeValue);
+
+        timeBlock.appendChild(timeItem);
+      }
+
+      modal.appendChild(timeBlock);
+    }
+
+    // ===== Шкалы: сложность, острота =====
+    const diff = recipe.difficulty;
+    const spice = recipe.spiciness;
+    const hasDiff = typeof diff === 'number' && diff >= 1 && diff <= 5;
+    const hasSpice = typeof spice === 'number' && spice >= 1 && spice <= 5;
+
+    if (hasDiff || hasSpice) {
+      const scalesBlock = document.createElement('div');
+      scalesBlock.className = 'recipe-scales';
+
+      if (hasDiff) {
+        scalesBlock.appendChild(buildScaleRow('Сложность', diff, DIFFICULTY_LABELS));
+      }
+      if (hasSpice) {
+        scalesBlock.appendChild(buildScaleRow('Острота', spice, SPICINESS_LABELS));
+      }
+
+      modal.appendChild(scalesBlock);
+    }
+
+    // ===== Аллергены =====
+    const allergensList = Array.isArray(recipe.allergens)
+      ? recipe.allergens.filter(a => ALLERGEN_LABELS[a])
+      : [];
+
+    if (allergensList.length > 0) {
+      const allergensBlock = document.createElement('div');
+      allergensBlock.className = 'recipe-allergens';
+
+      const allergensLabel = document.createElement('div');
+      allergensLabel.className = 'recipe-allergens-label';
+      allergensLabel.textContent = '⚠️ Аллергены';
+      allergensBlock.appendChild(allergensLabel);
+
+      const tagsWrap = document.createElement('div');
+      tagsWrap.className = 'recipe-allergens-list';
+      allergensList.forEach(a => {
+        const tag = document.createElement('span');
+        tag.className = 'recipe-allergen-tag';
+        tag.textContent = ALLERGEN_LABELS[a];
+        tagsWrap.appendChild(tag);
+      });
+      allergensBlock.appendChild(tagsWrap);
+
+      modal.appendChild(allergensBlock);
+    }
+
+    // ===== Ингредиенты =====
     const ingredientsDiv = document.createElement('div');
     ingredientsDiv.className = 'recipe-section recipe-ingredients';
 
@@ -1706,20 +2020,13 @@ export const Renderer = (function() {
     ingredientsTitle.textContent = '📝 Ингредиенты';
     ingredientsDiv.appendChild(ingredientsTitle);
 
-    const ingredientsList = document.createElement('ul');
-    ingredientsList.className = 'recipe-ingredients-list';
-    recipe.ingredients.forEach(ing => {
-      // ing — объект { name, amount, unit } (схема v2) или строка (старые данные).
-      // Utils.formatIngredient умеет и то, и другое.
-      const line = Utils.formatIngredient(ing);
-      if (!line) return;
-      const li = document.createElement('li');
-      li.textContent = line;
-      ingredientsList.appendChild(li);
-    });
-    ingredientsDiv.appendChild(ingredientsList);
+    ingredientsListEl = document.createElement('ul');
+    ingredientsListEl.className = 'recipe-ingredients-list';
+    ingredientsDiv.appendChild(ingredientsListEl);
+
     modal.appendChild(ingredientsDiv);
 
+    // ===== Инструкция =====
     if (recipe.instructions) {
       const instrDiv = document.createElement('div');
       instrDiv.className = 'recipe-section recipe-instructions';
@@ -1736,16 +2043,20 @@ export const Renderer = (function() {
       modal.appendChild(instrDiv);
     }
 
+    // ===== Кнопки =====
     const buttonsDiv = document.createElement('div');
     buttonsDiv.className = 'recipe-card-buttons';
+
     const addButton = document.createElement('button');
     addButton.className = 'btn-primary';
     addButton.id = 'addRecipeToCalendar';
     addButton.textContent = '➕ Добавить в календарь';
+
     const closeButton2 = document.createElement('button');
     closeButton2.className = 'btn-secondary';
     closeButton2.id = 'recipeCardCloseBtn';
     closeButton2.textContent = 'Закрыть';
+
     buttonsDiv.appendChild(addButton);
     buttonsDiv.appendChild(closeButton2);
     modal.appendChild(buttonsDiv);
@@ -1753,6 +2064,10 @@ export const Renderer = (function() {
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
 
+    // Первичный рендер зависимых блоков
+    rerender();
+
+    // ===== Закрытие =====
     const close = () => {
       if (overlay._trapFocusCleanup) {
         overlay._trapFocusCleanup();
