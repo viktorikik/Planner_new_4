@@ -1807,6 +1807,28 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   min-width: 0;
 }
 
+/* Контейнер бейджей под заголовком: категория + кухня */
+.recipe-view-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+/* Бейдж кухни. Формат — как у бейджа категории, но нейтрального цвета. */
+.recipe-cuisine-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  background: var(--badge-bg);
+  color: var(--text-secondary);
+  border: 1px solid var(--cell-border);
+  white-space: nowrap;
+}
+
 .recipe-view-titlerow h3 {
   font-size: 22px;
   font-weight: 700;
@@ -1823,7 +1845,6 @@ body.dark-theme .modal-dish .recipe-chip:hover {
 
 .recipe-category-badge {
   display: inline-block;
-  align-self: flex-start;
   padding: 3px 10px;
   border-radius: 999px;
   font-size: 12px;
@@ -4138,5 +4159,273 @@ body.dark-theme .add-modal .recipe-form-modal .recipe-form-details {
 
   .add-modal .recipe-form-modal .nutrition-row {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ============================================================
+   41. КАРТОЧКА РЕЦЕПТА v2 (v6.4)
+   ============================================================ */
+
+/* ---- Калькулятор порций ---- */
+.recipe-view-modal .recipe-servings-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: var(--cell-bg);
+  border: 1px solid var(--cell-border);
+  border-radius: var(--radius-md);
+}
+
+.recipe-view-modal .recipe-servings-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  flex: 1 1 auto;
+}
+
+.recipe-view-modal .recipe-servings-btn {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  padding: 0;
+  border: 1.5px solid var(--cell-border);
+  border-radius: 50%;
+  background: var(--card-bg);
+  color: var(--text-primary);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  appearance: none;
+  font-family: inherit;
+  transition: var(--transition-fast);
+}
+.recipe-view-modal .recipe-servings-btn:hover {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+  background: var(--card-hover-bg);
+}
+.recipe-view-modal .recipe-servings-btn:active {
+  transform: scale(0.94);
+}
+.recipe-view-modal .recipe-servings-btn:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.recipe-view-modal .recipe-servings-current {
+  min-width: 40px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* ---- Блок КБЖУ ---- */
+.recipe-view-modal .recipe-nutrition {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.recipe-view-modal .recipe-nutrition-cell {
+  padding: 10px 12px;
+  background: var(--cell-bg);
+  border: 1px solid var(--cell-border);
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+
+.recipe-view-modal .recipe-nutrition-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.2px;
+  margin-bottom: 4px;
+}
+
+.recipe-view-modal .recipe-nutrition-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.recipe-view-modal .recipe-nutrition-caption {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: right;
+  margin-bottom: 16px;
+}
+
+/* ---- Время ---- */
+.recipe-view-modal .recipe-times {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.recipe-view-modal .recipe-time-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  background: var(--cell-bg);
+  border: 1px solid var(--cell-border);
+  border-radius: var(--radius-sm);
+}
+
+.recipe-view-modal .recipe-time-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.recipe-view-modal .recipe-time-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* ---- Шкалы: сложность, острота ---- */
+.recipe-view-modal .recipe-scales {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: var(--cell-bg);
+  border: 1px solid var(--cell-border);
+  border-radius: var(--radius-sm);
+}
+
+.recipe-view-modal .recipe-scale-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.recipe-view-modal .recipe-scale-label {
+  min-width: 90px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.recipe-view-modal .recipe-scale-dots {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.recipe-view-modal .recipe-scale-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--cell-border);
+  transition: background var(--transition-fast);
+}
+
+.recipe-view-modal .recipe-scale-dot.active {
+  background: var(--accent-color);
+}
+
+.recipe-view-modal .recipe-scale-text {
+  color: var(--text-secondary);
+  font-weight: 500;
+  flex: 1 1 auto;
+}
+
+/* ---- Аллергены ---- */
+.recipe-view-modal .recipe-allergens {
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: rgba(194, 90, 58, 0.06);
+  border: 1px solid rgba(194, 90, 58, 0.2);
+  border-radius: var(--radius-sm);
+}
+
+.recipe-view-modal .recipe-allergens-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent-color);
+  margin-bottom: 8px;
+  letter-spacing: 0.2px;
+}
+
+.recipe-view-modal .recipe-allergens-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.recipe-view-modal .recipe-allergen-tag {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  background: var(--card-bg);
+  color: var(--text-primary);
+  border: 1px solid rgba(194, 90, 58, 0.3);
+  white-space: nowrap;
+}
+
+body.dark-theme .recipe-view-modal .recipe-allergens {
+  background: rgba(216, 120, 90, 0.1);
+  border-color: rgba(216, 120, 90, 0.25);
+}
+body.dark-theme .recipe-view-modal .recipe-allergen-tag {
+  background: rgba(50, 42, 35, 0.7);
+  border-color: rgba(216, 120, 90, 0.35);
+}
+
+/* ---- Мобильная адаптация карточки рецепта ---- */
+@media (max-width: 480px) {
+  .recipe-view-modal .recipe-nutrition {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .recipe-view-modal .recipe-nutrition-cell {
+    padding: 8px 10px;
+  }
+  .recipe-view-modal .recipe-nutrition-value {
+    font-size: 16px;
+  }
+
+  .recipe-view-modal .recipe-servings-row {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  .recipe-view-modal .recipe-servings-btn {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    font-size: 18px;
+  }
+  .recipe-view-modal .recipe-servings-current {
+    min-width: 32px;
+    font-size: 16px;
+  }
+
+  .recipe-view-modal .recipe-scale-label {
+    min-width: 76px;
+    font-size: 13px;
+  }
+  .recipe-view-modal .recipe-scale-text {
+    font-size: 13px;
+  }
+
+  .recipe-view-modal .recipe-times {
+    gap: 6px;
+  }
+  .recipe-view-modal .recipe-time-value {
+    font-size: 15px;
   }
 }
