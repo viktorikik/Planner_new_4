@@ -260,6 +260,7 @@ export const CONSTANTS = {
     exportModalClose: 'exportModalClose',
     choiceOverlay: 'choiceOverlay',
     choiceClose: 'choiceClose',
+    choiceSourceGroup: 'choiceSourceGroup',
     welcomeOverlay: 'welcomeOverlay',
     welcomeStartBtn: 'welcomeStartBtn',
     todayContent: 'todayContent',
