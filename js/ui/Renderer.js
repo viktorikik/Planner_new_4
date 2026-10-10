@@ -499,12 +499,31 @@ export const Renderer = (function() {
     });
   }
 
+  // --- Источник «Из рецептов» (v5.13) ---
+  // Дополнительно к 2.2: рецепт не предлагается, если связанное с ним
+  // блюдо (dish.recipeId === recipe.id) уже запланировано на отрезок
+  // [сегодня, сегодня + CONSTANTS.CHOICE.EXCLUDE_DAYS] включительно.
+  // Это защищает от «предложить то, что и так в меню на этой неделе».
   function rebuildChoiceRecipesRanking() {
     const all = RecipeStore.getAll();
     const items = [];
 
+    // Диапазон «ближайшего меню». Сегодняшний день включается: если
+    // рецепт уже стоит на сегодня, в выдаче он не нужен.
+    const today = new Date();
+    const todayStr = Utils.formatDateLocal(today);
+    const excludeDays = CONSTANTS.CHOICE && typeof CONSTANTS.CHOICE.EXCLUDE_DAYS === 'number'
+      ? CONSTANTS.CHOICE.EXCLUDE_DAYS
+      : 5;
+    const futureDate = new Date(today);
+    futureDate.setDate(futureDate.getDate() + excludeDays);
+    const futureStr = Utils.formatDateLocal(futureDate);
+
     all.forEach(recipe => {
       if (RecipeStore.isRecipeNameDisliked(recipe.name)) return;
+
+      // Уже стоит в меню на ближайшие дни — не предлагаем.
+      if (DishStore.hasPlannedDishForRecipeInRange(recipe.id, todayStr, futureStr)) return;
 
       const cat = recipe.category || Utils.guessCategory(recipe.name);
       if (choiceFilterCategory !== 'all' && cat !== choiceFilterCategory) return;
@@ -1798,9 +1817,6 @@ export const Renderer = (function() {
     titleRow.appendChild(badgesRow);
 
     // ===== Оценки 👍/👎 =====
-    // Те же самые поля liked/disliked, что и у блюда. save() эмитит
-    // recipes:changed — кэш выдачи «Что приготовить?» сбросится сам.
-    // После клика вручную синхронизируем кнопки: DOM сам не перерисуется.
     const thumbsRow = document.createElement('div');
     thumbsRow.className = 'recipe-view-thumbs';
 
