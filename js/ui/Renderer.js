@@ -24,16 +24,20 @@ export const Renderer = (function() {
   let activeUndoSnackbar = null;
 
   // ---- Состояние экрана «Что приготовить?» ----
-  // Источник: 'menu' — из моего меню (блюда + движок), 'recipes' — из рецептов.
+  // Источник: 'menu' — из моего меню (блюда), 'recipes' — из рецептов.
+  // Оба источника отдают items в одном формате и идут в один движок.
   let choiceSource = 'menu';
   let choiceFilterMealType = '';
   let choiceFilterCategory = 'all';
   let choiceFilterOnlyFavorites = false;
   let choiceOffset = 0;
   // Кэш отсортированного списка для экрана «Что приготовить?».
-  // Для источника 'menu' — результат RecommendationEngine (там random jitter,
-  // поэтому кэш обязателен, чтобы «🎲 Другое» не пересчитывал порядок).
-  // Для источника 'recipes' — просто отфильтрованный массив рецептов.
+  // Для источника 'menu' — RecommendationEngine.rank() от блюд.
+  // Для источника 'recipes' — RecommendationEngine.rank() от рецептов.
+  // Внутри score есть небольшой random jitter, поэтому кэш обязателен:
+  // без него порядок «прыгал» бы при каждом рендере и «🎲 Другое» не работал.
+  // Сбрасывается при смене источника, смене фильтров, при dishes:changed
+  // и recipes:changed.
   let choiceRankedCache = null;
 
   const els = {};
@@ -459,91 +463,101 @@ export const Renderer = (function() {
   // ============================================================
   // ЭКРАН «ЧТО ПРИГОТОВИТЬ?»
   // ============================================================
+  //
+  // Оба источника (блюда и рецепты) отдают items в одном формате:
+  //   { name, category, recipeId, hasRecipe,
+  //     liked, disliked, mealTypes, lastDoneDate }
+  // Затем один и тот же движок (RecommendationEngine.rank) их ранжирует.
+  // Разница только в том, откуда брать поля — см. rebuildChoiceRanking
+  // и rebuildChoiceRecipesRanking.
 
-  // --- Источник «Из моего меню» (блюда + движок) ---
-  function applyChoiceFilters(items) {
+  // --- Источник «Из моего меню» (блюда) ---
+  // Группируем все записи блюд по имени, чтобы собрать оценки и mealTypes.
+  // «Последний раз готовили» берём из готового getAllUniqueWithLastDone.
+  function rebuildChoiceRanking() {
+    const allItems = DishStore.getAllUniqueWithLastDone();
     const allDishes = DishStore.getAll();
-    const result = [];
 
-    items.forEach(item => {
+    const byName = new Map();
+    allDishes.forEach(d => {
+      if (!byName.has(d.name)) byName.set(d.name, []);
+      byName.get(d.name).push(d);
+    });
+
+    const items = [];
+    allItems.forEach(item => {
+      const list = byName.get(item.name) || [];
+      if (list.length === 0) return;
+
+      // Скрываем блюда с 👎 (по последней оценённой записи — логика в DishStore).
       if (DishStore.isDishNameDisliked(item.name)) return;
 
-      const dish = allDishes.find(d => d.name === item.name);
-      if (!dish) return;
-
-      if (choiceFilterMealType) {
-        const types = Array.isArray(dish.mealTypes) ? dish.mealTypes : [];
-        if (types.length > 0 && !types.includes(choiceFilterMealType)) return;
-      }
-
-      const cat = dish.category || Utils.guessCategory(dish.name);
+      const first = list[0];
+      const cat = first.category || Utils.guessCategory(first.name);
       if (choiceFilterCategory !== 'all' && cat !== choiceFilterCategory) return;
 
-      if (choiceFilterOnlyFavorites) {
-        const isLiked = allDishes.some(d => d.name === item.name && d.liked);
-        if (!isLiked) return;
-      }
+      // Приём пищи: если у блюда он не указан — пропускаем (движок потом
+      // даст +MEAL_TYPE_ANY). Если указан — должен совпадать с фильтром.
+      const types = Array.isArray(first.mealTypes) ? first.mealTypes : [];
+      if (choiceFilterMealType && types.length > 0 && !types.includes(choiceFilterMealType)) return;
 
-      result.push({
+      const isLiked = list.some(d => d.liked);
+      if (choiceFilterOnlyFavorites && !isLiked) return;
+
+      items.push({
         name: item.name,
-        lastDoneDate: item.lastDoneDate,
         category: cat,
-        recipeId: dish.recipeId || null,
-        hasRecipe: !!dish.recipeId
+        recipeId: first.recipeId || null,
+        hasRecipe: !!first.recipeId,
+        liked: isLiked,
+        disliked: false,   // уже отфильтровали выше
+        mealTypes: types.slice(),
+        lastDoneDate: item.lastDoneDate
       });
     });
 
-    return result;
-  }
-
-  function rebuildChoiceRanking() {
-    const allItems = DishStore.getAllUniqueWithLastDone();
-    const filtered = applyChoiceFilters(allItems);
-
-    const dishesByName = new Map();
-    DishStore.getAll().forEach(d => {
-      if (!dishesByName.has(d.name)) dishesByName.set(d.name, []);
-      dishesByName.get(d.name).push(d);
-    });
-
-    choiceRankedCache = RecommendationEngine.rank(filtered, {
-      mealType: choiceFilterMealType || null,
-      dishesByName
+    choiceRankedCache = RecommendationEngine.rank(items, {
+      mealType: choiceFilterMealType || null
     });
   }
 
-  // --- Источник «Из рецептов» (v5.11: простой список без ранжирования) ---
-  // Ранжирование рецептов появится в этапе 2.2.
+  // --- Источник «Из рецептов» (v5.12+) ---
+  // Готовим items так же, как для блюд, и передаём в тот же движок.
+  // Ключевое отличие: lastDoneDate ищется через связи dish.recipeId === recipe.id
+  // (не по имени — имя рецепта и имя блюда могут совпадать случайно).
+  // Оценка 👍/👎 — из самого рецепта.
   function rebuildChoiceRecipesRanking() {
     const all = RecipeStore.getAll();
-    const filtered = [];
+    const items = [];
 
     all.forEach(recipe => {
+      // Скрываем рецепты с 👎 (по последней оценённой записи).
       if (RecipeStore.isRecipeNameDisliked(recipe.name)) return;
-
-      if (choiceFilterMealType) {
-        const types = Array.isArray(recipe.mealTypes) ? recipe.mealTypes : [];
-        if (types.length > 0 && !types.includes(choiceFilterMealType)) return;
-      }
 
       const cat = recipe.category || Utils.guessCategory(recipe.name);
       if (choiceFilterCategory !== 'all' && cat !== choiceFilterCategory) return;
 
+      const types = Array.isArray(recipe.mealTypes) ? recipe.mealTypes : [];
+      if (choiceFilterMealType && types.length > 0 && !types.includes(choiceFilterMealType)) return;
+
       if (choiceFilterOnlyFavorites && !recipe.liked) return;
 
-      filtered.push({
+      items.push({
         id: recipe.id,
         name: recipe.name,
         category: cat,
-        cookTime: recipe.cookTime,
-        mealTypes: Array.isArray(recipe.mealTypes) ? recipe.mealTypes.slice() : [],
         recipeId: recipe.id,
         hasRecipe: true,
-        reasons: []   // в 2.1 движок не участвует — причин пока нет
+        liked: !!recipe.liked,
+        disliked: !!recipe.disliked,
+        mealTypes: types.slice(),
+        lastDoneDate: DishStore.getLastDoneDateForRecipe(recipe.id)
       });
     });
 
-    choiceRankedCache = filtered;
+    choiceRankedCache = RecommendationEngine.rank(items, {
+      mealType: choiceFilterMealType || null
+    });
   }
 
   function renderChoiceSourceButtons() {
@@ -581,8 +595,8 @@ export const Renderer = (function() {
 
     container.innerHTML = '';
 
-    // Кэш. Для 'menu' — движок (там random jitter, кэш обязателен).
-    // Для 'recipes' — просто отфильтрованный список.
+    // Кэш. Для обоих источников теперь — результат движка (там random jitter,
+    // поэтому кэш обязателен: иначе «🎲 Другое» работал бы нестабильно).
     if (!choiceRankedCache) {
       if (choiceSource === 'recipes') {
         rebuildChoiceRecipesRanking();
@@ -629,9 +643,10 @@ export const Renderer = (function() {
       const nameWrap = document.createElement('span');
       nameWrap.className = 'choice-result-name';
       nameWrap.textContent = item.name;
-      // Иконка «📖» — только для источника «Из моего меню»: там блюдо может
-      // ссылаться на рецепт. Для источника «Из рецептов» это избыточно.
-      if (choiceSource === 'menu' && item.hasRecipe) {
+      // Иконка «📖» — если у элемента есть связанный рецепт.
+      // Для источника «Из рецептов» это всегда так; для «Из моего меню» —
+      // только если у блюда есть recipeId.
+      if (item.hasRecipe) {
         const recipeIcon = document.createElement('span');
         recipeIcon.className = 'choice-result-recipe-icon';
         recipeIcon.textContent = ' 📖';
@@ -641,25 +656,12 @@ export const Renderer = (function() {
       }
       row.appendChild(nameWrap);
 
-      // Строка-объяснение справа.
-      // Для 'menu' — причины ранжирования (максимум две).
-      // Для 'recipes' — короткая мета: время готовки, приёмы пищи.
+      // Строка-объяснение: почему это предложено. Причины формирует движок.
+      // Максимум две — чтобы не разрослось на узком экране.
       const meta = document.createElement('span');
       meta.className = 'choice-result-last';
-      if (choiceSource === 'recipes') {
-        const parts = [];
-        if (item.cookTime != null && isFinite(item.cookTime)) {
-          parts.push(`⏱ ${item.cookTime} мин`);
-        }
-        if (Array.isArray(item.mealTypes) && item.mealTypes.length > 0) {
-          const labels = item.mealTypes.map(t => MEAL_TYPE_LABELS[t]).filter(Boolean);
-          if (labels.length > 0) parts.push(labels.join(', '));
-        }
-        meta.textContent = parts.join(' · ');
-      } else {
-        const reasonsText = (item.reasons || []).slice(0, 2).join(' · ');
-        meta.textContent = reasonsText;
-      }
+      const reasonsText = (item.reasons || []).slice(0, 2).join(' · ');
+      meta.textContent = reasonsText;
       row.appendChild(meta);
 
       const handleSelect = () => {
@@ -2141,7 +2143,17 @@ export const Renderer = (function() {
       renderToday();
       const choiceOverlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
       if (choiceOverlay && choiceOverlay.classList.contains('active')) {
-        // Данные изменились — кэш ранкинга устарел.
+        // Данные изменились — кэш ранжирования устарел.
+        // Для источника 'menu' это изменит score, для 'recipes' — lastDoneDate.
+        choiceRankedCache = null;
+        renderChoiceResults();
+      }
+    });
+
+    EventBus.on(CONSTANTS.EVENTS.RECIPES_CHANGED, () => {
+      const choiceOverlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
+      if (choiceOverlay && choiceOverlay.classList.contains('active') && choiceSource === 'recipes') {
+        // Рецепты изменились — кэш ранжирования устарел.
         choiceRankedCache = null;
         renderChoiceResults();
       }
