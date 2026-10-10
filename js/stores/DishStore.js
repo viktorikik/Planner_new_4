@@ -254,6 +254,22 @@ export const DishStore = (function() {
     return result;
   }
 
+  // Последняя дата DONE-блюда, связанного с этим рецептом (по recipeId).
+  // Нужно движку рекомендаций, чтобы ранжировать рецепты так же,
+  // как блюда — по давности приготовления. Возвращает 'YYYY-MM-DD' или null.
+  // Связь — именно по recipeId, а не по имени: имя рецепта и имя блюда
+  // могут совпадать случайно — это не значит, что это одно и то же блюдо.
+  function getLastDoneDateForRecipe(recipeId) {
+    if (!recipeId) return null;
+    let max = null;
+    dishes.forEach(d => {
+      if (d.recipeId === recipeId && d.status === STATUSES.DONE) {
+        if (!max || d.date > max) max = d.date;
+      }
+    });
+    return max;
+  }
+
   function getFavorites() { return dishes.filter(d => d.liked); }
   function replaceAll(newDishes) {
     dishes = newDishes.map(normalizeDish);
@@ -301,6 +317,7 @@ export const DishStore = (function() {
     toggleStatus, toggleLike, toggleThumbUp, toggleThumbDown,
     isDishNameDisliked,
     getAllUniqueWithLastDone,
+    getLastDoneDateForRecipe,
     getFavorites, replaceAll,
     updateDishDate, clearRecipeRefs,
     updateDish
