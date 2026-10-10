@@ -197,7 +197,7 @@ export const PRODUCT_WORDS = [
   'желатин', 'пудра', 'цукаты', 'карамель', 'сгущёнка', 'ванильный сахар'
 ];
 
-// Объект с ключами хранилища, событиями и селекторами
+// Объект с ключами хранилища, событиями, селекторами и настройками
 export const CONSTANTS = {
   STORAGE_KEYS: {
     RECIPES: 'smartMenuRecipes_v2',
@@ -210,6 +210,15 @@ export const CONSTANTS = {
   EVENTS: {
     DISHES_CHANGED: 'dishes:changed',
     RECIPES_CHANGED: 'recipes:changed'
+  },
+  // Настройки экрана «Что приготовить?» (v5.13, Блок 2 · подэтап 2.3)
+  CHOICE: {
+    // Сколько дней вперёд считаются «ближайшим меню».
+    // Рецепт не предлагается в источнике «Из рецептов», если связанное
+    // с ним блюдо (dish.recipeId === recipe.id) уже запланировано
+    // на отрезок [сегодня, сегодня + EXCLUDE_DAYS] включительно.
+    // 5 → горизонт 6 дней: сегодня и 5 вперёд.
+    EXCLUDE_DAYS: 5
   },
   SELECTORS: {
     monthTitle: 'monthTitle',
