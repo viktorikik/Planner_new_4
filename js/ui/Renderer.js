@@ -24,20 +24,11 @@ export const Renderer = (function() {
   let activeUndoSnackbar = null;
 
   // ---- Состояние экрана «Что приготовить?» ----
-  // Источник: 'menu' — из моего меню (блюда), 'recipes' — из рецептов.
-  // Оба источника отдают items в одном формате и идут в один движок.
   let choiceSource = 'menu';
   let choiceFilterMealType = '';
   let choiceFilterCategory = 'all';
   let choiceFilterOnlyFavorites = false;
   let choiceOffset = 0;
-  // Кэш отсортированного списка для экрана «Что приготовить?».
-  // Для источника 'menu' — RecommendationEngine.rank() от блюд.
-  // Для источника 'recipes' — RecommendationEngine.rank() от рецептов.
-  // Внутри score есть небольшой random jitter, поэтому кэш обязателен:
-  // без него порядок «прыгал» бы при каждом рендере и «🎲 Другое» не работал.
-  // Сбрасывается при смене источника, смене фильтров, при dishes:changed
-  // и recipes:changed.
   let choiceRankedCache = null;
 
   const els = {};
@@ -463,17 +454,7 @@ export const Renderer = (function() {
   // ============================================================
   // ЭКРАН «ЧТО ПРИГОТОВИТЬ?»
   // ============================================================
-  //
-  // Оба источника (блюда и рецепты) отдают items в одном формате:
-  //   { name, category, recipeId, hasRecipe,
-  //     liked, disliked, mealTypes, lastDoneDate }
-  // Затем один и тот же движок (RecommendationEngine.rank) их ранжирует.
-  // Разница только в том, откуда брать поля — см. rebuildChoiceRanking
-  // и rebuildChoiceRecipesRanking.
 
-  // --- Источник «Из моего меню» (блюда) ---
-  // Группируем все записи блюд по имени, чтобы собрать оценки и mealTypes.
-  // «Последний раз готовили» берём из готового getAllUniqueWithLastDone.
   function rebuildChoiceRanking() {
     const allItems = DishStore.getAllUniqueWithLastDone();
     const allDishes = DishStore.getAll();
@@ -489,15 +470,12 @@ export const Renderer = (function() {
       const list = byName.get(item.name) || [];
       if (list.length === 0) return;
 
-      // Скрываем блюда с 👎 (по последней оценённой записи — логика в DishStore).
       if (DishStore.isDishNameDisliked(item.name)) return;
 
       const first = list[0];
       const cat = first.category || Utils.guessCategory(first.name);
       if (choiceFilterCategory !== 'all' && cat !== choiceFilterCategory) return;
 
-      // Приём пищи: если у блюда он не указан — пропускаем (движок потом
-      // даст +MEAL_TYPE_ANY). Если указан — должен совпадать с фильтром.
       const types = Array.isArray(first.mealTypes) ? first.mealTypes : [];
       if (choiceFilterMealType && types.length > 0 && !types.includes(choiceFilterMealType)) return;
 
@@ -510,7 +488,7 @@ export const Renderer = (function() {
         recipeId: first.recipeId || null,
         hasRecipe: !!first.recipeId,
         liked: isLiked,
-        disliked: false,   // уже отфильтровали выше
+        disliked: false,
         mealTypes: types.slice(),
         lastDoneDate: item.lastDoneDate
       });
@@ -521,17 +499,11 @@ export const Renderer = (function() {
     });
   }
 
-  // --- Источник «Из рецептов» (v5.12+) ---
-  // Готовим items так же, как для блюд, и передаём в тот же движок.
-  // Ключевое отличие: lastDoneDate ищется через связи dish.recipeId === recipe.id
-  // (не по имени — имя рецепта и имя блюда могут совпадать случайно).
-  // Оценка 👍/👎 — из самого рецепта.
   function rebuildChoiceRecipesRanking() {
     const all = RecipeStore.getAll();
     const items = [];
 
     all.forEach(recipe => {
-      // Скрываем рецепты с 👎 (по последней оценённой записи).
       if (RecipeStore.isRecipeNameDisliked(recipe.name)) return;
 
       const cat = recipe.category || Utils.guessCategory(recipe.name);
@@ -595,8 +567,6 @@ export const Renderer = (function() {
 
     container.innerHTML = '';
 
-    // Кэш. Для обоих источников теперь — результат движка (там random jitter,
-    // поэтому кэш обязателен: иначе «🎲 Другое» работал бы нестабильно).
     if (!choiceRankedCache) {
       if (choiceSource === 'recipes') {
         rebuildChoiceRecipesRanking();
@@ -643,9 +613,6 @@ export const Renderer = (function() {
       const nameWrap = document.createElement('span');
       nameWrap.className = 'choice-result-name';
       nameWrap.textContent = item.name;
-      // Иконка «📖» — если у элемента есть связанный рецепт.
-      // Для источника «Из рецептов» это всегда так; для «Из моего меню» —
-      // только если у блюда есть recipeId.
       if (item.hasRecipe) {
         const recipeIcon = document.createElement('span');
         recipeIcon.className = 'choice-result-recipe-icon';
@@ -656,8 +623,6 @@ export const Renderer = (function() {
       }
       row.appendChild(nameWrap);
 
-      // Строка-объяснение: почему это предложено. Причины формирует движок.
-      // Максимум две — чтобы не разрослось на узком экране.
       const meta = document.createElement('span');
       meta.className = 'choice-result-last';
       const reasonsText = (item.reasons || []).slice(0, 2).join(' · ');
@@ -762,7 +727,6 @@ export const Renderer = (function() {
 
   function rerollChoiceDish() {
     if (!choiceRankedCache || choiceRankedCache.length === 0) return;
-    // Сдвигаем окно на 5 по уже отсортированному списку.
     choiceOffset = (choiceOffset + 5) % choiceRankedCache.length;
     renderChoiceResults();
   }
@@ -1733,7 +1697,7 @@ export const Renderer = (function() {
   function setCategoryFilter(f) { categoryFilter = f; renderMenu(); }
 
   // ============================================================
-  // КАРТОЧКА РЕЦЕПТА (расширенная, v6.4)
+  // КАРТОЧКА РЕЦЕПТА (расширенная, v6.5)
   // ============================================================
 
   function formatNutriValue(n) {
@@ -1832,6 +1796,54 @@ export const Renderer = (function() {
     }
 
     titleRow.appendChild(badgesRow);
+
+    // ===== Оценки 👍/👎 =====
+    // Те же самые поля liked/disliked, что и у блюда. save() эмитит
+    // recipes:changed — кэш выдачи «Что приготовить?» сбросится сам.
+    // После клика вручную синхронизируем кнопки: DOM сам не перерисуется.
+    const thumbsRow = document.createElement('div');
+    thumbsRow.className = 'recipe-view-thumbs';
+
+    const thumbUpBtn = document.createElement('button');
+    thumbUpBtn.type = 'button';
+    thumbUpBtn.className = `recipe-thumb-btn recipe-thumb-up ${recipe.liked ? 'active' : ''}`;
+    thumbUpBtn.textContent = '👍';
+    thumbUpBtn.title = recipe.liked ? 'Убрать оценку «нравится»' : 'Нравится';
+    thumbUpBtn.setAttribute('aria-label', thumbUpBtn.title);
+    thumbUpBtn.setAttribute('aria-pressed', String(!!recipe.liked));
+
+    const thumbDownBtn = document.createElement('button');
+    thumbDownBtn.type = 'button';
+    thumbDownBtn.className = `recipe-thumb-btn recipe-thumb-down ${recipe.disliked ? 'active' : ''}`;
+    thumbDownBtn.textContent = '👎';
+    thumbDownBtn.title = recipe.disliked ? 'Убрать оценку «не нравится»' : 'Не нравится';
+    thumbDownBtn.setAttribute('aria-label', thumbDownBtn.title);
+    thumbDownBtn.setAttribute('aria-pressed', String(!!recipe.disliked));
+
+    function syncThumbState() {
+      thumbUpBtn.classList.toggle('active', !!recipe.liked);
+      thumbUpBtn.title = recipe.liked ? 'Убрать оценку «нравится»' : 'Нравится';
+      thumbUpBtn.setAttribute('aria-label', thumbUpBtn.title);
+      thumbUpBtn.setAttribute('aria-pressed', String(!!recipe.liked));
+
+      thumbDownBtn.classList.toggle('active', !!recipe.disliked);
+      thumbDownBtn.title = recipe.disliked ? 'Убрать оценку «не нравится»' : 'Не нравится';
+      thumbDownBtn.setAttribute('aria-label', thumbDownBtn.title);
+      thumbDownBtn.setAttribute('aria-pressed', String(!!recipe.disliked));
+    }
+
+    thumbUpBtn.addEventListener('click', () => {
+      RecipeStore.toggleThumbUp(recipe.id);
+      syncThumbState();
+    });
+    thumbDownBtn.addEventListener('click', () => {
+      RecipeStore.toggleThumbDown(recipe.id);
+      syncThumbState();
+    });
+
+    thumbsRow.appendChild(thumbUpBtn);
+    thumbsRow.appendChild(thumbDownBtn);
+    titleRow.appendChild(thumbsRow);
 
     const closeButton = document.createElement('button');
     closeButton.className = 'modal-close';
@@ -2143,8 +2155,6 @@ export const Renderer = (function() {
       renderToday();
       const choiceOverlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
       if (choiceOverlay && choiceOverlay.classList.contains('active')) {
-        // Данные изменились — кэш ранжирования устарел.
-        // Для источника 'menu' это изменит score, для 'recipes' — lastDoneDate.
         choiceRankedCache = null;
         renderChoiceResults();
       }
@@ -2153,7 +2163,6 @@ export const Renderer = (function() {
     EventBus.on(CONSTANTS.EVENTS.RECIPES_CHANGED, () => {
       const choiceOverlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
       if (choiceOverlay && choiceOverlay.classList.contains('active') && choiceSource === 'recipes') {
-        // Рецепты изменились — кэш ранжирования устарел.
         choiceRankedCache = null;
         renderChoiceResults();
       }
