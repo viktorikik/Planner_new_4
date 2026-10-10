@@ -16,7 +16,7 @@
   <meta name="apple-mobile-web-app-title" content="Меню и рецепты">
   <link rel="apple-touch-icon" href="icon.svg">
 
-  <link rel="stylesheet" href="styles.css?v=5.2.3">
+  <link rel="stylesheet" href="styles.css?v=5.2.4">
 </head>
 <body>
 
@@ -402,6 +402,16 @@
 <div class="choice-overlay" id="choiceOverlay" role="dialog" aria-modal="true" aria-labelledby="choiceTitle">
   <div class="choice-modal">
     <h2 id="choiceTitle">🤔 Что приготовить?</h2>
+
+    <!-- Выбор источника: «Из моего меню» / «Из рецептов» (v5.11) -->
+    <div class="choice-source-group" id="choiceSourceGroup" role="group" aria-label="Источник блюд">
+      <button type="button" class="choice-source-btn active" data-source="menu" aria-pressed="true">
+        🍽️ Из моего меню
+      </button>
+      <button type="button" class="choice-source-btn" data-source="recipes" aria-pressed="false">
+        📖 Из рецептов
+      </button>
+    </div>
 
     <div class="choice-filter-group">
       <div class="choice-filter-label">Приём пищи</div>
