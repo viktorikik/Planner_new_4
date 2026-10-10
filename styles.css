@@ -1439,6 +1439,51 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   text-align: center;
 }
 
+/* ===== Выбор источника: «Из моего меню» / «Из рецептов» (v5.11) ===== */
+.choice-source-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.choice-source-btn {
+  padding: 12px 14px;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--cell-border);
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.choice-source-btn:hover {
+  border-color: var(--accent-color);
+  background: var(--card-hover-bg);
+}
+
+.choice-source-btn.active {
+  background: var(--accent-color);
+  border-color: var(--accent-color);
+  color: var(--accent-text);
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.25);
+}
+
+.choice-source-btn:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
 .choice-filter-group {
   margin-bottom: 16px;
 }
@@ -3504,6 +3549,12 @@ body {
 @media (max-width: 480px) {
   .meal-types-group {
     gap: 6px;
+  }
+
+     .choice-source-btn {
+    font-size: 13px;
+    padding: 10px 10px;
+    gap: 4px;
   }
   .meal-type-checkbox {
     padding: 8px 10px;
