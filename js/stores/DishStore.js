@@ -32,7 +32,6 @@ export const DishStore = (function() {
     return Date.now() + Math.random() * 10000;
   }
 
-  // Приводит любое значение к массиву mealTypes.
   function normalizeMealTypes(value) {
     if (!value) return [];
     if (Array.isArray(value)) {
@@ -127,8 +126,6 @@ export const DishStore = (function() {
   function getAll() { return dishes.slice(); }
   function getForDate(dateStr) { return dishes.filter(d => d.date === dateStr); }
 
-  // mealTypes — массив значений из MEAL_TYPES. Может быть пустым.
-  // disliked — если true, блюдо сразу помечается «не нравится» (взаимоисключение с liked).
   function addDish(name, status, date, category, liked = false, note = '', recipeId = null, mealTypes = [], disliked = false) {
     if (!name || !status || !date || !category) return false;
     const id = generateId();
@@ -144,9 +141,6 @@ export const DishStore = (function() {
     return true;
   }
 
-  // Восстанавливает блюдо по снимку (объект с теми же полями, что хранятся
-  // в массиве dishes). Сохраняет исходный id, если он есть. Используется
-  // для кнопки «Вернуть» после удаления.
   function restoreDish(snapshot) {
     if (!snapshot || !snapshot.name || !snapshot.status || !snapshot.date || !snapshot.category) {
       return false;
@@ -220,11 +214,6 @@ export const DishStore = (function() {
     return true;
   }
 
-  // Проверка: последняя по дате запись с этим именем, у которой вообще есть
-  // оценка (👍 или 👎), помечена как «не нравится»? Если у записи нет оценки —
-  // она не участвует в проверке, и решение принимает предыдущая оценённая
-  // запись. Так 👎 «прилипает» к названию блюда: поставила один раз — блюдо
-  // скрыто из рекомендаций, пока ты явно не поставишь 👍 (или не снимешь 👎).
   function isDishNameDisliked(name) {
     const rated = dishes.filter(d => d.name === name && (d.liked || d.disliked));
     if (rated.length === 0) return false;
@@ -257,8 +246,6 @@ export const DishStore = (function() {
   // Последняя дата DONE-блюда, связанного с этим рецептом (по recipeId).
   // Нужно движку рекомендаций, чтобы ранжировать рецепты так же,
   // как блюда — по давности приготовления. Возвращает 'YYYY-MM-DD' или null.
-  // Связь — именно по recipeId, а не по имени: имя рецепта и имя блюда
-  // могут совпадать случайно — это не значит, что это одно и то же блюдо.
   function getLastDoneDateForRecipe(recipeId) {
     if (!recipeId) return null;
     let max = null;
@@ -268,6 +255,21 @@ export const DishStore = (function() {
       }
     });
     return max;
+  }
+
+  // Есть ли у этого рецепта запланированное блюдо (status = PLANNED)
+  // на отрезке [fromDateStr, toDateStr] включительно. Даты — строки
+  // в формате 'YYYY-MM-DD', сравнение лексикографическое (корректно
+  // для ISO-дат). Нужно экрану «Что приготовить?», чтобы не предлагать
+  // рецепт, который уже стоит в ближайшем меню.
+  function hasPlannedDishForRecipeInRange(recipeId, fromDateStr, toDateStr) {
+    if (!recipeId || !fromDateStr || !toDateStr) return false;
+    return dishes.some(d =>
+      d.recipeId === recipeId &&
+      d.status === STATUSES.PLANNED &&
+      d.date >= fromDateStr &&
+      d.date <= toDateStr
+    );
   }
 
   function getFavorites() { return dishes.filter(d => d.liked); }
@@ -318,6 +320,7 @@ export const DishStore = (function() {
     isDishNameDisliked,
     getAllUniqueWithLastDone,
     getLastDoneDateForRecipe,
+    hasPlannedDishForRecipeInRange,
     getFavorites, replaceAll,
     updateDishDate, clearRecipeRefs,
     updateDish
