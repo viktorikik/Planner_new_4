@@ -4214,7 +4214,7 @@ body.dark-theme .add-modal .recipe-form-modal .recipe-form-details {
 }
 
 /* ============================================================
-   41. КАРТОЧКА РЕЦЕПТА v2 (v6.4)
+   41. КАРТОЧКА РЕЦЕПТА v2 (v6.5)
    ============================================================ */
 
 /* ---- Калькулятор порций ---- */
@@ -4438,6 +4438,50 @@ body.dark-theme .recipe-view-modal .recipe-allergen-tag {
   border-color: rgba(216, 120, 90, 0.35);
 }
 
+/* ---- Оценки 👍/👎 в карточке рецепта (v6.5) ---- */
+.recipe-view-thumbs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.recipe-thumb-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 6px;
+  opacity: 0.35;
+  filter: grayscale(1);
+  transition: var(--transition-fast);
+  appearance: none;
+  font-family: inherit;
+  border-radius: 8px;
+  min-width: 34px;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.recipe-thumb-btn:hover {
+  opacity: 0.7;
+  filter: grayscale(0.3);
+  transform: scale(1.15);
+}
+.recipe-thumb-btn:active {
+  transform: scale(0.95);
+}
+.recipe-thumb-btn.active {
+  opacity: 1;
+  filter: none;
+}
+.recipe-thumb-btn:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
 /* ---- Мобильная адаптация карточки рецепта ---- */
 @media (max-width: 480px) {
   .recipe-view-modal .recipe-nutrition {
@@ -4478,5 +4522,15 @@ body.dark-theme .recipe-view-modal .recipe-allergen-tag {
   }
   .recipe-view-modal .recipe-time-value {
     font-size: 15px;
+  }
+
+  .recipe-view-thumbs {
+    margin-top: 4px;
+  }
+  .recipe-thumb-btn {
+    font-size: 18px;
+    min-width: 30px;
+    min-height: 30px;
+    padding: 2px 4px;
   }
 }
