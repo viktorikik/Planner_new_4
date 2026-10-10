@@ -1,12 +1,16 @@
 // ============================================================
 // Движок рекомендаций для экрана «Что приготовить?».
-// Считает score для каждого блюда по нескольким факторам и
+// Считает score для каждого элемента (блюда или рецепта) и
 // возвращает отсортированный список — от более желанного к менее.
 // Никакого машинного обучения: простая сумма баллов, чтобы
 // поведение было предсказуемым и его можно было объяснить словами.
+//
+// v2 (Блок 2 · подэтап 2.2):
+//   Движок больше не знает, блюдо это или рецепт. Он работает с
+//   универсальным «item» — объект с уже подготовленными полями.
+//   Кто и как их готовит (Renderer) — не его забота.
+//   Это позволяет ранжировать и блюда, и рецепты одним и тем же кодом.
 // ============================================================
-
-import { MEAL_TYPES } from '../utils/Constants.js';
 
 export const RecommendationEngine = (function() {
   // Веса факторов. Подобраны «на глаз» — если после недели использования
@@ -48,9 +52,17 @@ export const RecommendationEngine = (function() {
     return `${n} ${pluralDays(n)} назад`;
   }
 
-  // Считает score одного блюда и собирает список коротких причин —
+  // Считает score одного элемента и собирает список коротких причин —
   // их потом показываем в карточке результата.
-  // context: { mealType: string|null, dishesByName: Map<name, dish[]> }
+  //
+  // item: {
+  //   name,
+  //   lastDoneDate,   // 'YYYY-MM-DD' или null («ещё не готовили»)
+  //   liked,          // boolean
+  //   disliked,       // boolean (не участвует в score — используется снаружи)
+  //   mealTypes       // массив строк из MEAL_TYPES
+  // }
+  // context: { mealType: string|null }
   function scoreItem(item, context) {
     let score = 0;
     const reasons = [];
@@ -66,21 +78,19 @@ export const RecommendationEngine = (function() {
       reasons.push(formatDaysAgo(days));
     }
 
-    // 2. Любимое (👍 стоял хоть на одной записи с этим именем)
-    const dishes = context.dishesByName.get(item.name) || [];
-    const isLiked = dishes.some(d => d.liked);
-    if (isLiked) {
+    // 2. Любимое — берётся прямо из item.
+    //    Для блюда сюда кладётся «хоть одна запись с 👍» (готовит Renderer).
+    //    Для рецепта — recipe.liked.
+    if (item.liked) {
       score += WEIGHTS.LIKED;
       reasons.push('👍 любимое');
     }
 
     // 3. Подходит под выбранный приём пищи.
     //    Это добавляет только балл, но НЕ причину: пользователь сам
-    //    выбрал фильтр, значит и так знает, зачем ему эти блюда.
+    //    выбрал фильтр, значит и так знает, зачем ему эти элементы.
     if (context.mealType) {
-      const types = dishes.length > 0 && Array.isArray(dishes[0].mealTypes)
-        ? dishes[0].mealTypes
-        : [];
+      const types = Array.isArray(item.mealTypes) ? item.mealTypes : [];
       if (types.length === 0) {
         score += WEIGHTS.MEAL_TYPE_ANY;
       } else if (types.includes(context.mealType)) {
@@ -95,12 +105,13 @@ export const RecommendationEngine = (function() {
     return { score, reasons };
   }
 
-  // Публичная функция. Принимает список блюд и контекст фильтров,
+  // Публичная функция. Принимает список items и контекст,
   // возвращает копию списка с полями score и reasons, отсортированную
   // по убыванию score.
   function rank(items, context) {
+    const ctx = context || {};
     const result = items.map(item => {
-      const { score, reasons } = scoreItem(item, context);
+      const { score, reasons } = scoreItem(item, ctx);
       return { ...item, score, reasons };
     });
     result.sort((a, b) => b.score - a.score);
