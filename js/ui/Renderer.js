@@ -17,24 +17,23 @@ export const Renderer = (function() {
   let searchQuery = '', statusFilter = 'all', categoryFilter = 'all';
   let currentModalDate = null;
 
-  // Какая дата сейчас показывается на вкладке «Сегодня».
-  // Меняется свайпом влево/вправо. Сбрасывается в реальное «сегодня»
-  // при переходе на вкладку и по кнопке «↺ К сегодня».
   let todayViewDate = new Date();
 
   let touchDragActive = false;
   let openSwipeCard = null;
   let activeUndoSnackbar = null;
 
+  // ---- Состояние экрана «Что приготовить?» ----
+  // Источник: 'menu' — из моего меню (блюда + движок), 'recipes' — из рецептов.
+  let choiceSource = 'menu';
   let choiceFilterMealType = '';
   let choiceFilterCategory = 'all';
   let choiceFilterOnlyFavorites = false;
   let choiceOffset = 0;
-  // Кэш отсортированного движком списка для экрана «Что приготовить?».
-  // Хранится между рендерами, чтобы «🎲 Другое» сдвигало окно по одному
-  // и тому же порядку, а не пересчитывало score заново (в score есть
-  // небольшой random jitter — без кэша порядок бы «прыгал»).
-  // Сбрасывается при смене фильтров и при изменении данных.
+  // Кэш отсортированного списка для экрана «Что приготовить?».
+  // Для источника 'menu' — результат RecommendationEngine (там random jitter,
+  // поэтому кэш обязателен, чтобы «🎲 Другое» не пересчитывал порядок).
+  // Для источника 'recipes' — просто отфильтрованный массив рецептов.
   let choiceRankedCache = null;
 
   const els = {};
@@ -94,8 +93,6 @@ export const Renderer = (function() {
     return many;
   }
 
-  // Короткая подпись для дня относительно «сегодня»: «вчера», «завтра»,
-  // «через 3 дня», «5 дней назад». Используется на экране «Сегодня».
   function relativeDayLabel(date, baseDate) {
     const MS_PER_DAY = 24 * 60 * 60 * 1000;
     const d1 = new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -463,6 +460,7 @@ export const Renderer = (function() {
   // ЭКРАН «ЧТО ПРИГОТОВИТЬ?»
   // ============================================================
 
+  // --- Источник «Из моего меню» (блюда + движок) ---
   function applyChoiceFilters(items) {
     const allDishes = DishStore.getAll();
     const result = [];
@@ -498,8 +496,6 @@ export const Renderer = (function() {
     return result;
   }
 
-  // Пересчитывает отсортированный движком список. Кэшируется в choiceRankedCache.
-  // Сбрасывается при смене фильтров или изменении данных.
   function rebuildChoiceRanking() {
     const allItems = DishStore.getAllUniqueWithLastDone();
     const filtered = applyChoiceFilters(allItems);
@@ -513,6 +509,49 @@ export const Renderer = (function() {
     choiceRankedCache = RecommendationEngine.rank(filtered, {
       mealType: choiceFilterMealType || null,
       dishesByName
+    });
+  }
+
+  // --- Источник «Из рецептов» (v5.11: простой список без ранжирования) ---
+  // Ранжирование рецептов появится в этапе 2.2.
+  function rebuildChoiceRecipesRanking() {
+    const all = RecipeStore.getAll();
+    const filtered = [];
+
+    all.forEach(recipe => {
+      if (RecipeStore.isRecipeNameDisliked(recipe.name)) return;
+
+      if (choiceFilterMealType) {
+        const types = Array.isArray(recipe.mealTypes) ? recipe.mealTypes : [];
+        if (types.length > 0 && !types.includes(choiceFilterMealType)) return;
+      }
+
+      const cat = recipe.category || Utils.guessCategory(recipe.name);
+      if (choiceFilterCategory !== 'all' && cat !== choiceFilterCategory) return;
+
+      if (choiceFilterOnlyFavorites && !recipe.liked) return;
+
+      filtered.push({
+        id: recipe.id,
+        name: recipe.name,
+        category: cat,
+        cookTime: recipe.cookTime,
+        mealTypes: Array.isArray(recipe.mealTypes) ? recipe.mealTypes.slice() : [],
+        recipeId: recipe.id,
+        hasRecipe: true,
+        reasons: []   // в 2.1 движок не участвует — причин пока нет
+      });
+    });
+
+    choiceRankedCache = filtered;
+  }
+
+  function renderChoiceSourceButtons() {
+    const buttons = document.querySelectorAll('#choiceSourceGroup .choice-source-btn');
+    buttons.forEach(btn => {
+      const isActive = (btn.dataset.source || 'menu') === choiceSource;
+      btn.classList.toggle('active', isActive);
+      btn.setAttribute('aria-pressed', String(isActive));
     });
   }
 
@@ -542,10 +581,14 @@ export const Renderer = (function() {
 
     container.innerHTML = '';
 
-    // Ранкинг считаем один раз и кэшируем. Внутри score есть небольшой
-    // random jitter, поэтому без кэша порядок «прыгал» бы между рендерами.
+    // Кэш. Для 'menu' — движок (там random jitter, кэш обязателен).
+    // Для 'recipes' — просто отфильтрованный список.
     if (!choiceRankedCache) {
-      rebuildChoiceRanking();
+      if (choiceSource === 'recipes') {
+        rebuildChoiceRecipesRanking();
+      } else {
+        rebuildChoiceRanking();
+      }
     }
 
     const ranked = choiceRankedCache;
@@ -553,7 +596,9 @@ export const Renderer = (function() {
     if (!ranked || ranked.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'choice-empty';
-      empty.textContent = '😌 Ничего не найдено. Попробуйте ослабить фильтры.';
+      empty.textContent = choiceSource === 'recipes'
+        ? '😌 Подходящих рецептов нет. Добавьте их на вкладке «Рецепты» или ослабьте фильтры.'
+        : '😌 Ничего не найдено. Попробуйте ослабить фильтры.';
       container.appendChild(empty);
       if (rerollBtn) rerollBtn.hidden = true;
       return;
@@ -584,7 +629,9 @@ export const Renderer = (function() {
       const nameWrap = document.createElement('span');
       nameWrap.className = 'choice-result-name';
       nameWrap.textContent = item.name;
-      if (item.hasRecipe) {
+      // Иконка «📖» — только для источника «Из моего меню»: там блюдо может
+      // ссылаться на рецепт. Для источника «Из рецептов» это избыточно.
+      if (choiceSource === 'menu' && item.hasRecipe) {
         const recipeIcon = document.createElement('span');
         recipeIcon.className = 'choice-result-recipe-icon';
         recipeIcon.textContent = ' 📖';
@@ -594,12 +641,25 @@ export const Renderer = (function() {
       }
       row.appendChild(nameWrap);
 
-      // Строка-объяснение: почему это блюдо предложено. Максимум две
-      // причины, чтобы не разрослось на узком экране.
+      // Строка-объяснение справа.
+      // Для 'menu' — причины ранжирования (максимум две).
+      // Для 'recipes' — короткая мета: время готовки, приёмы пищи.
       const meta = document.createElement('span');
       meta.className = 'choice-result-last';
-      const reasonsText = (item.reasons || []).slice(0, 2).join(' · ');
-      meta.textContent = reasonsText;
+      if (choiceSource === 'recipes') {
+        const parts = [];
+        if (item.cookTime != null && isFinite(item.cookTime)) {
+          parts.push(`⏱ ${item.cookTime} мин`);
+        }
+        if (Array.isArray(item.mealTypes) && item.mealTypes.length > 0) {
+          const labels = item.mealTypes.map(t => MEAL_TYPE_LABELS[t]).filter(Boolean);
+          if (labels.length > 0) parts.push(labels.join(', '));
+        }
+        meta.textContent = parts.join(' · ');
+      } else {
+        const reasonsText = (item.reasons || []).slice(0, 2).join(' · ');
+        meta.textContent = reasonsText;
+      }
       row.appendChild(meta);
 
       const handleSelect = () => {
@@ -607,7 +667,7 @@ export const Renderer = (function() {
         setTimeout(() => {
           openAddModal(null, {
             name: item.name,
-            recipeId: item.recipeId,
+            recipeId: item.recipeId || null,
             category: item.category
           });
         }, 0);
@@ -625,6 +685,7 @@ export const Renderer = (function() {
   }
 
   function renderChoiceScreenDom() {
+    renderChoiceSourceButtons();
     renderChoiceChips();
     renderChoiceCategorySelect();
     renderChoiceFavoritesCheckbox();
@@ -632,6 +693,7 @@ export const Renderer = (function() {
   }
 
   function openChoiceScreen(mealTypePreset = null) {
+    choiceSource = 'menu';
     choiceFilterMealType = mealTypePreset || '';
     choiceFilterCategory = 'all';
     choiceFilterOnlyFavorites = false;
@@ -656,14 +718,21 @@ export const Renderer = (function() {
     }
   }
 
-  // Возврат в «Что приготовить?» из вложенной модалки «Мои рецепты».
-  // Фильтры и кэш ранкинга сохраняются — пользователь возвращается туда,
-  // откуда ушёл.
   function returnToChoice() {
     const overlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
     if (!overlay) return;
     overlay.classList.add('active');
     trapFocus(overlay, closeChoiceModal);
+    renderChoiceResults();
+  }
+
+  function setChoiceSource(source) {
+    const next = (source === 'recipes') ? 'recipes' : 'menu';
+    if (choiceSource === next) return;
+    choiceSource = next;
+    choiceOffset = 0;
+    choiceRankedCache = null;
+    renderChoiceSourceButtons();
     renderChoiceResults();
   }
 
@@ -1233,8 +1302,6 @@ export const Renderer = (function() {
     });
   }
 
-  // Подсказки на экране «Сегодня» — свёрнуты в <details>,
-  // чтобы не отъедать экран. Разворачиваются по тапу.
   function buildTodayHints() {
     const details = document.createElement('details');
     details.className = 'today-hints';
@@ -1306,7 +1373,6 @@ export const Renderer = (function() {
 
     container.appendChild(header);
 
-    // Если ушли с сегодня — покажем кнопку возврата.
     if (!isToday) {
       const backBtn = document.createElement('button');
       backBtn.type = 'button';
@@ -1668,7 +1734,6 @@ export const Renderer = (function() {
   // КАРТОЧКА РЕЦЕПТА (расширенная, v6.4)
   // ============================================================
 
-  // Форматирует число КБЖУ: целое — без запятой, дробное — через запятую.
   function formatNutriValue(n) {
     if (n == null || !isFinite(n)) return '—';
     const rounded = Math.round(n * 10) / 10;
@@ -1676,17 +1741,12 @@ export const Renderer = (function() {
     return String(rounded).replace('.', ',');
   }
 
-  // Пересчитывает ингредиент при изменении числа порций.
-  // Весовые (g, ml) — округление до 5, минимум 1.
-  // Штучные и прочие (pcs, tbsp, tsp, pinch, clove, bunch) — округление до 0,25, минимум 0,25.
-  // Без количества (соль «по вкусу») — не пересчитывается.
   function scaleIngredient(ing, baseServings, currentServings) {
     if (!ing || typeof ing !== 'object') return ing;
     const name = ing.name || '';
     const amount = ing.amount;
     const unit = ing.unit || null;
 
-    // Без количества или без единицы — не пересчитываем.
     if (amount == null || !isFinite(amount)) return { name, amount, unit };
     if (!unit) return { name, amount, unit };
 
@@ -1694,11 +1754,9 @@ export const Renderer = (function() {
     let scaled = amount * factor;
 
     if (unit === UNITS.G || unit === UNITS.ML) {
-      // Весовые: округление до 5.
       scaled = Math.round(scaled / 5) * 5;
       if (scaled < 1) scaled = 1;
     } else {
-      // Штучные и прочие: округление до 0,25.
       scaled = Math.round(scaled * 4) / 4;
       if (scaled < 0.25) scaled = 0.25;
     }
@@ -1706,7 +1764,6 @@ export const Renderer = (function() {
     return { name, amount: scaled, unit };
   }
 
-  // Создаёт строку шкалы: «Сложность [●●●○○] Просто».
   function buildScaleRow(label, level, labelsMap) {
     const row = document.createElement('div');
     row.className = 'recipe-scale-row';
@@ -1745,7 +1802,6 @@ export const Renderer = (function() {
     const modal = document.createElement('div');
     modal.className = 'modal recipe-view-modal';
 
-    // ===== Заголовок =====
     const header = document.createElement('div');
     header.className = 'modal-header recipe-view-header';
 
@@ -1757,7 +1813,6 @@ export const Renderer = (function() {
     title.textContent = '📖 ' + recipe.name;
     titleRow.appendChild(title);
 
-    // Бейджи: категория + кухня
     const badgesRow = document.createElement('div');
     badgesRow.className = 'recipe-view-badges';
 
@@ -1785,21 +1840,17 @@ export const Renderer = (function() {
     header.appendChild(closeButton);
     modal.appendChild(header);
 
-    // ===== Состояние калькулятора порций =====
     const baseServings = (typeof recipe.servings === 'number' && recipe.servings > 0) ? recipe.servings : 1;
     let currentServings = baseServings;
 
-    // Ссылки на элементы, которые перерисовываются при изменении порций.
     let ingredientsListEl = null;
-    let nutritionValueEls = null;   // { kcal, protein, fat, carbs }
+    let nutritionValueEls = null;
     let servingsCurrentEl = null;
     let nutritionCaptionEl = null;
 
-    // Перерисовывает всё, что зависит от текущего числа порций.
     function rerender() {
       if (servingsCurrentEl) servingsCurrentEl.textContent = String(currentServings);
 
-      // Ингредиенты — с пересчётом
       if (ingredientsListEl) {
         ingredientsListEl.innerHTML = '';
         const list = Array.isArray(recipe.ingredients) ? recipe.ingredients : [];
@@ -1813,7 +1864,6 @@ export const Renderer = (function() {
         });
       }
 
-      // КБЖУ — умножаем на текущее число порций
       if (nutritionValueEls) {
         const n = recipe.nutrition || {};
         const f = currentServings;
@@ -1828,7 +1878,6 @@ export const Renderer = (function() {
         nutritionValueEls.carbs.textContent = formatNutriValue(carbs);
       }
 
-      // Подпись под КБЖУ
       if (nutritionCaptionEl) {
         if (currentServings === 1) {
           nutritionCaptionEl.textContent = 'На 1 порцию';
@@ -1838,7 +1887,6 @@ export const Renderer = (function() {
       }
     }
 
-    // ===== Калькулятор порций =====
     const calcRow = document.createElement('div');
     calcRow.className = 'recipe-servings-row';
 
@@ -1881,7 +1929,6 @@ export const Renderer = (function() {
 
     modal.appendChild(calcRow);
 
-    // ===== КБЖУ =====
     const n = recipe.nutrition || {};
     const hasNutrition = [n.kcal, n.protein, n.fat, n.carbs].some(v => v != null && isFinite(v));
 
@@ -1924,7 +1971,6 @@ export const Renderer = (function() {
       modal.appendChild(nutritionCaptionEl);
     }
 
-    // ===== Время =====
     const cookTime = recipe.cookTime;
     const activeTime = recipe.activeTime;
     const hasCookTime = cookTime != null && isFinite(cookTime);
@@ -1971,7 +2017,6 @@ export const Renderer = (function() {
       modal.appendChild(timeBlock);
     }
 
-    // ===== Шкалы: сложность, острота =====
     const diff = recipe.difficulty;
     const spice = recipe.spiciness;
     const hasDiff = typeof diff === 'number' && diff >= 1 && diff <= 5;
@@ -1991,7 +2036,6 @@ export const Renderer = (function() {
       modal.appendChild(scalesBlock);
     }
 
-    // ===== Аллергены =====
     const allergensList = Array.isArray(recipe.allergens)
       ? recipe.allergens.filter(a => ALLERGEN_LABELS[a])
       : [];
@@ -2018,7 +2062,6 @@ export const Renderer = (function() {
       modal.appendChild(allergensBlock);
     }
 
-    // ===== Ингредиенты =====
     const ingredientsDiv = document.createElement('div');
     ingredientsDiv.className = 'recipe-section recipe-ingredients';
 
@@ -2033,7 +2076,6 @@ export const Renderer = (function() {
 
     modal.appendChild(ingredientsDiv);
 
-    // ===== Инструкция =====
     if (recipe.instructions) {
       const instrDiv = document.createElement('div');
       instrDiv.className = 'recipe-section recipe-instructions';
@@ -2050,7 +2092,6 @@ export const Renderer = (function() {
       modal.appendChild(instrDiv);
     }
 
-    // ===== Кнопки =====
     const buttonsDiv = document.createElement('div');
     buttonsDiv.className = 'recipe-card-buttons';
 
@@ -2071,10 +2112,8 @@ export const Renderer = (function() {
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
 
-    // Первичный рендер зависимых блоков
     rerender();
 
-    // ===== Закрытие =====
     const close = () => {
       if (overlay._trapFocusCleanup) {
         overlay._trapFocusCleanup();
@@ -2175,6 +2214,7 @@ export const Renderer = (function() {
     openChoiceScreen,
     closeChoiceModal,
     returnToChoice,
+    setChoiceSource,
     setChoiceMealType,
     setChoiceCategory,
     setChoiceOnlyFavorites,
@@ -2184,6 +2224,7 @@ export const Renderer = (function() {
 
 export const openChoiceScreen = Renderer.openChoiceScreen;
 export const closeChoiceModal = Renderer.closeChoiceModal;
+export const setChoiceSource = Renderer.setChoiceSource;
 export const setChoiceMealType = Renderer.setChoiceMealType;
 export const setChoiceCategory = Renderer.setChoiceCategory;
 export const setChoiceOnlyFavorites = Renderer.setChoiceOnlyFavorites;
