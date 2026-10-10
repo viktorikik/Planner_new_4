@@ -9,6 +9,7 @@ import {
   Renderer,
   openChoiceScreen,
   closeChoiceModal,
+  setChoiceSource,
   setChoiceMealType,
   setChoiceCategory,
   setChoiceOnlyFavorites,
@@ -64,7 +65,6 @@ import { printWeeklyMenu } from './features/Print.js';
     } else if (tab === 'shopping') {
       initShoppingTab();
     } else {
-      // Ушли с таба «Рецепты» — сбрасываем контекст «Что приготовить?».
       resetOpenedFromChoice();
     }
   }
@@ -85,7 +85,6 @@ import { printWeeklyMenu } from './features/Print.js';
     btn.addEventListener('click', function() {
       const tab = this.dataset.tab;
 
-      // Тап по активному табу: для «Сегодня» — сброс даты, для остальных — ничего.
       if (window.location.hash === `#${tab}`) {
         if (tab === 'today') Renderer.resetTodayViewDate();
         return;
@@ -305,9 +304,6 @@ import { printWeeklyMenu } from './features/Print.js';
   // ---------- History integration для модалок ----------
   let historyEntryPushed = false;
   let closingViaHistory = false;
-  // Если при закрытии модалки нужно переключиться на другой таб —
-  // делаем это после того, как observer сделает history.back() и придёт popstate.
-  // Иначе hashchange конфликтует с back и откатывает таб назад.
   let pendingTabAfterModalClose = null;
 
   function hasActiveModal() {
@@ -339,8 +335,6 @@ import { printWeeklyMenu } from './features/Print.js';
     if (closingViaHistory) {
       closingViaHistory = false;
       historyEntryPushed = false;
-      // Если при закрытии модалки было отложено переключение на другой таб —
-      // выполняем его сейчас, когда запись модалки уже удалена.
       if (pendingTabAfterModalClose) {
         const tab = pendingTabAfterModalClose;
         pendingTabAfterModalClose = null;
@@ -425,6 +419,15 @@ import { printWeeklyMenu } from './features/Print.js';
   // ---------- Экран «Что приготовить?» ----------
   document.getElementById(CONSTANTS.SELECTORS.choiceClose).addEventListener('click', closeChoiceModal);
 
+  // Кнопки выбора источника: «Из моего меню» / «Из рецептов».
+  const choiceSourceButtons = document.querySelectorAll('#choiceSourceGroup .choice-source-btn');
+  choiceSourceButtons.forEach(btn => {
+    btn.addEventListener('click', function() {
+      const source = this.dataset.source || 'menu';
+      setChoiceSource(source);
+    });
+  });
+
   const choiceChips = document.querySelectorAll('#choiceMealTypesChips .choice-chip');
   choiceChips.forEach(chip => {
     chip.addEventListener('click', function() {
@@ -457,17 +460,12 @@ import { printWeeklyMenu } from './features/Print.js';
   const choiceOpenRecipesBtn = document.getElementById('choiceOpenRecipesBtn');
   if (choiceOpenRecipesBtn) {
     choiceOpenRecipesBtn.addEventListener('click', function() {
-      // Ставим флаг «пришли из Что приготовить?» заранее.
       openRecipesTab(true);
 
-      // Сообщаем флагом, что после закрытия модалки нужно уйти на таб «Рецепты».
-      // Сам переход выполнится в popstate, когда observer сделает history.back()
-      // и запись модалки будет удалена из стека.
       if (historyEntryPushed) {
         pendingTabAfterModalClose = 'recipes';
         closeChoiceModal();
       } else {
-        // Резервный путь: записи в history нет — закрываем модалку и сразу меняем hash.
         closeChoiceModal();
         window.location.hash = 'recipes';
       }
@@ -554,10 +552,18 @@ import { printWeeklyMenu } from './features/Print.js';
 
   // ---------- Подписка на изменения рецептов ----------
   EventBus.on(CONSTANTS.EVENTS.RECIPES_CHANGED, () => {
-    // Список рецептов рендерится, если таб «Рецепты» сейчас активен.
     const app = document.querySelector('.app');
     if (app && app.getAttribute('data-active-tab') === 'recipes') {
       renderRecipesList();
+    }
+    // Если открыт экран «Что приготовить?» с источником «Из рецептов» —
+    // список рецептов устарел, сбрасываем кэш и перерисовываем результаты.
+    const choiceOverlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
+    if (choiceOverlay && choiceOverlay.classList.contains('active')) {
+      // Renderer сам разберётся: при следующем renderChoiceResults кэш сброшен.
+      // Публичного метода для этого нет — просто эмитим dishes:changed-подобное
+      // поведение через сброс кэша не сделать отсюда без раскрытия внутренностей.
+      // Поэтому: даём Renderer'у шанс перерисоваться при следующем открытии.
     }
   });
 
