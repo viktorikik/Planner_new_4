@@ -197,6 +197,32 @@ export const PRODUCT_WORDS = [
   'желатин', 'пудра', 'цукаты', 'карамель', 'сгущёнка', 'ванильный сахар'
 ];
 
+// ============================================================
+// ТЕМЫ ОФОРМЛЕНИЯ (v5.15, Блок 4 · подэтап 4.1)
+// ============================================================
+// Четыре темы: две классических (текущая палитра) и две брендовых
+// (стиль канала «Ещё одна галочка»). Ключ хранения —
+// CONSTANTS.STORAGE_KEYS.THEME ('mealPlannerTheme').
+// Применение — через атрибут data-theme на <html>.
+// Бренд-палитра появится в 4.2, UI выбора — в 4.3.
+export const THEMES = {
+  CLASSIC_LIGHT: 'classic-light',
+  CLASSIC_DARK:  'classic-dark',
+  BRAND_LIGHT:   'brand-light',
+  BRAND_DARK:    'brand-dark'
+};
+
+// Тема по умолчанию (если в localStorage пусто и ОС не подсказала тёмную).
+export const DEFAULT_THEME = THEMES.CLASSIC_LIGHT;
+
+// Карта миграции старых значений 'light'/'dark' → новые.
+// Применяется один раз при чтении из localStorage; после миграции
+// в хранилище пишется новое значение (Блок 4 · 4.1, решение A).
+export const THEME_LEGACY_MAP = {
+  'light': THEMES.CLASSIC_LIGHT,
+  'dark':  THEMES.CLASSIC_DARK
+};
+
 // Объект с ключами хранилища, событиями, селекторами и настройками
 export const CONSTANTS = {
   STORAGE_KEYS: {
