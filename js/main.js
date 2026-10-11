@@ -121,15 +121,12 @@ import { printWeeklyMenu } from './features/Print.js';
     Onboarding.open();
   });
 
-  // ---------- Тема (v5.15, Блок 4 · подэтап 4.1) ----------
+  // ---------- Тема (v5.15, Блок 4 · подэтапы 4.1–4.3) ----------
   // Хранение — CONSTANTS.STORAGE_KEYS.THEME ('mealPlannerTheme').
   // Значения — из THEMES: 'classic-light' | 'classic-dark' |
   // 'brand-light' | 'brand-dark'. Старые 'light'/'dark' мигрируют
   // один раз при чтении. Применение — атрибут data-theme на <html>.
 
-  // Читает тему из localStorage. Возвращает валидное значение темы
-  // или null, если ничего нет / значение неизвестное.
-  // При обнаружении старого 'light'/'dark' — пишет новое значение.
   function getStoredTheme() {
     let raw;
     try {
@@ -139,28 +136,24 @@ import { printWeeklyMenu } from './features/Print.js';
     }
     if (!raw) return null;
 
-    // Миграция старого значения.
     if (THEME_LEGACY_MAP[raw]) {
       const migrated = THEME_LEGACY_MAP[raw];
       try {
         localStorage.setItem(CONSTANTS.STORAGE_KEYS.THEME, migrated);
-      } catch (e) { /* молча — тема применится и без записи */ }
+      } catch (e) { /* молча */ }
       return migrated;
     }
 
-    // Валидация: значение должно быть одной из известных тем.
     const known = Object.keys(THEMES).map(k => THEMES[k]);
     return known.includes(raw) ? raw : null;
   }
 
-  // Тема по умолчанию — из предпочтений ОС.
   function getPreferredTheme() {
     return window.matchMedia('(prefers-color-scheme: dark)').matches
       ? THEMES.CLASSIC_DARK
       : THEMES.CLASSIC_LIGHT;
   }
 
-  // Применяет тему к <html data-theme="...">.
   function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
   }
@@ -168,17 +161,108 @@ import { printWeeklyMenu } from './features/Print.js';
   let currentTheme = getStoredTheme() || getPreferredTheme() || DEFAULT_THEME;
   applyTheme(currentTheme);
 
-  document.getElementById(CONSTANTS.SELECTORS.themeToggle).addEventListener('click', function() {
-    // 4.1: кнопка переключает классическую светлую ↔ классическую тёмную.
-    // В 4.3 заменим её на модалку «Оформление» с выбором из 4 тем.
-    currentTheme = (currentTheme === THEMES.CLASSIC_DARK)
-      ? THEMES.CLASSIC_LIGHT
-      : THEMES.CLASSIC_DARK;
-    applyTheme(currentTheme);
-    try {
-      localStorage.setItem(CONSTANTS.STORAGE_KEYS.THEME, currentTheme);
-    } catch (e) { /* молча */ }
-  });
+  // ---- Модалка «Оформление» (v5.15, 4.3) ----
+  // Плитка показывает мини-превью: фон темы + «кнопка» в её акцентном
+  // цвете с текстом в accentText. Цвета захардкожены здесь — они
+  // зеркалят CSS-переменные из styles.css, чтобы превью читалось
+  // даже когда применена другая тема.
+  const THEME_PREVIEW = {
+    [THEMES.CLASSIC_LIGHT]: { bg: '#faf7f2', accent: '#c25a3a', accentText: '#ffffff', label: 'Классическая светлая' },
+    [THEMES.CLASSIC_DARK]:  { bg: '#17130f', accent: '#d8785a', accentText: '#1a1310', label: 'Классическая тёмная' },
+    [THEMES.BRAND_LIGHT]:   { bg: '#F4EBDD', accent: '#292724', accentText: '#DCEB32', label: 'Авторская светлая' },
+    [THEMES.BRAND_DARK]:    { bg: '#1A1816', accent: '#DCEB32', accentText: '#292724', label: 'Авторская тёмная' }
+  };
+
+  const themeOverlay = document.getElementById(CONSTANTS.SELECTORS.themeOverlay);
+  const themeGrid = document.getElementById(CONSTANTS.SELECTORS.themeGrid);
+
+  function highlightCurrentTheme() {
+    if (!themeGrid) return;
+    themeGrid.querySelectorAll('.theme-option').forEach(tile => {
+      const isActive = tile.dataset.theme === currentTheme;
+      tile.classList.toggle('active', isActive);
+      tile.setAttribute('aria-pressed', String(isActive));
+    });
+  }
+
+  function buildThemeTiles() {
+    if (!themeGrid) return;
+    themeGrid.innerHTML = '';
+
+    Object.keys(THEMES).forEach(key => {
+      const theme = THEMES[key];
+      const preview = THEME_PREVIEW[theme];
+      if (!preview) return;
+
+      const tile = document.createElement('button');
+      tile.type = 'button';
+      tile.className = 'theme-option';
+      tile.dataset.theme = theme;
+      tile.setAttribute('aria-label', 'Тема: ' + preview.label);
+      tile.setAttribute('aria-pressed', 'false');
+
+      const previewEl = document.createElement('span');
+      previewEl.className = 'theme-option-preview';
+      previewEl.style.background = preview.bg;
+
+      const chipEl = document.createElement('span');
+      chipEl.className = 'theme-option-chip';
+      chipEl.style.background = preview.accent;
+      chipEl.style.color = preview.accentText;
+      chipEl.textContent = 'Aa';
+      previewEl.appendChild(chipEl);
+
+      tile.appendChild(previewEl);
+
+      const labelEl = document.createElement('span');
+      labelEl.className = 'theme-option-label';
+      labelEl.textContent = preview.label;
+      tile.appendChild(labelEl);
+
+      const checkEl = document.createElement('span');
+      checkEl.className = 'theme-option-check';
+      checkEl.setAttribute('aria-hidden', 'true');
+      checkEl.textContent = '✓';
+      tile.appendChild(checkEl);
+
+      tile.addEventListener('click', () => {
+        currentTheme = theme;
+        applyTheme(theme);
+        try {
+          localStorage.setItem(CONSTANTS.STORAGE_KEYS.THEME, theme);
+        } catch (e) { /* молча */ }
+        highlightCurrentTheme();
+      });
+
+      themeGrid.appendChild(tile);
+    });
+
+    highlightCurrentTheme();
+  }
+
+  function openThemeModal() {
+    if (!themeOverlay) return;
+    highlightCurrentTheme();
+    themeOverlay.classList.add('active');
+    trapFocus(themeOverlay, closeThemeModal);
+  }
+
+  function closeThemeModal() {
+    if (!themeOverlay) return;
+    themeOverlay.classList.remove('active');
+    if (themeOverlay._trapFocusCleanup) {
+      themeOverlay._trapFocusCleanup();
+      delete themeOverlay._trapFocusCleanup;
+    }
+  }
+
+  buildThemeTiles();
+
+  document.getElementById(CONSTANTS.SELECTORS.themeToggle).addEventListener('click', openThemeModal);
+
+  if (themeOverlay) {
+    document.getElementById(CONSTANTS.SELECTORS.themeClose).addEventListener('click', closeThemeModal);
+  }
 
   // ---------- Меню «⋯» ----------
   const moreMenuBtn = document.getElementById('moreMenuBtn');
@@ -335,7 +419,8 @@ import { printWeeklyMenu } from './features/Print.js';
     },
     { overlay: document.getElementById(CONSTANTS.SELECTORS.choiceOverlay), close: closeChoiceModal },
     { overlay: document.getElementById(CONSTANTS.SELECTORS.welcomeOverlay), close: hideWelcome },
-    { overlay: document.getElementById(CONSTANTS.SELECTORS.recipeFormOverlay), close: closeRecipeForm }
+    { overlay: document.getElementById(CONSTANTS.SELECTORS.recipeFormOverlay), close: closeRecipeForm },
+    { overlay: themeOverlay, close: closeThemeModal }
   ];
 
   modals.forEach(({ overlay, close }) => {
@@ -466,7 +551,6 @@ import { printWeeklyMenu } from './features/Print.js';
   // ---------- Экран «Что приготовить?» ----------
   document.getElementById(CONSTANTS.SELECTORS.choiceClose).addEventListener('click', closeChoiceModal);
 
-  // Кнопки выбора источника: «Из моего меню» / «Из рецептов».
   const choiceSourceButtons = document.querySelectorAll('#choiceSourceGroup .choice-source-btn');
   choiceSourceButtons.forEach(btn => {
     btn.addEventListener('click', function() {
