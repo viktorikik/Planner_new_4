@@ -476,6 +476,10 @@ export const Renderer = (function() {
       const cat = first.category || Utils.guessCategory(first.name);
       if (choiceFilterCategory !== 'all' && cat !== choiceFilterCategory) return;
 
+      // Примечание: у блюд из «Моего меню» правило по mealTypes
+      // отличается от рецептов — пустой список = «любой приём пищи».
+      // Это поведение сохранено с v4.0. Унификация с источником
+      // «Из рецептов» — отдельная задача.
       const types = Array.isArray(first.mealTypes) ? first.mealTypes : [];
       if (choiceFilterMealType && types.length > 0 && !types.includes(choiceFilterMealType)) return;
 
@@ -499,11 +503,25 @@ export const Renderer = (function() {
     });
   }
 
-  // --- Источник «Из рецептов» (v5.13) ---
-  // Дополнительно к 2.2: рецепт не предлагается, если связанное с ним
-  // блюдо (dish.recipeId === recipe.id) уже запланировано на отрезок
+  // --- Источник «Из рецептов» (v5.14, Блок 2 · подэтапы 2.2–2.4) ---
+  //
+  // 2.2: рецепты ранжируются тем же движком, что и блюда.
+  // lastDoneDate — из DishStore.getLastDoneDateForRecipe (связь по recipeId,
+  // не по имени). Оценки 👍/👎 — из самого рецепта.
+  //
+  // 2.3: рецепт не предлагается, если связанное с ним блюдо
+  // (dish.recipeId === recipe.id) уже запланировано на отрезок
   // [сегодня, сегодня + CONSTANTS.CHOICE.EXCLUDE_DAYS] включительно.
-  // Это защищает от «предложить то, что и так в меню на этой неделе».
+  //
+  // 2.4 — правила фильтров:
+  //   • Приём пищи. Если у рецепта пустой список mealTypes — он виден
+  //     только во «Все» и скрыт в конкретных приёмах (завтрак/обед/ужин/
+  //     перекус), пока пользователь явно не проставит галочки в форме
+  //     рецепта. Это отличается от блюд из «Моего меню».
+  //   • Категория. Берётся явная из рецепта или угаданная через
+  //     guessCategory. Значение 'other' видно только во «Все» и «Другое».
+  //   • «Только любимые». Опирается только на recipe.liked. Связь
+  //     блюдо ↔ рецепт (recipeId) на этот фильтр не влияет.
   function rebuildChoiceRecipesRanking() {
     const all = RecipeStore.getAll();
     const items = [];
@@ -522,15 +540,22 @@ export const Renderer = (function() {
     all.forEach(recipe => {
       if (RecipeStore.isRecipeNameDisliked(recipe.name)) return;
 
-      // Уже стоит в меню на ближайшие дни — не предлагаем.
+      // 2.3: не предлагаем то, что уже стоит в ближайшем меню.
       if (DishStore.hasPlannedDishForRecipeInRange(recipe.id, todayStr, futureStr)) return;
 
+      // 2.4: категория — явная из рецепта или угаданная по названию.
+      // Значение 'other' видно только во «Все» и «Другое» (см. шапку).
       const cat = recipe.category || Utils.guessCategory(recipe.name);
       if (choiceFilterCategory !== 'all' && cat !== choiceFilterCategory) return;
 
+      // 2.4: приём пищи. Пустой список mealTypes → рецепт виден только
+      // во «Все» (choiceFilterMealType === ''). В конкретном приёме пищи
+      // требуется явное совпадение — правило B (Блок 2 · подэтап 2.4).
       const types = Array.isArray(recipe.mealTypes) ? recipe.mealTypes : [];
-      if (choiceFilterMealType && types.length > 0 && !types.includes(choiceFilterMealType)) return;
+      if (choiceFilterMealType && !types.includes(choiceFilterMealType)) return;
 
+      // 2.4: «только любимые» — только по оценке самого рецепта.
+      // 👍 на связанном блюде не делает рецепт любимым (правило A).
       if (choiceFilterOnlyFavorites && !recipe.liked) return;
 
       items.push({
