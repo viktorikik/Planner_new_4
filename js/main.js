@@ -1,4 +1,4 @@
-import { STATUSES, CONSTANTS } from './utils/Constants.js';
+import { STATUSES, CONSTANTS, THEMES, DEFAULT_THEME, THEME_LEGACY_MAP } from './utils/Constants.js';
 import { Utils } from './utils/Utils.js';
 import { EventBus } from './utils/EventBus.js';
 import { showMessage } from './utils/notifications.js';
@@ -121,16 +121,63 @@ import { printWeeklyMenu } from './features/Print.js';
     Onboarding.open();
   });
 
-  // ---------- Тема ----------
-  let theme = localStorage.getItem(CONSTANTS.STORAGE_KEYS.THEME);
-  if (!theme) {
-    theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  // ---------- Тема (v5.15, Блок 4 · подэтап 4.1) ----------
+  // Хранение — CONSTANTS.STORAGE_KEYS.THEME ('mealPlannerTheme').
+  // Значения — из THEMES: 'classic-light' | 'classic-dark' |
+  // 'brand-light' | 'brand-dark'. Старые 'light'/'dark' мигрируют
+  // один раз при чтении. Применение — атрибут data-theme на <html>.
+
+  // Читает тему из localStorage. Возвращает валидное значение темы
+  // или null, если ничего нет / значение неизвестное.
+  // При обнаружении старого 'light'/'dark' — пишет новое значение.
+  function getStoredTheme() {
+    let raw;
+    try {
+      raw = localStorage.getItem(CONSTANTS.STORAGE_KEYS.THEME);
+    } catch (e) {
+      return null;
+    }
+    if (!raw) return null;
+
+    // Миграция старого значения.
+    if (THEME_LEGACY_MAP[raw]) {
+      const migrated = THEME_LEGACY_MAP[raw];
+      try {
+        localStorage.setItem(CONSTANTS.STORAGE_KEYS.THEME, migrated);
+      } catch (e) { /* молча — тема применится и без записи */ }
+      return migrated;
+    }
+
+    // Валидация: значение должно быть одной из известных тем.
+    const known = Object.keys(THEMES).map(k => THEMES[k]);
+    return known.includes(raw) ? raw : null;
   }
-  if (theme === 'dark') document.body.classList.add('dark-theme');
+
+  // Тема по умолчанию — из предпочтений ОС.
+  function getPreferredTheme() {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? THEMES.CLASSIC_DARK
+      : THEMES.CLASSIC_LIGHT;
+  }
+
+  // Применяет тему к <html data-theme="...">.
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+  }
+
+  let currentTheme = getStoredTheme() || getPreferredTheme() || DEFAULT_THEME;
+  applyTheme(currentTheme);
 
   document.getElementById(CONSTANTS.SELECTORS.themeToggle).addEventListener('click', function() {
-    document.body.classList.toggle('dark-theme');
-    localStorage.setItem(CONSTANTS.STORAGE_KEYS.THEME, document.body.classList.contains('dark-theme') ? 'dark' : 'light');
+    // 4.1: кнопка переключает классическую светлую ↔ классическую тёмную.
+    // В 4.3 заменим её на модалку «Оформление» с выбором из 4 тем.
+    currentTheme = (currentTheme === THEMES.CLASSIC_DARK)
+      ? THEMES.CLASSIC_LIGHT
+      : THEMES.CLASSIC_DARK;
+    applyTheme(currentTheme);
+    try {
+      localStorage.setItem(CONSTANTS.STORAGE_KEYS.THEME, currentTheme);
+    } catch (e) { /* молча */ }
   });
 
   // ---------- Меню «⋯» ----------
@@ -555,15 +602,6 @@ import { printWeeklyMenu } from './features/Print.js';
     const app = document.querySelector('.app');
     if (app && app.getAttribute('data-active-tab') === 'recipes') {
       renderRecipesList();
-    }
-    // Если открыт экран «Что приготовить?» с источником «Из рецептов» —
-    // список рецептов устарел, сбрасываем кэш и перерисовываем результаты.
-    const choiceOverlay = document.getElementById(CONSTANTS.SELECTORS.choiceOverlay);
-    if (choiceOverlay && choiceOverlay.classList.contains('active')) {
-      // Renderer сам разберётся: при следующем renderChoiceResults кэш сброшен.
-      // Публичного метода для этого нет — просто эмитим dishes:changed-подобное
-      // поведение через сброс кэша не сделать отсюда без раскрытия внутренностей.
-      // Поэтому: даём Renderer'у шанс перерисоваться при следующем открытии.
     }
   });
 
