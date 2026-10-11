@@ -42,8 +42,8 @@
           <span>Печать меню на неделю</span>
         </button>
         <button class="more-menu-item" id="themeToggle" role="menuitem" type="button">
-          <span class="more-menu-icon">🌓</span>
-          <span>Сменить тему</span>
+          <span class="more-menu-icon">🎨</span>
+          <span>Оформление</span>
         </button>
       </div>
     </div>
@@ -780,6 +780,21 @@
       <button class="btn-secondary" id="recipeParserCancel">Отмена</button>
       <button class="btn-primary" id="recipeParserApply">Разобрать</button>
     </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     МОДАЛКА «ОФОРМЛЕНИЕ» (v5.15, Блок 4 · подэтап 4.3)
+     Плитки тем собираются из JS (main.js → buildThemeTiles).
+     ============================================================ -->
+<div class="modal-overlay add-modal theme-modal" id="themeOverlay" role="dialog" aria-modal="true" aria-labelledby="themeTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="themeTitle">🎨 Оформление</h3>
+      <button class="modal-close" id="themeClose" aria-label="Закрыть">✕</button>
+    </div>
+    <p class="modal-desc">Выберите оформление приложения. Тема сохраняется и применяется сразу.</p>
+    <div class="theme-grid" id="themeGrid"></div>
   </div>
 </div>
 
