@@ -1,10 +1,10 @@
 /* ============================================================
-   1. ПЕРЕМЕННЫЕ — ТЕМЫ ОФОРМЛЕНИЯ (v5.15, Блок 4 · 4.1)
+   1. ПЕРЕМЕННЫЕ — ТЕМЫ ОФОРМЛЕНИЯ (v5.15, Блок 4 · 4.1–4.3)
    Тема применяется через data-theme на <html>:
      • classic-light — светлая классическая (по умолчанию)
      • classic-dark  — тёмная классическая
-     • brand-light   — бренд-светлая (добавится в 4.2)
-     • brand-dark    — бренд-тёмная (добавится в 4.2)
+     • brand-light   — бренд-светлая (канал «Ещё одна галочка»)
+     • brand-dark    — бренд-тёмная
    :root держит светлые значения как fallback до применения JS.
    ============================================================ */
 :root,
@@ -45,7 +45,7 @@
   --search-bg: #ffffff;
   --search-border: #d9cfc2;
 
-    --spacing-xs: 4px;
+  --spacing-xs: 4px;
   --spacing-sm: 8px;
   --spacing-md: 16px;
   --spacing-lg: 24px;
@@ -67,6 +67,7 @@
   --accent-hover: #a94a2d;
   --accent-light: rgba(194, 90, 58, 0.1);
   --accent-text: #ffffff;
+  --accent-shadow: rgba(194, 90, 58, 0.28);
 }
 
 [data-theme="classic-dark"] {
@@ -111,146 +112,11 @@
   --accent-hover: #e58a6d;
   --accent-light: rgba(216, 120, 90, 0.18);
   --accent-text: #1a1310;
+  --accent-shadow: rgba(216, 120, 90, 0.35);
 }
 
 /* ============================================================
-   1b. БРЕНД-ПАЛИТРА (v5.16, Блок 4 · подэтап 4.2)
-   Источник: визуальный стиль канала «Ещё одна галочка».
-   Молочный #F4EBDD, графит #292724, лайм #DCEB32,
-   коралл #F27691, шалфей #687B59.
-   Размеры, радиусы, тени-смещения и transition — наследуются
-   из :root, здесь только цвета и цветовые производные.
-   UI выбора темы появится в 4.3.
-   ============================================================ */
-
-[data-theme="brand-light"] {
-  /* ---- Фоны ---- */
-  --bg-primary: #F4EBDD;                              /* молочный */
-  --bg-app: #FFFAF1;                                  /* paper, чуть светлее */
-  --bg-app-border: rgba(41, 39, 36, 0.10);
-  --cell-bg: #FFFAF1;
-  --cell-border: rgba(41, 39, 36, 0.15);
-  --tag-bg: #FFFAF1;
-  --input-bg: #FFFAF1;
-  --modal-bg: #FFFAF1;
-  --card-bg: #FFFAF1;
-  --search-bg: #FFFAF1;
-  --search-border: #DED1B8;
-  --chip-bg: #EDE1CB;                                 /* на тон темнее молочного */
-  --menu-item-bg: #F8F0DF;
-  --week-row-bg: rgba(255, 250, 241, 0.85);
-
-  /* ---- Текст ---- */
-  --text-primary: #292724;                            /* графит */
-  --text-secondary: #4A4439;
-  --text-muted: #756F65;                              /* из гайда */
-  --modal-text: #292724;
-
-  /* ---- Тени ---- */
-  --shadow: 0 20px 40px -12px rgba(41, 39, 36, 0.18);
-
-  /* ---- Кнопки ---- */
-  --btn-bg: #292724;
-  --btn-text: #DCEB32;                                /* лайм-текст на графит-кнопке */
-
-  /* ---- Мелкие подложки ---- */
-  --badge-bg: rgba(41, 39, 36, 0.05);
-  --empty-border: rgba(41, 39, 36, 0.08);
-  --day-hover: rgba(41, 39, 36, 0.05);
-  --suggest-item-bg: rgba(41, 39, 36, 0.04);
-  --rec-item-bg: rgba(41, 39, 36, 0.04);
-
-  /* ---- Оверлей модалок ---- */
-  --modal-overlay: rgba(41, 39, 36, 0.5);
-
-  /* ---- Статусы ---- */
-  --planned-color: #A86A2C;                           /* янтарь — «запланировано» */
-  --done-color: #687B59;                              /* шалфей — «сделано» */
-  --liked-color: #F27691;                             /* коралл — «любимое» */
-  --planned-bg: rgba(168, 106, 44, 0.12);
-  --done-bg: rgba(104, 123, 89, 0.15);
-
-  /* ---- Цвета категорий ---- */
-  --color-soup: #A0404F;                              /* тёмный коралл */
-  --color-salad: #687B59;                             /* шалфей */
-  --color-main: #C25A3A;                              /* терракота */
-  --color-bakery: #8B6914;                            /* тёмный янтарь */
-
-  /* ---- Акцент ---- */
-  /* В светлой теме accent-color = графит (текст, границы, focus),
-     а лайм живёт в accent-text (текст на графит-кнопке) и
-     в accent-light (подложка активных элементов). */
-  --accent-color: #292724;
-  --accent-hover: #3A3632;
-  --accent-light: rgba(220, 235, 50, 0.22);           /* лайм-подложка */
-  --accent-text: #DCEB32;                             /* лайм-текст на графите */
-}
-
-[data-theme="brand-dark"] {
-  /* ---- Фоны ---- */
-  --bg-primary: #1A1816;                              /* глубже графита, для body */
-  --bg-app: rgba(41, 39, 36, 0.95);                   /* сам графит */
-  --bg-app-border: rgba(244, 235, 221, 0.06);
-  --cell-bg: rgba(60, 56, 50, 0.55);
-  --cell-border: rgba(244, 235, 221, 0.08);
-  --tag-bg: rgba(60, 56, 50, 0.7);
-  --input-bg: rgba(60, 56, 50, 0.6);
-  --modal-bg: #221F1C;
-  --card-bg: rgba(60, 56, 50, 0.65);
-  --search-bg: rgba(60, 56, 50, 0.6);
-  --search-border: rgba(244, 235, 221, 0.1);
-  --chip-bg: rgba(60, 56, 50, 0.7);
-  --menu-item-bg: rgba(60, 56, 50, 0.5);
-  --week-row-bg: rgba(60, 56, 50, 0.5);
-
-  /* ---- Текст ---- */
-  --text-primary: #F4EBDD;                            /* молочный */
-  --text-secondary: #D9CFC2;
-  --text-muted: #948880;
-  --modal-text: #F4EBDD;
-
-  /* ---- Тени ---- */
-  --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75);
-
-  /* ---- Кнопки ---- */
-  --btn-bg: #DCEB32;                                  /* лайм-фон */
-  --btn-text: #292724;                                /* графит-текст */
-
-  /* ---- Мелкие подложки ---- */
-  --badge-bg: rgba(244, 235, 221, 0.05);
-  --empty-border: rgba(244, 235, 221, 0.03);
-  --day-hover: rgba(244, 235, 221, 0.05);
-  --suggest-item-bg: rgba(80, 75, 65, 0.4);
-  --rec-item-bg: rgba(80, 75, 65, 0.4);
-
-  /* ---- Оверлей модалок ---- */
-  --modal-overlay: rgba(0, 0, 0, 0.75);
-
-  /* ---- Статусы ---- */
-  --planned-color: #D9A558;                           /* светлый янтарь */
-  --done-color: #8DC19A;                              /* светлый шалфей */
-  --liked-color: #F89BAF;                             /* светлый коралл */
-  --planned-bg: rgba(217, 165, 88, 0.14);
-  --done-bg: rgba(141, 193, 154, 0.14);
-
-  /* ---- Цвета категорий ---- */
-  --color-soup: #E88A9A;
-  --color-salad: #8DC19A;
-  --color-main: #E88578;
-  --color-bakery: #D9A558;
-
-  /* ---- Акцент ---- */
-  /* В тёмной теме accent-color = лайм: на графите он читается
-     и как текст, и как граница, и как фон кнопки.
-     accent-text — графит, чтобы текст на лайм-кнопке был читаемым. */
-  --accent-color: #DCEB32;
-  --accent-hover: #C7D42A;
-  --accent-light: rgba(220, 235, 50, 0.15);
-  --accent-text: #292724;
-}
-
-/* ============================================================
-   1b. БРЕНД-ПАЛИТРА (v5.15, Блок 4 · подэтап 4.2)
+   1b. БРЕНД-ПАЛИТРА (Блок 4 · подэтап 4.2)
    Источник: визуальный стиль канала «Ещё одна галочка».
    Молочный #F4EBDD, графит #292724, лайм #DCEB32,
    коралл #F27691, шалфей #687B59.
@@ -318,6 +184,7 @@
   --accent-hover: #3A3632;
   --accent-light: rgba(220, 235, 50, 0.22);
   --accent-text: #DCEB32;
+  --accent-shadow: rgba(41, 39, 36, 0.18);
 }
 
 [data-theme="brand-dark"] {
@@ -374,13 +241,15 @@
   --color-bakery: #D9A558;
 
   /* ---- Акцент ---- */
-  /* В тёмной бренд-теме accent-color = лайм (и текст, и границы,
-     и фон кнопок). accent-text = графит — текст на лайм-кнопке. */
+  /* В тёмной бренд-теме accent-color = лайм (текст, границы, фон
+     кнопок). accent-text = графит — текст на лайм-кнопке. */
   --accent-color: #DCEB32;
   --accent-hover: #C7D42A;
   --accent-light: rgba(220, 235, 50, 0.15);
   --accent-text: #292724;
+  --accent-shadow: rgba(0, 0, 0, 0.4);
 }
+
 /* ============================================================
    2. БАЗА
    ============================================================ */
@@ -550,7 +419,7 @@ textarea:focus-visible {
 .btn-row .btn-primary:hover,
 .btn-row .btn-done:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(255, 107, 53, 0.3);
+  box-shadow: 0 8px 16px var(--accent-shadow);
   filter: brightness(1.05);
 }
 .btn-row .btn-primary:active,
@@ -804,8 +673,6 @@ textarea:focus-visible {
   pointer-events: none;
   transform: none;
 }
-
-
 
 .day-number {
   font-weight: 600;
@@ -1252,10 +1119,10 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
-body.dark-theme .modal-dish .recipe-chip {
-  background: rgba(255, 107, 53, 0.18);
+[data-theme="classic-dark"] .modal-dish .recipe-chip {
+  background: rgba(216, 120, 90, 0.18);
 }
-body.dark-theme .modal-dish .recipe-chip:hover {
+[data-theme="classic-dark"] .modal-dish .recipe-chip:hover {
   background: var(--accent-color);
   color: #1a1a1a;
 }
@@ -1323,8 +1190,6 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   outline-offset: 2px;
   border-radius: 4px;
 }
-
-
 
 .dish-note {
   font-size: 12px;
@@ -1507,8 +1372,6 @@ body.dark-theme .modal-dish .recipe-chip:hover {
 .suggest-title {
   margin-top: 12px;
 }
-
-
 
 /* ============================================================
    15. МОДАЛКИ ДОБАВЛЕНИЯ / РЕДАКТИРОВАНИЯ — ФОРМА
@@ -1751,7 +1614,7 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   background: var(--accent-color);
   border-color: var(--accent-color);
   color: var(--accent-text);
-  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.25);
+  box-shadow: 0 2px 8px var(--accent-shadow);
 }
 
 .choice-source-btn:focus-visible {
@@ -1956,12 +1819,12 @@ body.dark-theme .modal-dish .recipe-chip:hover {
 .choice-action-reroll {
   background: var(--accent-color);
   color: var(--accent-text);
-  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.25);
+  box-shadow: 0 2px 8px var(--accent-shadow);
 }
 .choice-action-reroll:hover {
   filter: brightness(1.05);
   transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(255, 107, 53, 0.3);
+  box-shadow: 0 8px 16px var(--accent-shadow);
 }
 .choice-action-reroll:active {
   transform: translateY(0);
@@ -2093,7 +1956,7 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   font-weight: 600;
   cursor: pointer;
   transition: var(--transition-fast);
-  box-shadow: 0 4px 16px rgba(255, 107, 53, 0.3);
+  box-shadow: 0 4px 16px var(--accent-shadow);
   min-width: 160px;
   margin-top: var(--spacing-sm);
   appearance: none;
@@ -2271,12 +2134,12 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   background: var(--accent-color);
   color: var(--accent-text);
   border: none;
-  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.25);
+  box-shadow: 0 2px 8px var(--accent-shadow);
 }
 .recipe-view-modal .recipe-card-buttons .btn-primary:hover {
   filter: brightness(1.05);
   transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(255, 107, 53, 0.3);
+  box-shadow: 0 8px 16px var(--accent-shadow);
 }
 .recipe-view-modal .recipe-card-buttons .btn-primary:active {
   transform: translateY(0);
@@ -2368,13 +2231,13 @@ body.dark-theme .modal-dish .recipe-chip:hover {
 
 .recipes-toolbar > .btn-done {
   background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
-  color: #ffffff;
+  color: var(--accent-text);
   border: none;
-  box-shadow: 0 4px 14px rgba(255, 107, 53, 0.35);
+  box-shadow: 0 4px 14px var(--accent-shadow);
 }
 .recipes-toolbar > .btn-done:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 107, 53, 0.45);
+  box-shadow: 0 6px 20px var(--accent-shadow);
   filter: brightness(1.05);
 }
 .recipes-toolbar > .btn-done:active {
@@ -2397,13 +2260,13 @@ body.dark-theme .modal-dish .recipe-chip:hover {
   transform: translateY(0);
 }
 
-body.dark-theme .recipes-toolbar > button {
+[data-theme="classic-dark"] .recipes-toolbar > button {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
-body.dark-theme .recipes-toolbar > .btn-done {
-  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.35);
+[data-theme="classic-dark"] .recipes-toolbar > .btn-done {
+  box-shadow: 0 4px 12px var(--accent-shadow);
 }
-body.dark-theme .recipes-toolbar > .btn-secondary:hover {
+[data-theme="classic-dark"] .recipes-toolbar > .btn-secondary:hover {
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
 }
 
@@ -2514,10 +2377,10 @@ body.dark-theme .recipes-toolbar > .btn-secondary:hover {
   display: none;
 }
 
-body.dark-theme .recipe-category-header {
+[data-theme="classic-dark"] .recipe-category-header {
   background: rgba(255, 255, 255, 0.04);
 }
-body.dark-theme .recipe-category-header:hover {
+[data-theme="classic-dark"] .recipe-category-header:hover {
   background: rgba(255, 255, 255, 0.08);
 }
 
@@ -2638,13 +2501,13 @@ body.dark-theme .recipe-category-header:hover {
   transition: var(--transition-fast);
   appearance: none;
   font-family: inherit;
-  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.25);
+  box-shadow: 0 2px 8px var(--accent-shadow);
   margin-bottom: 16px;
 }
 .shopping-generate-btn:hover {
   filter: brightness(1.05);
   transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(255, 107, 53, 0.3);
+  box-shadow: 0 8px 16px var(--accent-shadow);
 }
 .shopping-generate-btn:active {
   transform: translateY(0);
@@ -2835,7 +2698,7 @@ body.dark-theme .recipe-category-header:hover {
 .shopping-actions-row .btn-done {
   background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
   color: var(--accent-text);
-  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.25);
+  box-shadow: 0 2px 8px var(--accent-shadow);
 }
 .shopping-actions-row .btn-done:hover {
   filter: brightness(1.05);
@@ -2853,22 +2716,22 @@ body.dark-theme .recipe-category-header:hover {
   transform: translateY(-2px);
 }
 
-body.dark-theme #shoppingListDisplay .shopping-group h4,
-body.dark-theme .saved-list-item .list-date,
-body.dark-theme #savedListsList .saved-list-item {
+[data-theme="classic-dark"] #shoppingListDisplay .shopping-group h4,
+[data-theme="classic-dark"] .saved-list-item .list-date,
+[data-theme="classic-dark"] #savedListsList .saved-list-item {
   color: var(--text-primary);
 }
 
-body.dark-theme .saved-list-item .list-date,
-body.dark-theme #savedListsList .saved-list-item {
+[data-theme="classic-dark"] .saved-list-item .list-date,
+[data-theme="classic-dark"] #savedListsList .saved-list-item {
   color: var(--text-primary);
 }
 
-body.dark-theme .shopping-tab h4 {
+[data-theme="classic-dark"] .shopping-tab h4 {
   color: var(--text-primary);
 }
-body.dark-theme #shoppingListOverlay h4,
-body.dark-theme #savedListsContainer h4 {
+[data-theme="classic-dark"] #shoppingListOverlay h4,
+[data-theme="classic-dark"] #savedListsContainer h4 {
   color: var(--text-primary);
 }
 
@@ -3074,14 +2937,14 @@ body.dark-theme #savedListsContainer h4 {
   background: rgba(0, 0, 0, 0.03);
 }
 
-body.dark-theme .today-hints-summary {
+[data-theme="classic-dark"] .today-hints-summary {
   background: rgba(255, 255, 255, 0.04);
   color: var(--text-secondary);
 }
-body.dark-theme .today-hints-summary:hover {
+[data-theme="classic-dark"] .today-hints-summary:hover {
   background: rgba(255, 255, 255, 0.07);
 }
-body.dark-theme .today-hints-body {
+[data-theme="classic-dark"] .today-hints-body {
   background: rgba(255, 255, 255, 0.04);
   color: #c2c2cc;
 }
@@ -3301,12 +3164,12 @@ body.dark-theme .today-hints-body {
 .onboarding-btn-primary {
   background: var(--accent-color);
   color: var(--accent-text);
-  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+  box-shadow: 0 2px 8px var(--accent-shadow);
 }
 .onboarding-btn-primary:hover {
   filter: brightness(1.05);
   transform: translateY(-1px);
-  box-shadow: 0 8px 16px rgba(255, 107, 53, 0.3);
+  box-shadow: 0 8px 16px var(--accent-shadow);
 }
 .onboarding-btn-primary:active {
   transform: translateY(0);
@@ -3346,7 +3209,7 @@ body.dark-theme .today-hints-body {
   transform: none;
 }
 
-body.dark-theme .onboarding-modal {
+[data-theme="classic-dark"] .onboarding-modal {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
 }
 
@@ -3467,7 +3330,7 @@ body.dark-theme .onboarding-modal {
   text-align: center;
 }
 
-body.dark-theme .more-menu {
+[data-theme="classic-dark"] .more-menu {
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
 }
 
@@ -3526,7 +3389,7 @@ body.dark-theme .more-menu {
   white-space: nowrap;
 }
 
-body.dark-theme .bottom-nav {
+[data-theme="classic-dark"] .bottom-nav {
   box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.4);
 }
 
@@ -3546,8 +3409,6 @@ body {
 .app[data-active-tab="shopping"] .tab-view[data-tab-view="shopping"] {
   display: block;
 }
-
-
 
 /* ============================================================
    32. ЭКРАН «СЕГОДНЯ»
@@ -3667,12 +3528,12 @@ body {
 .today-action-add {
   background: var(--accent-color);
   color: var(--accent-text);
-  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.25);
+  box-shadow: 0 2px 8px var(--accent-shadow);
 }
 .today-action-add:hover {
   filter: brightness(1.05);
   transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(255, 107, 53, 0.3);
+  box-shadow: 0 8px 16px var(--accent-shadow);
 }
 .today-action-add:active {
   transform: translateY(0);
@@ -3826,7 +3687,7 @@ body {
     gap: 6px;
   }
 
-     .choice-source-btn {
+  .choice-source-btn {
     font-size: 13px;
     padding: 10px 10px;
     gap: 4px;
@@ -4419,7 +4280,7 @@ body {
   margin-bottom: 0;
 }
 
-body.dark-theme .add-modal .recipe-form-modal .recipe-form-details {
+[data-theme="classic-dark"] .add-modal .recipe-form-modal .recipe-form-details {
   background: rgba(255, 255, 255, 0.04);
 }
 
@@ -4704,11 +4565,11 @@ body.dark-theme .add-modal .recipe-form-modal .recipe-form-details {
   white-space: nowrap;
 }
 
-body.dark-theme .recipe-view-modal .recipe-allergens {
+[data-theme="classic-dark"] .recipe-view-modal .recipe-allergens {
   background: rgba(216, 120, 90, 0.1);
   border-color: rgba(216, 120, 90, 0.25);
 }
-body.dark-theme .recipe-view-modal .recipe-allergen-tag {
+[data-theme="classic-dark"] .recipe-view-modal .recipe-allergen-tag {
   background: rgba(50, 42, 35, 0.7);
   border-color: rgba(216, 120, 90, 0.35);
 }
@@ -4811,7 +4672,7 @@ body.dark-theme .recipe-view-modal .recipe-allergen-tag {
 }
 
 /* ============================================================
-   42. МОДАЛКА «ОФОРМЛЕНИЕ» (v5.15, Блок 4 · подэтап 4.3)
+   42. МОДАЛКА «ОФОРМЛЕНИЕ» (Блок 4 · подэтап 4.3)
    Плитки-превью: фон темы + «кнопка» в её акцентном цвете.
    Цвета плитки задаются inline в JS (main.js → buildThemeTiles),
    чтобы превью не зависело от активной темы.
