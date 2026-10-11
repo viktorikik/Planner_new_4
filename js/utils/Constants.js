@@ -198,13 +198,13 @@ export const PRODUCT_WORDS = [
 ];
 
 // ============================================================
-// ТЕМЫ ОФОРМЛЕНИЯ (v5.15, Блок 4 · подэтап 4.1)
+// ТЕМЫ ОФОРМЛЕНИЯ (v5.15, Блок 4 · подэтапы 4.1–4.3)
 // ============================================================
-// Четыре темы: две классических (текущая палитра) и две брендовых
+// Четыре темы: две классических (исходная палитра) и две авторских
 // (стиль канала «Ещё одна галочка»). Ключ хранения —
 // CONSTANTS.STORAGE_KEYS.THEME ('mealPlannerTheme').
-// Применение — через атрибут data-theme на <html>.
-// Бренд-палитра появится в 4.2, UI выбора — в 4.3.
+// Применение — атрибут data-theme на <html>.
+// UI выбора — модалка «Оформление» (main.js → buildThemeTiles).
 export const THEMES = {
   CLASSIC_LIGHT: 'classic-light',
   CLASSIC_DARK:  'classic-dark',
@@ -371,6 +371,11 @@ export const CONSTANTS = {
     // ---- Bottom navigation (v4.0) ----
     bottomNav: 'bottomNav',
     bottomNavButtons: '.bottom-nav-btn',
+
+    // ---- Модалка «Оформление» (v5.15, Блок 4 · 4.3) ----
+    themeOverlay: 'themeOverlay',
+    themeClose: 'themeClose',
+    themeGrid: 'themeGrid',
 
     // ---- Обучающий тур ----
     onboardingHelpBtn: 'onboardingHelpBtn',
