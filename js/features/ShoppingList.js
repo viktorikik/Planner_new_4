@@ -1,4 +1,4 @@
-import { CONSTANTS } from '../utils/Constants.js';
+import { CONSTANTS, UNITS, UNIT_LABELS } from '../utils/Constants.js';
 import { Utils } from '../utils/Utils.js';
 import { DishStore } from '../stores/DishStore.js';
 import { RecipeStore } from '../stores/RecipeStore.js';
@@ -146,6 +146,66 @@ function classifyIngredient(ingredient) {
 }
 
 // ============================================================
+// АГРЕГАЦИЯ ИНГРЕДИЕНТОВ (Блок 3, v5.16)
+// ============================================================
+// Принимает массив объектов { name, amount, unit } (с возможным мусором
+// в имени от старого парсера). Возвращает массив уникальных продуктов:
+//   [{ name, amounts: [{ unit, total }] }]
+// Сложение — только внутри одинаковых единиц. Разные единицы — отдельными
+// частями (в UI отдаются как «300 г + 3 шт»).
+function aggregateIngredients(ingredients) {
+  const map = new Map();
+  const order = [];
+
+  ingredients.forEach(ing => {
+    if (!ing || typeof ing !== 'object') return;
+    const cleaned = Utils.cleanIngredientName(ing.name);
+    if (!cleaned) return;
+    const key = cleaned.toLowerCase();
+    if (!map.has(key)) {
+      map.set(key, { name: cleaned, parts: [] });
+      order.push(key);
+    }
+    const amount = (typeof ing.amount === 'number' && isFinite(ing.amount)) ? ing.amount : null;
+    map.get(key).parts.push({ amount, unit: ing.unit || null });
+  });
+
+  return order.map(key => {
+    const entry = map.get(key);
+    const byUnit = new Map();
+    entry.parts.forEach(p => {
+      if (p.amount == null) return;
+      const unitKey = p.unit || '__none__';
+      if (!byUnit.has(unitKey)) {
+        byUnit.set(unitKey, { unit: p.unit, total: 0 });
+      }
+      byUnit.get(unitKey).total += p.amount;
+    });
+    return { name: entry.name, amounts: [...byUnit.values()] };
+  });
+}
+
+function formatAmountWithUnit(amount, unit) {
+  if (unit === UNITS.G && amount >= 1000) {
+    return Utils.formatNumber(amount / 1000) + ' кг';
+  }
+  if (unit === UNITS.ML && amount >= 1000) {
+    return Utils.formatNumber(amount / 1000) + ' л';
+  }
+  const label = UNIT_LABELS[unit] || '';
+  const amtStr = Utils.formatNumber(amount);
+  return label ? amtStr + ' ' + label : amtStr;
+}
+
+function formatAggregatedLine(entry) {
+  if (!entry.amounts || entry.amounts.length === 0) {
+    return entry.name;
+  }
+  const parts = entry.amounts.map(a => formatAmountWithUnit(a.total, a.unit));
+  return entry.name + ' — ' + parts.join(' + ');
+}
+
+// ============================================================
 // ПРЕОБРАЗОВАНИЯ: текст ⇄ группы
 // ============================================================
 function groupsToText(groups) {
@@ -271,7 +331,6 @@ function getPeriodLabel(key) {
 // ИНИЦИАЛИЗАЦИЯ ТАБА «ПОКУПКИ»
 // ============================================================
 export function initShoppingTab() {
-  // Дефолтные даты — только если поля ещё пусты.
   const fromInput = document.getElementById(CONSTANTS.SELECTORS.shoppingDateFrom);
   const toInput = document.getElementById(CONSTANTS.SELECTORS.shoppingDateTo);
   if (fromInput && !fromInput.value) {
@@ -281,7 +340,6 @@ export function initShoppingTab() {
     fromInput.value = Utils.formatDateLocal(today);
     toInput.value = Utils.formatDateLocal(tomorrow);
   }
-  // Возвращаемся к списку сохранённых.
   const display = document.getElementById(CONSTANTS.SELECTORS.shoppingListDisplay);
   if (display) display.style.display = 'none';
   const savedBlock = document.getElementById(CONSTANTS.SELECTORS.savedListsContainer);
@@ -389,29 +447,34 @@ export function generateShoppingList() {
     current.setDate(current.getDate() + 1);
   }
 
-  const items = [];
+  // Собираем сырые ингредиенты из всех рецептов выбранных блюд.
+  const rawIngredients = [];
   allDishes.forEach(dish => {
     if (dish.recipeId) {
       const recipe = RecipeStore.getById(dish.recipeId);
-      if (recipe) {
+      if (recipe && Array.isArray(recipe.ingredients)) {
         recipe.ingredients.forEach(ing => {
-          const line = Utils.formatIngredient(ing);
-          if (line) items.push(line);
+          if (ing) rawIngredients.push(ing);
         });
       }
     }
   });
 
-  if (items.length === 0) {
+  if (rawIngredients.length === 0) {
     showMessage('😌 За выбранный период нет блюд с рецептами.');
     return;
   }
 
+  // Объединяем одинаковые продукты, складываем количества внутри одной единицы.
+  const aggregated = aggregateIngredients(rawIngredients);
+
+  // Классифицируем по отделам и группируем.
   const grouped = {};
-  items.forEach(ing => {
-    const dept = classifyIngredient(ing);
+  aggregated.forEach(entry => {
+    const line = formatAggregatedLine(entry);
+    const dept = classifyIngredient(entry.name);
     if (!grouped[dept]) grouped[dept] = [];
-    grouped[dept].push(ing);
+    grouped[dept].push(line);
   });
 
   const text = groupsToText(grouped);
@@ -547,6 +610,6 @@ export function initShoppingListHandlers() {
   document.getElementById(CONSTANTS.SELECTORS.deleteCurrentListBtn).addEventListener('click', deleteCurrentList);
   document.getElementById(CONSTANTS.SELECTORS.backToSavedListsBtn).addEventListener('click', backToSavedLists);
   document.getElementById(CONSTANTS.SELECTORS.exportShoppingListTxtBtn).addEventListener('click', exportShoppingListTxt);
-  const editBtn = document.getElementById(CONSTANTS.SELECTORS.shoppingListEditBtn);
+  const editBtn = document.getElementById(CONSTANTS.SELECTORS.editShoppingListBtn);
   if (editBtn) editBtn.addEventListener('click', toggleShoppingListEdit);
 }
