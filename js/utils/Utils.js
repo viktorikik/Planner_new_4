@@ -11,16 +11,13 @@ function isHeaderLine(line) {
   if (!line) return true;
   const trimmed = line.trim();
   if (!trimmed) return true;
-  // Короткая строка без цифр с двоеточием на конце — «Ингредиенты:», «Для теста:».
   if (/:\s*$/.test(trimmed) && trimmed.length < 60 && !/\d/.test(trimmed)) return true;
-  // «Ингредиенты», «Состав» без двоеточия.
   const clean = trimmed.toLowerCase().replace(/[:.]/g, '').trim();
   if (HEADER_KEYWORDS.test(clean)) return true;
   return false;
 }
 
 // Нормализация русской единицы измерения в ключ из UNITS.
-// «грамм», «гр», «г» → 'g'; «ст.л.», «столовая ложка» → 'tbsp' и т.д.
 function normalizeUnit(raw) {
   const u = String(raw).toLowerCase().replace(/\./g, '').replace(/\s+/g, ' ').trim();
   if (/^(кг|килограмм|килограмма|килограммов)/.test(u)) return UNITS.KG;
@@ -37,34 +34,70 @@ function normalizeUnit(raw) {
 }
 
 // Регулярка для поиска единицы в строке (только распознавание, не нормализация).
-// Экранирование: в строке JS двойной слэш, в regex — одинарный.
 const UNIT_REGEX = '(кг|килограмм[аов]*|гр|грамм[аов]*|г|мл|миллилитр[аов]*|литр[аов]*|л|штук[аи]?|шт|ст\\.?\\s*л\\.?|столов[а-я]+\\s+ложк[а-я]+|ч\\.?\\s*л\\.?|чайн[а-я]+\\s+ложк[а-я]+|щепотк[а-я]*|щепоть|зубчик[аов]*|пучок|пучка|пучков|пуч)';
 
-// Убирает мусорные хвосты и «по вкусу» из имени ингредиента.
+// Чистит имя ингредиента от мусора: скобок, «по вкусу», висячих чисел,
+// диапазонов в конце, пунктуации по краям. Идемпотентна.
 function cleanupName(name) {
-  return String(name || '')
-    .replace(/\s+/g, ' ')
-    .replace(/\s+по\s+(вкусу|желанию)\s*/gi, ' ')
-    .replace(/^[\s\-–—,;:.]+|[\s\-–—,;:.]+$/g, '')
-    .trim();
+  let s = String(name || '').replace(/\s+/g, ' ').trim();
+  if (!s) return '';
+
+  // 1. Скобки и их содержимое («(≈300 г)», «(4 ст. л.)», «(по желанию)»).
+  s = s.replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim();
+
+  // 2. «по вкусу», «по желанию», «для подачи» и т.п.
+  s = s.replace(/\s+по\s+(вкусу|желанию)\s*/gi, ' ').replace(/\s+/g, ' ').trim();
+  s = s.replace(/\s+для\s+(подачи|украшения|теста|начинки|соуса|крема|заливки|глазури|обжарки|панировки|маринада)\s*$/gi, '').replace(/\s+/g, ' ').trim();
+
+  // 3. Пунктуация по краям.
+  s = s.replace(/^[\s\-–—,;:.]+|[\s\-–—,;:.]+$/g, '').trim();
+
+  // 4. Диапазон в конце: «2-3», «600-800».
+  s = s.replace(/\s+\d+([.,]\d+)?\s*[-–—]\s*\d+([.,]\d+)?\s*$/g, '').trim();
+
+  // 5. Открытый диапазон: «2-», «2-.».
+  s = s.replace(/\s+\d+\s*[-–—]\s*\.?\s*$/g, '').trim();
+
+  // 6. Одиночное число в конце: «Картофель 2».
+  s = s.replace(/\s+\d+([.,]\d+)?\s*$/g, '').trim();
+
+  // 7. Ещё раз пунктуация (после удаления хвостов).
+  s = s.replace(/^[\s\-–—,;:.]+|[\s\-–—,;:.]+\s*$/g, '').trim();
+
+  // 8. Финальная нормализация пробелов.
+  s = s.replace(/\s+/g, ' ').trim();
+
+  return s;
 }
 
 // Разбирает одну строку ингредиента в { name, amount, unit }.
-// Возвращает объект всегда — даже если строка не похожа на ингредиент.
 function parseIngredientLine(line) {
-  // Нормализуем тире, убираем маркер списка и нумерацию.
   let s = String(line)
     .replace(/[–—]/g, '-')
     .replace(/^[•\-*]\s*/, '')
     .replace(/^\d+[.)]\s+/, '')
     .trim();
 
-  // Попытка 1: «число + единица» — «Свинина 1,2кг», «Лук 1 шт».
-  const withNumber = new RegExp('(\\d+(?:[.,]\\d+)?)\\s*' + UNIT_REGEX, 'i');
+  // Скобки как правило — пояснения («≈300 г», «4 ст. л.», «по желанию»).
+  // Удаляем их, чтобы не мешали. Содержимое не сохраняем.
+  s = s.replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim();
+
+  // Попытка 1: «число [ - число ] единица» — «Свинина 1,2 кг», «Картофель 2-3 шт».
+  const withNumber = new RegExp(
+    '(\\d+(?:[.,]\\d+)?)' +
+    '(?:\\s*[-–—]\\s*(\\d+(?:[.,]\\d+)?))?' +
+    '\\s*' + UNIT_REGEX,
+    'i'
+  );
   const m1 = s.match(withNumber);
   if (m1) {
-    let num = parseFloat(m1[1].replace(',', '.'));
-    let unit = normalizeUnit(m1[2]);
+    const num1 = parseFloat(m1[1].replace(',', '.'));
+    let num = num1;
+    if (m1[2]) {
+      const num2 = parseFloat(m1[2].replace(',', '.'));
+      num = (num1 + num2) / 2; // середина диапазона
+    }
+    let unit = normalizeUnit(m1[3]);
     if (unit === UNITS.KG) { num = num * 1000; unit = UNITS.G; }
     else if (unit === UNITS.L) { num = num * 1000; unit = UNITS.ML; }
     const name = cleanupName(s.replace(m1[0], ''));
@@ -80,7 +113,6 @@ function parseIngredientLine(line) {
     return { name: name || cleanupName(s), amount: null, unit };
   }
 
-  // Ничего не нашли — только имя.
   return { name: cleanupName(s), amount: null, unit: null };
 }
 
@@ -122,9 +154,6 @@ export const Utils = {
 
   guessCategory(name) {
     const lower = name.toLowerCase();
-    // Выпечка — проверяем раньше остальных категорий,
-    // чтобы «пирог», «торт», «кекс» и т.п. не улетали в «Другое».
-    // Важно: используется 'печенье' (полное слово), чтобы не путать с «печенью» (органом).
     if (lower.includes('пирог') || lower.includes('пирож') || lower.includes('торт') ||
         lower.includes('кекс') || lower.includes('печенье') || lower.includes('булочк') ||
         lower.includes('хлеб') || lower.includes('блин') || lower.includes('олад') ||
@@ -150,9 +179,6 @@ export const Utils = {
 
   getWeekDays(baseDate) {
     const start = new Date(baseDate);
-    // getDay(): 0 = воскресенье, 1 = понедельник, ..., 6 = суббота.
-    // Начало недели — понедельник. Для воскресенья (0) он на 6 дней назад,
-    // для остальных дней — на (getDay() - 1) дней назад.
     const day = start.getDay();
     const offset = day === 0 ? -6 : 1 - day;
     start.setDate(start.getDate() + offset);
@@ -180,11 +206,6 @@ export const Utils = {
     return score >= 2;
   },
 
-  // Разбирает текст ингредиентов в структурированный вид.
-  // Возвращает { title, ingredients: [{ name, amount, unit }] }.
-  // Заголовки блоков («Ингредиенты:», «Для теста:») отбрасываются.
-  // Все остальные непустые строки становятся ингредиентами — даже если
-  // не удалось распознать количество и единицу.
   parseRecipeText(text) {
     const lines = String(text || '')
       .split('\n')
@@ -194,13 +215,11 @@ export const Utils = {
     const ingredients = [];
     for (const line of lines) {
       if (isHeaderLine(line)) continue;
-      if (line.length > 150) continue; // явно не ингредиент
+      if (line.length > 150) continue;
       const parsed = parseIngredientLine(line);
       if (parsed.name) ingredients.push(parsed);
     }
 
-    // Попытка найти заголовок рецепта в первых строках.
-    // Заголовок — короткая строка без цифр, которая не похожа на ингредиент.
     let title = '';
     for (let i = 0; i < Math.min(lines.length, 5); i++) {
       const candidate = lines[i];
@@ -217,8 +236,6 @@ export const Utils = {
     return { title, ingredients };
   },
 
-  // Форматирует один ингредиент обратно в человекочитаемую строку.
-  // «Свинина — 1,2 кг», «Имбирь», «Соль».
   formatIngredient(ing) {
     if (!ing) return '';
     if (typeof ing === 'string') return ing;
@@ -230,7 +247,6 @@ export const Utils = {
       }
       return name;
     }
-    // Для веса и объёма — показываем в «кг» и «л», если >= 1000 базовых единиц.
     if (ing.unit === UNITS.G && ing.amount >= 1000) {
       return `${name} — ${formatNumber(ing.amount / 1000)} кг`.trim();
     }
@@ -242,14 +258,24 @@ export const Utils = {
     return label ? `${name} — ${amountStr} ${label}`.trim() : `${name} — ${amountStr}`.trim();
   },
 
-  // Форматирует массив ингредиентов обратно в текст для textarea.
-  // Принимает и объекты, и строки (совместимость со старыми данными).
   formatIngredientsToText(ingredients) {
     if (!Array.isArray(ingredients)) return '';
     return ingredients
       .map(ing => this.formatIngredient(ing))
       .filter(s => s.length > 0)
       .join('\n');
+  },
+
+  // Чистит имя ингредиента от мусора. Публичный метод — используется
+  // в RecipeStore (миграция при загрузке) и ShoppingList (агрегация).
+  cleanIngredientName(name) {
+    return cleanupName(name);
+  },
+
+  // Форматирует число с запятой для дробных. Публичный метод — используется
+  // в ShoppingList для агрегированных количеств.
+  formatNumber(n) {
+    return formatNumber(n);
   },
 
   debounce(func, delay = 300) {
