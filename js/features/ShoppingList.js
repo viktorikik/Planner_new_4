@@ -610,6 +610,6 @@ export function initShoppingListHandlers() {
   document.getElementById(CONSTANTS.SELECTORS.deleteCurrentListBtn).addEventListener('click', deleteCurrentList);
   document.getElementById(CONSTANTS.SELECTORS.backToSavedListsBtn).addEventListener('click', backToSavedLists);
   document.getElementById(CONSTANTS.SELECTORS.exportShoppingListTxtBtn).addEventListener('click', exportShoppingListTxt);
-  const editBtn = document.getElementById(CONSTANTS.SELECTORS.editShoppingListBtn);
+  const editBtn = document.getElementById(CONSTANTS.SELECTORS.shoppingListEditBtn);
   if (editBtn) editBtn.addEventListener('click', toggleShoppingListEdit);
 }
