@@ -16,20 +16,21 @@ export const RecipeStore = (function() {
 
   // Приводит ингредиент к объекту { name, amount, unit }.
   // Принимает и объект, и строку.
+  // Имя прогоняется через cleanIngredientName — это убирает мусорные
+  // хвосты, скобки и висячие числа, оставшиеся от старых версий парсера.
   function normalizeIngredient(ing) {
     if (typeof ing === 'string') {
       const parsed = Utils.parseRecipeText(ing).ingredients;
       return parsed[0] || null;
     }
     if (!ing || typeof ing !== 'object') return null;
-    const name = String(ing.name || '').trim();
+    const rawName = String(ing.name || '').trim();
+    const name = Utils.cleanIngredientName(rawName);
     if (!name) return null;
     const amount = (typeof ing.amount === 'number' && isFinite(ing.amount)) ? ing.amount : null;
     return { name, amount, unit: ing.unit || null };
   }
 
-  // Приводит ингредиенты к массиву объектов.
-  // Принимает: массив объектов, массив строк, одну строку (textarea).
   function normalizeIngredients(input) {
     if (Array.isArray(input)) {
       return input.map(normalizeIngredient).filter(Boolean);
@@ -49,7 +50,6 @@ export const RecipeStore = (function() {
     return base;
   }
 
-  // Приводит запись рецепта к схеме v2. Дозаполняет отсутствующие поля.
   function normalizeRecipe(r) {
     const safe = r || {};
     return {
@@ -74,8 +74,6 @@ export const RecipeStore = (function() {
     };
   }
 
-  // Публичный хелпер миграции одной записи v1 → v2.
-  // Используется при загрузке из localStorage и при импорте JSON-бэкапа.
   function migrateLegacyRecipe(oldRecipe) {
     return normalizeRecipe(oldRecipe);
   }
@@ -85,7 +83,6 @@ export const RecipeStore = (function() {
   // ============================================================
 
   function load() {
-    // Попытка 1: актуальный ключ v2.
     try {
       const savedV2 = localStorage.getItem(STORAGE_KEY);
       if (savedV2) {
@@ -99,7 +96,6 @@ export const RecipeStore = (function() {
       console.warn('Ошибка загрузки рецептов v2:', e);
     }
 
-    // Попытка 2: старый ключ v1 → миграция.
     if (LEGACY_KEY) {
       try {
         const savedV1 = localStorage.getItem(LEGACY_KEY);
@@ -107,8 +103,6 @@ export const RecipeStore = (function() {
           const parsedV1 = JSON.parse(savedV1);
           if (Array.isArray(parsedV1)) {
             recipes = parsedV1.map(migrateLegacyRecipe);
-            // Сохраняем мигрированные данные в v2.
-            // Старый ключ НЕ удаляем — оставляем на случай отката.
             try {
               localStorage.setItem(STORAGE_KEY, JSON.stringify(recipes));
             } catch(e) {
@@ -141,9 +135,21 @@ export const RecipeStore = (function() {
     if (!load()) {
       recipes = [];
       save();
-    } else {
-      EventBus.emit(CONSTANTS.EVENTS.RECIPES_CHANGED);
+      return;
     }
+    // Персистим изменения, которые нормализация применила при загрузке
+    // (например, чистку имён ингредиентов от мусора старого парсера).
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      const current = JSON.stringify(recipes);
+      if (stored !== current) {
+        localStorage.setItem(STORAGE_KEY, current);
+        console.log('Рецепты нормализованы при загрузке.');
+      }
+    } catch(e) {
+      console.warn('Не удалось сохранить нормализованные рецепты', e);
+    }
+    EventBus.emit(CONSTANTS.EVENTS.RECIPES_CHANGED);
   }
 
   // ============================================================
@@ -153,11 +159,6 @@ export const RecipeStore = (function() {
   function getAll() { return recipes.slice(); }
   function getById(id) { return recipes.find(r => r.id === id); }
 
-  // Добавляет рецепт.
-  // ingredients — строка (textarea) ИЛИ массив объектов { name, amount, unit }.
-  // extra — опциональный объект с новыми полями v2
-  //         (servings, cookTime, activeTime, nutrition, difficulty,
-  //          spiciness, cuisine, allergens, mealTypes, liked, disliked, builtIn).
   function add(name, ingredients, instructions, category, extra = {}) {
     const recipe = normalizeRecipe({
       id: generateId(),
@@ -173,8 +174,6 @@ export const RecipeStore = (function() {
     return recipe;
   }
 
-  // Обновляет рецепт. Переданные поля перезаписывают текущие.
-  // Если аргумент === undefined — поле не меняется.
   function update(id, name, ingredients, instructions, category, extra = {}) {
     const recipe = getById(id);
     if (!recipe) return false;
@@ -188,8 +187,6 @@ export const RecipeStore = (function() {
       ...extra
     });
 
-    // Object.assign сохраняет идентичность объекта,
-    // чтобы не сломать ссылки, если где-то уже держат recipe.
     Object.assign(recipe, updated);
     save();
     return true;
@@ -202,8 +199,6 @@ export const RecipeStore = (function() {
     save();
     return true;
   }
-
-  // ---- Оценки 👍 / 👎 (для будущего источника «Из рецептов») ----
 
   function toggleThumbUp(id) {
     const recipe = getById(id);
@@ -229,8 +224,6 @@ export const RecipeStore = (function() {
     save();
   }
 
-  // Смотрит на последнюю по порядку добавления запись с этой оценкой.
-  // Возвращает true, если у последней оценённой записи с таким именем стоит 👎.
   function isRecipeNameDisliked(name) {
     for (let i = recipes.length - 1; i >= 0; i--) {
       const r = recipes[i];
@@ -240,7 +233,6 @@ export const RecipeStore = (function() {
     return false;
   }
 
-  // Заменяет все рецепты (для импорта). Данные прогоняются через normalizeRecipe.
   function replaceAll(newRecipes) {
     if (!Array.isArray(newRecipes)) return false;
     recipes = newRecipes.map(normalizeRecipe);
