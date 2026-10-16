@@ -121,21 +121,6 @@ export const RecipeStore = (function() {
     return false;
   }
 
-  // Одноразово удаляет устаревший ключ схемы v1.
-  // Вызывается из init() после успешной загрузки или миграции:
-  // к этому моменту данные уже лежат в v2, старый ключ больше не нужен.
-  function removeLegacyKey() {
-    if (!LEGACY_KEY) return;
-    try {
-      if (localStorage.getItem(LEGACY_KEY) !== null) {
-        localStorage.removeItem(LEGACY_KEY);
-        console.log('Удалён устаревший ключ smartMenuRecipes_v1.');
-      }
-    } catch(e) {
-      console.warn('Не удалось удалить устаревший ключ рецептов:', e);
-    }
-  }
-
   function save() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(recipes));
@@ -150,7 +135,6 @@ export const RecipeStore = (function() {
     if (!load()) {
       recipes = [];
       save();
-      removeLegacyKey();
       return;
     }
     // Персистим изменения, которые нормализация применила при загрузке
@@ -165,8 +149,6 @@ export const RecipeStore = (function() {
     } catch(e) {
       console.warn('Не удалось сохранить нормализованные рецепты', e);
     }
-    // v2 на месте — старый ключ v1 больше не нужен.
-    removeLegacyKey();
     EventBus.emit(CONSTANTS.EVENTS.RECIPES_CHANGED);
   }
 
