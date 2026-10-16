@@ -137,6 +137,10 @@ export const UNIT_LABELS = {
   [UNITS.BUNCH]: 'пучок'
 };
 
+export const NON_SCALABLE_UNITS = [
+  UNITS.PCS, UNITS.TBSP, UNITS.TSP, UNITS.PINCH, UNITS.CLOVE, UNITS.BUNCH
+];
+
 export const DIFFICULTY_LABELS = {
   1: 'Очень просто',
   2: 'Просто',
