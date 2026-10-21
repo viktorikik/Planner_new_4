@@ -3380,8 +3380,15 @@ textarea:focus-visible {
 }
 
 .bottom-nav-icon {
-  font-size: 20px;
-  line-height: 1;
+  width: 24px;
+  height: 24px;
+  display: block;
+  margin: 0 auto 4px;
+  transition: transform 0.2s ease;
+}
+
+.bottom-nav-btn.active .bottom-nav-icon {
+  transform: translateY(-2px);
 }
 
 .bottom-nav-label {
