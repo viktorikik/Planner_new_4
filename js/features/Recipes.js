@@ -217,6 +217,23 @@ export function renderRecipesList() {
 // ФОРМА РЕЦЕПТА — ЛОГИКА (v6.3, схема v2)
 // ============================================================
 
+// Обновляет список подсказок для ингредиентов.
+function updateIngredientDatalist() {
+  let datalist = document.getElementById('ingredientNamesList');
+  if (!datalist) {
+    datalist = document.createElement('datalist');
+    datalist.id = 'ingredientNamesList';
+    document.body.appendChild(datalist);
+  }
+  datalist.innerHTML = '';
+  const uniqueNames = RecipeStore.getUniqueIngredientNames();
+  uniqueNames.forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    datalist.appendChild(opt);
+  });
+}
+
 // Создаёт одну строку ингредиента: [название] [количество] [единица] [✕].
 function createIngredientRow(ing = {}) {
   const row = document.createElement('div');
@@ -228,6 +245,7 @@ function createIngredientRow(ing = {}) {
   nameInput.placeholder = 'Название';
   nameInput.value = ing.name || '';
   nameInput.setAttribute('aria-label', 'Название ингредиента');
+  nameInput.setAttribute('list', 'ingredientNamesList'); // <-- Подключаем автодополнение
   row.appendChild(nameInput);
 
   const amountInput = document.createElement('input');
@@ -262,7 +280,6 @@ function createIngredientRow(ing = {}) {
   removeBtn.setAttribute('aria-label', 'Удалить ингредиент');
   removeBtn.addEventListener('click', function() {
     row.remove();
-    // Если строк не осталось — добавляем одну пустую.
     const container = document.getElementById(CONSTANTS.SELECTORS.recipeIngredientsList);
     if (container && container.querySelectorAll('.ingredient-row').length === 0) {
       container.appendChild(createIngredientRow());
@@ -325,6 +342,8 @@ function openRecipeForm(recipeId = null) {
   const isEdit = !!recipeId;
   const recipe = isEdit ? RecipeStore.getById(recipeId) : null;
   if (isEdit && !recipe) { showMessage('Рецепт не найден', 'error'); return; }
+
+  updateIngredientDatalist(); // Обновляем подсказки перед открытием
 
   const idField       = document.getElementById(CONSTANTS.SELECTORS.recipeFormId);
   const nameInput     = document.getElementById(CONSTANTS.SELECTORS.recipeName);
@@ -529,8 +548,15 @@ function applyRecipeParser() {
     if (!nameVal) row.remove();
   });
 
+  // Умная унификация имён на основе существующих рецептов
+  const uniqueNamesMap = RecipeStore.getUniqueIngredientNames();
+
   // Добавляем распознанные строки.
   result.ingredients.forEach(ing => {
+    const norm = ing.name.toLowerCase().replace(/ё/g, 'е');
+    if (uniqueNamesMap.has(norm)) {
+      ing.name = uniqueNamesMap.get(norm); // Заменяем на эталонное имя
+    }
     container.appendChild(createIngredientRow(ing));
   });
 
