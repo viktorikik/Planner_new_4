@@ -80,6 +80,12 @@ export const Renderer = (function() {
   const SWIPE_REVEAL_THRESHOLD = SWIPE_ACTION_WIDTH / 2;
   const UNDO_TIMEOUT_MS = 5000;
 
+  // Иконки статусов (SVG)
+  const ICON_DONE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+  const ICON_PLANNED = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`;
+  const ICON_DONE_SMALL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+  const ICON_PLANNED_SMALL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`;
+
   function pluralizeRu(n, one, few, many) {
     const mod10 = n % 10;
     const mod100 = n % 100;
@@ -237,7 +243,7 @@ export const Renderer = (function() {
     const statusToggle = document.createElement('button');
     statusToggle.type = 'button';
     statusToggle.className = 'status-toggle-btn';
-    statusToggle.textContent = dish.status === STATUSES.DONE ? '✅' : '🗓️';
+    statusToggle.innerHTML = dish.status === STATUSES.DONE ? ICON_DONE : ICON_PLANNED;
     statusToggle.title = dish.status === STATUSES.DONE
       ? 'Отметить как запланированное'
       : 'Отметить как приготовленное';
@@ -476,10 +482,6 @@ export const Renderer = (function() {
       const cat = first.category || Utils.guessCategory(first.name);
       if (choiceFilterCategory !== 'all' && cat !== choiceFilterCategory) return;
 
-      // Примечание: у блюд из «Моего меню» правило по mealTypes
-      // отличается от рецептов — пустой список = «любой приём пищи».
-      // Это поведение сохранено с v4.0. Унификация с источником
-      // «Из рецептов» — отдельная задача.
       const types = Array.isArray(first.mealTypes) ? first.mealTypes : [];
       if (choiceFilterMealType && types.length > 0 && !types.includes(choiceFilterMealType)) return;
 
@@ -503,31 +505,10 @@ export const Renderer = (function() {
     });
   }
 
-  // --- Источник «Из рецептов» (v5.14, Блок 2 · подэтапы 2.2–2.4) ---
-  //
-  // 2.2: рецепты ранжируются тем же движком, что и блюда.
-  // lastDoneDate — из DishStore.getLastDoneDateForRecipe (связь по recipeId,
-  // не по имени). Оценки 👍/👎 — из самого рецепта.
-  //
-  // 2.3: рецепт не предлагается, если связанное с ним блюдо
-  // (dish.recipeId === recipe.id) уже запланировано на отрезок
-  // [сегодня, сегодня + CONSTANTS.CHOICE.EXCLUDE_DAYS] включительно.
-  //
-  // 2.4 — правила фильтров:
-  //   • Приём пищи. Если у рецепта пустой список mealTypes — он виден
-  //     только во «Все» и скрыт в конкретных приёмах (завтрак/обед/ужин/
-  //     перекус), пока пользователь явно не проставит галочки в форме
-  //     рецепта. Это отличается от блюд из «Моего меню».
-  //   • Категория. Берётся явная из рецепта или угаданная через
-  //     guessCategory. Значение 'other' видно только во «Все» и «Другое».
-  //   • «Только любимые». Опирается только на recipe.liked. Связь
-  //     блюдо ↔ рецепт (recipeId) на этот фильтр не влияет.
   function rebuildChoiceRecipesRanking() {
     const all = RecipeStore.getAll();
     const items = [];
 
-    // Диапазон «ближайшего меню». Сегодняшний день включается: если
-    // рецепт уже стоит на сегодня, в выдаче он не нужен.
     const today = new Date();
     const todayStr = Utils.formatDateLocal(today);
     const excludeDays = CONSTANTS.CHOICE && typeof CONSTANTS.CHOICE.EXCLUDE_DAYS === 'number'
@@ -540,22 +521,14 @@ export const Renderer = (function() {
     all.forEach(recipe => {
       if (RecipeStore.isRecipeNameDisliked(recipe.name)) return;
 
-      // 2.3: не предлагаем то, что уже стоит в ближайшем меню.
       if (DishStore.hasPlannedDishForRecipeInRange(recipe.id, todayStr, futureStr)) return;
 
-      // 2.4: категория — явная из рецепта или угаданная по названию.
-      // Значение 'other' видно только во «Все» и «Другое» (см. шапку).
       const cat = recipe.category || Utils.guessCategory(recipe.name);
       if (choiceFilterCategory !== 'all' && cat !== choiceFilterCategory) return;
 
-      // 2.4: приём пищи. Пустой список mealTypes → рецепт виден только
-      // во «Все» (choiceFilterMealType === ''). В конкретном приёме пищи
-      // требуется явное совпадение — правило B (Блок 2 · подэтап 2.4).
       const types = Array.isArray(recipe.mealTypes) ? recipe.mealTypes : [];
       if (choiceFilterMealType && !types.includes(choiceFilterMealType)) return;
 
-      // 2.4: «только любимые» — только по оценке самого рецепта.
-      // 👍 на связанном блюде не делает рецепт любимым (правило A).
       if (choiceFilterOnlyFavorites && !recipe.liked) return;
 
       items.push({
@@ -1303,7 +1276,7 @@ export const Renderer = (function() {
 
         const badge = document.createElement('span');
         badge.className = 'status-badge';
-        badge.textContent = dish.status === STATUSES.DONE ? '✅' : '🗓️';
+        badge.innerHTML = dish.status === STATUSES.DONE ? ICON_DONE_SMALL : ICON_PLANNED_SMALL;
         item.appendChild(badge);
 
         group.appendChild(item);
