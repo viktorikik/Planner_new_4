@@ -7,6 +7,17 @@ import { CATEGORIES, PRODUCT_WORDS, UNITS, UNIT_LABELS } from './Constants.js';
 // Заголовки блоков — не ингредиенты, не попадают в массив.
 const HEADER_KEYWORDS = /^(ингредиенты|состав|продукты|для\s+(теста|начинки|соуса|крема|украшения|подачи|заливки|глазури|маринада|панировки|обжарки))$/i;
 
+// Словарь символов дробей
+const FRACTION_MAP = {
+  '½': '0.5', '⅓': '0.33', '⅔': '0.66', '¼': '0.25', '¾': '0.75',
+  '⅕': '0.2', '⅖': '0.4', '⅗': '0.6', '⅘': '0.8', '⅙': '0.16',
+  '⅚': '0.83', '⅛': '0.125', '⅜': '0.375', '⅝': '0.625', '⅞': '0.875'
+};
+
+function normalizeFractions(str) {
+  return String(str).replace(/[½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]/g, match => FRACTION_MAP[match] || match);
+}
+
 function isHeaderLine(line) {
   if (!line) return true;
   const trimmed = line.trim();
@@ -39,7 +50,7 @@ const UNIT_REGEX = '(кг|килограмм[аов]*|гр|грамм[аов]*|�
 // Чистит имя ингредиента от мусора: скобок, «по вкусу», висячих чисел,
 // диапазонов в конце, пунктуации по краям. Идемпотентна.
 function cleanupName(name) {
-  let s = String(name || '').replace(/\s+/g, ' ').trim();
+  let s = normalizeFractions(String(name || '')).replace(/\s+/g, ' ').trim();
   if (!s) return '';
 
   // 1. Скобки и их содержимое («(≈300 г)», «(4 ст. л.)», «(по желанию)»).
@@ -72,7 +83,7 @@ function cleanupName(name) {
 
 // Разбирает одну строку ингредиента в { name, amount, unit }.
 function parseIngredientLine(line) {
-  let s = String(line)
+  let s = normalizeFractions(String(line))
     .replace(/[–—]/g, '-')
     .replace(/^[•\-*]\s*/, '')
     .replace(/^\d+[.)]\s+/, '')
