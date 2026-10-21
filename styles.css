@@ -256,6 +256,11 @@
   color-scheme: dark;
 }
 
+[data-theme="classic-dark"],
+[data-theme="brand-dark"] {
+  color-scheme: dark;
+}
+
 /* ============================================================
    2. БАЗА
    ============================================================ */
@@ -495,13 +500,16 @@ textarea:focus-visible {
 .add-modal .form-group .meal-types-group .meal-type-checkbox input[type="checkbox"],
 .add-modal .form-group .allergens-group .meal-type-checkbox input[type="checkbox"],
 .meal-types-group .meal-type-checkbox input[type="checkbox"],
-.allergens-group .meal-type-checkbox input[type="checkbox"] {
+.allergens-group .meal-type-checkbox input[type="checkbox"],
+.choice-favorite-toggle input[type="checkbox"] { /* <-- ДОБАВЛЕН */
   width: 18px;
   height: 18px;
   min-width: 18px;
   padding: 0;
   margin: 0;
   border-radius: 4px;
+  background: var(--input-bg); /* <-- ДОБАВЛЕНО */
+  border: 1px solid var(--text-muted); /* <-- ДОБАВЛЕНО */
   accent-color: var(--accent-color);
   cursor: pointer;
   flex-shrink: 0;
@@ -1731,13 +1739,11 @@ textarea:focus-visible {
 .choice-favorite-toggle:has(input:checked) {
   background: var(--accent-light);
   border-color: var(--accent-color);
-  color: var(--accent-color);
+  color: var(--text-primary); /* <-- ИСПРАВЛЕНО */
   font-weight: 600;
 }
 
-[data-theme="brand-dark"] .choice-favorite-toggle:has(input:checked) {
-  color: var(--text-primary);
-}
+
 .choice-results {
   min-height: 80px;
   max-height: 340px;
@@ -3397,6 +3403,10 @@ textarea:focus-visible {
   display: block;
   margin: 0 auto 4px;
   transition: transform 0.2s ease;
+}
+
+.bottom-nav-btn.active .bottom-nav-icon {
+  transform: translateY(-2px);
 }
 
 .bottom-nav-btn.active .bottom-nav-icon {
