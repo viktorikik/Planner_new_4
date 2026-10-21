@@ -185,7 +185,7 @@ function aggregateIngredients(ingredients) {
     if (!ing || typeof ing !== 'object') return;
     const cleaned = Utils.cleanIngredientName(ing.name);
     if (!cleaned) return;
-    const key = cleaned.toLowerCase();
+    const key = cleaned.toLowerCase().replace(/ё/g, 'е');
     if (!map.has(key)) {
       map.set(key, { name: cleaned, parts: [] });
       order.push(key);
