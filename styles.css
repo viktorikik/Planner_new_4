@@ -250,6 +250,12 @@
   --accent-shadow: rgba(0, 0, 0, 0.4);
 }
 
+/* Указываем браузеру, что тёмные темы — это тёмный интерфейс */
+[data-theme="classic-dark"],
+[data-theme="brand-dark"] {
+  color-scheme: dark;
+}
+
 /* ============================================================
    2. БАЗА
    ============================================================ */
@@ -496,7 +502,6 @@ textarea:focus-visible {
   padding: 0;
   margin: 0;
   border-radius: 4px;
-  background: var(--input-bg);
   accent-color: var(--accent-color);
   cursor: pointer;
   flex-shrink: 0;
@@ -518,6 +523,10 @@ textarea:focus-visible {
   border-color: var(--accent-color);
   color: var(--accent-color);
   font-weight: 600;
+}
+
+[data-theme="brand-dark"] .meal-type-checkbox:has(input:checked) {
+  color: var(--text-primary); /* Делаем текст молочным, чтобы не сливался с лаймом */
 }
 
 .meal-type-checkbox span {
@@ -1726,6 +1735,9 @@ textarea:focus-visible {
   font-weight: 600;
 }
 
+[data-theme="brand-dark"] .choice-favorite-toggle:has(input:checked) {
+  color: var(--text-primary);
+}
 .choice-results {
   min-height: 80px;
   max-height: 340px;
