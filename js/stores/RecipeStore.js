@@ -14,10 +14,6 @@ export const RecipeStore = (function() {
   // НОРМАЛИЗАЦИЯ (схема v2)
   // ============================================================
 
-  // Приводит ингредиент к объекту { name, amount, unit }.
-  // Принимает и объект, и строку.
-  // Имя прогоняется через cleanIngredientName — это убирает мусорные
-  // хвосты, скобки и висячие числа, оставшиеся от старых версий парсера.
   function normalizeIngredient(ing) {
     if (typeof ing === 'string') {
       const parsed = Utils.parseRecipeText(ing).ingredients;
@@ -137,8 +133,6 @@ export const RecipeStore = (function() {
       save();
       return;
     }
-    // Персистим изменения, которые нормализация применила при загрузке
-    // (например, чистку имён ингредиентов от мусора старого парсера).
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       const current = JSON.stringify(recipes);
@@ -158,6 +152,27 @@ export const RecipeStore = (function() {
 
   function getAll() { return recipes.slice(); }
   function getById(id) { return recipes.find(r => r.id === id); }
+
+  // Собирает эталонный словарь ингредиентов из всех рецептов.
+  // Возвращает Map: нормализованное_имя -> оригинальное_имя.
+  function getUniqueIngredientNames() {
+    const map = new Map();
+    recipes.forEach(recipe => {
+      if (Array.isArray(recipe.ingredients)) {
+        recipe.ingredients.forEach(ing => {
+          if (ing && ing.name) {
+            const cleaned = Utils.cleanIngredientName(ing.name);
+            if (!cleaned) return;
+            const key = cleaned.toLowerCase().replace(/ё/g, 'е');
+            if (!map.has(key)) {
+              map.set(key, cleaned);
+            }
+          }
+        });
+      }
+    });
+    return map;
+  }
 
   function add(name, ingredients, instructions, category, extra = {}) {
     const recipe = normalizeRecipe({
@@ -251,6 +266,7 @@ export const RecipeStore = (function() {
     toggleThumbDown,
     isRecipeNameDisliked,
     replaceAll,
-    migrateLegacyRecipe
+    migrateLegacyRecipe,
+    getUniqueIngredientNames // <-- Новый метод
   };
 })();
