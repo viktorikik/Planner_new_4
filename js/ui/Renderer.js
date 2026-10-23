@@ -1,3 +1,20 @@
+/**
+ * Renderer — отрисовка всех экранов и модалок приложения.
+ * Зависит от: Constants, Utils, EventBus, DishStore, RecipeStore,
+ *             RecommendationEngine, notifications, focusTrap.
+ *
+ * v5.25 (Блок 6):
+ *   • Новые категории «Закуска» (appetizer) и «Десерт» (dessert) —
+ *     в селектах формы, эмодзи и подписях карточки рецепта.
+ *   • Аккордеон в карточке рецепта: ингредиенты раскрыты,
+ *     инструкция свёрнута. Нативно через <details>/<summary>,
+ *     без JS-стейта.
+ *   • Блок «Заметка» (recipe.comments) внизу карточки рецепта,
+ *     с автолинковкой URL (appendTextWithLinks).
+ *   • В renderMenu категория блюда → CSS-класс через CATEGORY_CLASS_MAP
+ *     вместо цепочки if/else — при добавлении новых категорий
+ *     больше не нужно править рендер.
+ */
 import {
   STATUSES, CATEGORIES, MEAL_TYPES, MEAL_TYPE_LABELS, CONSTANTS,
   CUISINE_LABELS, ALLERGEN_LABELS, UNITS,
@@ -46,12 +63,18 @@ export const Renderer = (function() {
   const modalDate = els.modalTitle;
   const modalContent = els.modalContent;
 
+  // Список категорий для селектов внутри Renderer (buildAddForm).
+  // Порядок повторяет визуальный: супы → салаты → основное → закуски →
+  // выпечка → десерты → прочее. Синхронизирован с index.html и
+  // ExportImport.categoryOrder.
   const CATEGORY_OPTIONS = [
-    { val: CATEGORIES.SOUP,   label: '🍲 Суп' },
-    { val: CATEGORIES.SALAD,  label: '🥗 Салат' },
-    { val: CATEGORIES.MAIN,   label: '🍖 Основное' },
-    { val: CATEGORIES.BAKERY, label: '🥐 Выпечка' },
-    { val: CATEGORIES.OTHER,  label: '🍽️ Другое' }
+    { val: CATEGORIES.SOUP,      label: '🍲 Суп' },
+    { val: CATEGORIES.SALAD,     label: '🥗 Салат' },
+    { val: CATEGORIES.MAIN,      label: '🍖 Основное' },
+    { val: CATEGORIES.APPETIZER, label: '🥪 Закуска' },
+    { val: CATEGORIES.BAKERY,    label: '🥐 Выпечка' },
+    { val: CATEGORIES.DESSERT,   label: '🍰 Десерт' },
+    { val: CATEGORIES.OTHER,     label: '🍽️ Другое' }
   ];
 
   const MEAL_TYPE_OPTIONS = [
@@ -62,18 +85,34 @@ export const Renderer = (function() {
   ];
 
   const CATEGORY_EMOJI = {
-    [CATEGORIES.SOUP]:   '🍲',
-    [CATEGORIES.SALAD]:  '🥗',
-    [CATEGORIES.MAIN]:   '🍖',
-    [CATEGORIES.BAKERY]: '🥐',
-    [CATEGORIES.OTHER]:  '🍽️'
+    [CATEGORIES.SOUP]:      '🍲',
+    [CATEGORIES.SALAD]:     '🥗',
+    [CATEGORIES.MAIN]:      '🍖',
+    [CATEGORIES.APPETIZER]: '🥪',
+    [CATEGORIES.BAKERY]:    '🥐',
+    [CATEGORIES.DESSERT]:   '🍰',
+    [CATEGORIES.OTHER]:     '🍽️'
   };
   const CATEGORY_NAMES = {
-    [CATEGORIES.SOUP]:   'Суп',
-    [CATEGORIES.SALAD]:  'Салат',
-    [CATEGORIES.MAIN]:   'Основное',
-    [CATEGORIES.BAKERY]: 'Выпечка',
-    [CATEGORIES.OTHER]:  'Другое'
+    [CATEGORIES.SOUP]:      'Суп',
+    [CATEGORIES.SALAD]:     'Салат',
+    [CATEGORIES.MAIN]:      'Основное',
+    [CATEGORIES.APPETIZER]: 'Закуска',
+    [CATEGORIES.BAKERY]:    'Выпечка',
+    [CATEGORIES.DESSERT]:   'Десерт',
+    [CATEGORIES.OTHER]:     'Другое'
+  };
+
+  // Блюдо → CSS-класс для полоски слева в .menu-item.
+  // Вынесено из renderMenu, чтобы новые категории не требовали
+  // правки длинной цепочки if/else.
+  const CATEGORY_CLASS_MAP = {
+    [CATEGORIES.SOUP]:      'category-soup',
+    [CATEGORIES.SALAD]:     'category-salad',
+    [CATEGORIES.MAIN]:      'category-main',
+    [CATEGORIES.APPETIZER]: 'category-appetizer',
+    [CATEGORIES.BAKERY]:    'category-bakery',
+    [CATEGORIES.DESSERT]:   'category-dessert'
   };
 
   const SWIPE_ACTION_WIDTH = 120;
@@ -105,6 +144,52 @@ export const Renderer = (function() {
     if (diff > 1) return `через ${diff} ${pluralizeRu(diff, 'день', 'дня', 'дней')}`;
     const absDiff = Math.abs(diff);
     return `${absDiff} ${pluralizeRu(absDiff, 'день', 'дня', 'дней')} назад`;
+  }
+
+  // ============================================================
+  // ВСПОМОГАТЕЛЬНОЕ: ТЕКСТ С АВТОЛИНКОВКОЙ URL (v5.25, Блок 6)
+  // Разбивает строку по URL-паттерну и вставляет <a> для каждого
+  // https?://-совпадения. Хвостовую пунктуацию (точка, запятая,
+  // скобка) оставляем текстом, чтобы она не попала в href.
+  // Используется в блоке «Заметка» карточки рецепта.
+  // ============================================================
+  function appendTextWithLinks(container, text) {
+    if (text == null) return;
+    const str = String(text);
+    if (!str) return;
+
+    const urlPattern = /https?:\/\/[^\s]+/g;
+    let lastIndex = 0;
+    let match;
+
+    while ((match = urlPattern.exec(str)) !== null) {
+      const before = str.slice(lastIndex, match.index);
+      if (before) container.appendChild(document.createTextNode(before));
+
+      const rawUrl = match[0];
+      // Отделяем хвостовую пунктуацию: «https://x.ru,» → ссылка + запятая.
+      const cleaned = rawUrl.replace(/[.,;:!?)]+$/g, '');
+      const trailing = rawUrl.slice(cleaned.length);
+
+      // Регекс гарантирует http(s), но проверим повторно — на случай
+      // экзотических контролов внутри строки.
+      if (/^https?:\/\//i.test(cleaned)) {
+        const a = document.createElement('a');
+        a.href = cleaned;
+        a.textContent = cleaned;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        container.appendChild(a);
+      } else {
+        container.appendChild(document.createTextNode(cleaned));
+      }
+
+      if (trailing) container.appendChild(document.createTextNode(trailing));
+      lastIndex = match.index + rawUrl.length;
+    }
+
+    const tail = str.slice(lastIndex);
+    if (tail) container.appendChild(document.createTextNode(tail));
   }
 
   // ============================================================
@@ -1251,11 +1336,9 @@ export const Renderer = (function() {
       dateEl.textContent = displayDate;
       group.appendChild(dateEl);
       dayDishes.forEach(dish => {
-        let categoryClass = '';
-        if (dish.category === CATEGORIES.SOUP) categoryClass = 'category-soup';
-        else if (dish.category === CATEGORIES.SALAD) categoryClass = 'category-salad';
-        else if (dish.category === CATEGORIES.MAIN) categoryClass = 'category-main';
-        else if (dish.category === CATEGORIES.BAKERY) categoryClass = 'category-bakery';
+        // v5.25: категория → CSS-класс через карту, а не if/else.
+        // При добавлении новой категории правится только CATEGORY_CLASS_MAP.
+        const categoryClass = CATEGORY_CLASS_MAP[dish.category] || '';
         const item = document.createElement('div');
         item.className = `menu-item ${dish.status} ${categoryClass}`;
 
@@ -1714,7 +1797,7 @@ export const Renderer = (function() {
   function setCategoryFilter(f) { categoryFilter = f; renderMenu(); }
 
   // ============================================================
-  // КАРТОЧКА РЕЦЕПТА (расширенная, v6.5)
+  // КАРТОЧКА РЕЦЕПТА (v6.5 → v5.25)
   // ============================================================
 
   function formatNutriValue(n) {
@@ -1772,6 +1855,22 @@ export const Renderer = (function() {
     row.appendChild(textEl);
 
     return row;
+  }
+
+  // Вспомогательная: собирает <summary> для аккордеона секции карточки.
+  // Возвращает summary с заголовком и chevron (стрелка вправо → вниз при open).
+  function buildRecipeSummary(text) {
+    const summary = document.createElement('summary');
+    summary.className = 'recipe-section-title';
+    summary.textContent = text;
+
+    const chevron = document.createElement('span');
+    chevron.className = 'recipe-accordion-chevron';
+    chevron.setAttribute('aria-hidden', 'true');
+    chevron.textContent = '▶';
+    summary.appendChild(chevron);
+
+    return summary;
   }
 
   function showRecipeCard(recipe) {
@@ -2090,34 +2189,57 @@ export const Renderer = (function() {
       modal.appendChild(allergensBlock);
     }
 
-    const ingredientsDiv = document.createElement('div');
-    ingredientsDiv.className = 'recipe-section recipe-ingredients';
+    // ---- v5.25: ингредиенты в <details open> (всегда раскрыты) ----
+    // Ингредиенты — главное, что смотрят первым. Оставляем их открытыми
+    // по умолчанию, чтобы пользователю не приходилось кликать.
+    const ingredientsDetails = document.createElement('details');
+    ingredientsDetails.className = 'recipe-section recipe-accordion recipe-ingredients';
+    ingredientsDetails.open = true;
 
-    const ingredientsTitle = document.createElement('h4');
-    ingredientsTitle.className = 'recipe-section-title';
-    ingredientsTitle.textContent = '📝 Ингредиенты';
-    ingredientsDiv.appendChild(ingredientsTitle);
+    ingredientsDetails.appendChild(buildRecipeSummary('📝 Ингредиенты'));
 
     ingredientsListEl = document.createElement('ul');
     ingredientsListEl.className = 'recipe-ingredients-list';
-    ingredientsDiv.appendChild(ingredientsListEl);
+    ingredientsDetails.appendChild(ingredientsListEl);
 
-    modal.appendChild(ingredientsDiv);
+    modal.appendChild(ingredientsDetails);
 
+    // ---- v5.25: инструкция в <details> без open (свёрнута) ----
+    // Инструкция длинная и нужна не всегда — держим свёрнутой,
+    // чтобы карточка не разрасталась до бесконечности.
     if (recipe.instructions) {
-      const instrDiv = document.createElement('div');
-      instrDiv.className = 'recipe-section recipe-instructions';
+      const instructionsDetails = document.createElement('details');
+      instructionsDetails.className = 'recipe-section recipe-accordion recipe-instructions';
 
-      const instrTitle = document.createElement('h4');
-      instrTitle.className = 'recipe-section-title';
-      instrTitle.textContent = '👨‍🍳 Инструкция';
-      instrDiv.appendChild(instrTitle);
+      instructionsDetails.appendChild(buildRecipeSummary('👨‍🍳 Инструкция'));
 
       const pre = document.createElement('pre');
       pre.className = 'recipe-instructions-text';
       pre.textContent = recipe.instructions;
-      instrDiv.appendChild(pre);
-      modal.appendChild(instrDiv);
+      instructionsDetails.appendChild(pre);
+
+      modal.appendChild(instructionsDetails);
+    }
+
+    // ---- v5.25: блок «Заметка» (recipe.comments) ----
+    // Показываем всегда, когда поле непустое. URL внутри текста
+    // автолинкуются отдельной функцией.
+    const commentsText = recipe.comments != null ? String(recipe.comments).trim() : '';
+    if (commentsText) {
+      const commentsBlock = document.createElement('div');
+      commentsBlock.className = 'recipe-comments';
+
+      const commentsLabel = document.createElement('div');
+      commentsLabel.className = 'recipe-comments-label';
+      commentsLabel.textContent = '📌 Заметка';
+      commentsBlock.appendChild(commentsLabel);
+
+      const commentsTextEl = document.createElement('div');
+      commentsTextEl.className = 'recipe-comments-text';
+      appendTextWithLinks(commentsTextEl, commentsText);
+      commentsBlock.appendChild(commentsTextEl);
+
+      modal.appendChild(commentsBlock);
     }
 
     const buttonsDiv = document.createElement('div');
