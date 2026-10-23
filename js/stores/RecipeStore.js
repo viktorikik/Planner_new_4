@@ -1,3 +1,15 @@
+/**
+ * RecipeStore — хранилище рецептов (схема v2).
+ * Ключ localStorage: CONSTANTS.STORAGE_KEYS.RECIPES ('smartMenuRecipes_v2').
+ * Автоматическая миграция из v1 при загрузке.
+ * Зависит от: Constants, Utils, EventBus, notifications.
+ *
+ * v5.26 (Блок 6):
+ *   • Поле hidden — для базовых рецептов, скрытых пользователем.
+ *   • Поле comments — заметка/источник (уже в схеме, теперь сохраняется).
+ *   • cloneFromBase(id) — копия базового рецепта в «Мои», без правки базы.
+ *   • toggleHidden(id) — скрыть/вернуть базовый рецепт.
+ */
 import { CONSTANTS } from '../utils/Constants.js';
 import { Utils } from '../utils/Utils.js';
 import { EventBus } from '../utils/EventBus.js';
@@ -66,6 +78,11 @@ export const RecipeStore = (function() {
       liked: !!safe.liked,
       disliked: !!safe.disliked,
       builtIn: !!safe.builtIn,
+      // v5.26: скрытый базовый рецепт. Пользовательские рецепты
+      // не скрываются, но флаг безвредно висит и у них (false).
+      hidden: !!safe.hidden,
+      // v5.26: заметка/источник. Пустая строка = блок не показывается.
+      comments: safe.comments != null ? String(safe.comments) : '',
       createdAt: safe.createdAt || new Date().toISOString()
     };
   }
@@ -175,12 +192,16 @@ export const RecipeStore = (function() {
   }
 
   function add(name, ingredients, instructions, category, extra = {}) {
+    // v5.26: пользовательский рецепт по умолчанию не базовый.
+    // extra.builtIn === true приходит только из импорта базы.
     const recipe = normalizeRecipe({
       id: generateId(),
       name,
       ingredients,
       instructions: instructions || '',
       category: category || Utils.guessCategory(name),
+      builtIn: false,
+      hidden: false,
       ...extra,
       createdAt: new Date().toISOString()
     });
@@ -213,6 +234,39 @@ export const RecipeStore = (function() {
     recipes.splice(index, 1);
     save();
     return true;
+  }
+
+  // v5.26: скрыть/вернуть базовый рецепт. Применяется только к базовым,
+  // но функция не проверяет builtIn — вызывающая сторона (Recipes.js)
+  // уже различает сценарии. Возвращает новое значение hidden или false.
+  function toggleHidden(id) {
+    const recipe = getById(id);
+    if (!recipe) return false;
+    recipe.hidden = !recipe.hidden;
+    save();
+    return recipe.hidden;
+  }
+
+  // v5.26: копия базового рецепта в «Мои». База не меняется.
+  // Имя — «<оригинал> (копия)». Лайки/дизлайки сбрасываются,
+  // категория и всё содержимое наследуются.
+  function cloneFromBase(id) {
+    const base = getById(id);
+    if (!base || !base.builtIn) return null;
+
+    const copy = normalizeRecipe({
+      ...base,
+      id: generateId(),
+      name: base.name + ' (копия)',
+      builtIn: false,
+      hidden: false,
+      liked: false,
+      disliked: false,
+      createdAt: new Date().toISOString()
+    });
+    recipes.push(copy);
+    save();
+    return copy;
   }
 
   function toggleThumbUp(id) {
@@ -264,9 +318,11 @@ export const RecipeStore = (function() {
     remove,
     toggleThumbUp,
     toggleThumbDown,
+    toggleHidden,     // v5.26
+    cloneFromBase,    // v5.26
     isRecipeNameDisliked,
     replaceAll,
     migrateLegacyRecipe,
-    getUniqueIngredientNames // <-- Новый метод
+    getUniqueIngredientNames
   };
 })();
