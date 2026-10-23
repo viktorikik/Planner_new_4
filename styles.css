@@ -977,8 +977,8 @@ textarea:focus-visible {
 
 .modal {
   background: var(--modal-bg);
-  border-radius: 32px;
-  padding: var(--spacing-xl) var(--spacing-md);
+  border-radius: var(--radius-md); /* Было 32px, стало 24px для единообразия */
+  padding: var(--spacing-xl) var(--spacing-lg); /* Сделали отступы ровнее */
   max-width: 540px;
   width: 100%;
   max-height: 85vh;
@@ -991,28 +991,44 @@ textarea:focus-visible {
 .modal-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
+  align-items: flex-start; /* Прижимаем к верху, если текст в 2 строки */
+  margin-bottom: 20px;
+  gap: 12px;
 }
+
 .modal-header h3 {
-  font-size: 22px;
+  font-size: 20px; /* Единый размер */
   font-weight: 700;
   color: var(--modal-text);
+  line-height: 1.3;
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Отступ между эмодзи и текстом */
+  margin: 0;
 }
+
 .modal-close {
   background: none;
   border: none;
-  font-size: 28px;
+  font-size: 24px; /* Уменьшили, чтобы не выбивалась */
   cursor: pointer;
   color: var(--text-muted);
-  padding: 0 var(--spacing-sm);
+  padding: 0;
   line-height: 1;
   transition: var(--transition-fast);
+  width: 32px; /* Жёсткий размер для ровного тапа */
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 .modal-close:hover {
   color: var(--text-primary);
   transform: rotate(90deg);
 }
+
+
 
 .modal-desc {
   color: var(--text-secondary);
@@ -1574,8 +1590,8 @@ textarea:focus-visible {
 
 .choice-modal {
   background: var(--modal-bg);
-  border-radius: 24px;
-  padding: 24px 20px;
+  border-radius: var(--radius-md); /* 24px */
+  padding: var(--spacing-xl) var(--spacing-lg); /* Как у базовой модалки */
   max-width: 500px;
   width: 100%;
   max-height: 88vh;
@@ -1586,11 +1602,14 @@ textarea:focus-visible {
   text-align: left;
 }
 .choice-modal h2 {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--modal-text);
-  margin-bottom: 16px;
-  text-align: center;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Здесь оставим по центру */
+  gap: 8px;
 }
 
 /* ===== Выбор источника: «Из моего меню» / «Из рецептов» (v5.11) ===== */
@@ -2031,11 +2050,15 @@ textarea:focus-visible {
 }
 
 .recipe-view-titlerow h3 {
-  font-size: 22px;
+  font-size: 20px; /* Было 22px */
   font-weight: 700;
   line-height: 1.25;
   color: var(--text-primary);
   word-break: break-word;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
 }
 
 .recipe-view-modal .recipe-view-header .modal-close {
@@ -3861,13 +3884,14 @@ body {
     padding: var(--spacing-xs) var(--spacing-sm);
   }
 
-  .modal {
-    padding: 16px var(--spacing-md);
+   .modal {
+    padding: var(--spacing-lg) var(--spacing-md); /* 24px 16px */
     border-radius: var(--radius-md);
   }
   .modal-header h3 {
-    font-size: 18px;
+    font-size: 18px; /* Чуть уменьшаем на мобилках */
   }
+   
   .modal-dish {
     font-size: 15px;
     padding: 12px 2px;
