@@ -3,19 +3,13 @@
  * Зависит от: Constants, Utils, EventBus, DishStore, RecipeStore,
  *             RecommendationEngine, notifications, focusTrap.
  *
- * v5.25 (Блок 6):
- *   • Новые категории «Закуска» (appetizer) и «Десерт» (dessert).
- *   • Аккордеон в карточке рецепта (ингредиенты раскрыты,
- *     инструкция свёрнута), нативно через <details>/<summary>.
- *   • Блок «Заметка» (recipe.comments) с автолинковкой URL.
- *   • renderMenu использует CATEGORY_CLASS_MAP.
- *
- * v5.26 (Блок 6):
- *   • Экран «Что приготовить?» — фильтр источника рецептов
- *     (Все · Мои · База). Блок виден только при source='recipes'.
- *   • rebuildChoiceRecipesRanking пропускает рецепты с hidden=true
- *     и уважает choiceRecipesSource.
- *   • Сеттер setChoiceRecipesSource; экспорт наружу.
+ * v5.25 (Блок 6): новые категории, аккордеон, comments, CATEGORY_CLASS_MAP.
+ * v5.26 (Блок 6): экран «Что приготовить?» — фильтр источника рецептов
+ *                 (Все · Мои · База); rebuildChoiceRecipesRanking
+ *                 пропускает hidden и уважает choiceRecipesSource.
+ * v5.27 (Блок 6): аккордеон в карточке рецепта — заголовок стал
+ *                 панелью-кнопкой (фон, рамка, hover), chevron — SVG
+ *                 в круглой подложке. Текст в span для flex-раскладки.
  */
 import {
   STATUSES, CATEGORIES, MEAL_TYPES, MEAL_TYPE_LABELS, CONSTANTS,
@@ -49,8 +43,7 @@ export const Renderer = (function() {
   let choiceFilterCategory = 'all';
   let choiceFilterOnlyFavorites = false;
   // v5.26: источник рецептов — 'all' | 'my' | 'base'. Применяется
-  // только когда choiceSource === 'recipes'. При смене основного
-  // источника не сбрасывается — пользователь мог осознанно выбрать.
+  // только когда choiceSource === 'recipes'.
   let choiceRecipesSource = RECIPE_SOURCES.ALL;
   let choiceOffset = 0;
   let choiceRankedCache = null;
@@ -71,9 +64,6 @@ export const Renderer = (function() {
   const modalContent = els.modalContent;
 
   // Список категорий для селектов внутри Renderer (buildAddForm).
-  // Порядок повторяет визуальный: супы → салаты → основное → закуски →
-  // выпечка → десерты → прочее. Синхронизирован с index.html и
-  // ExportImport.categoryOrder.
   const CATEGORY_OPTIONS = [
     { val: CATEGORIES.SOUP,      label: '🍲 Суп' },
     { val: CATEGORIES.SALAD,     label: '🥗 Салат' },
@@ -110,7 +100,6 @@ export const Renderer = (function() {
     [CATEGORIES.OTHER]:     'Другое'
   };
 
-  // Блюдо → CSS-класс для полоски слева в .menu-item.
   const CATEGORY_CLASS_MAP = {
     [CATEGORIES.SOUP]:      'category-soup',
     [CATEGORIES.SALAD]:     'category-salad',
@@ -129,6 +118,11 @@ export const Renderer = (function() {
   const ICON_PLANNED = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`;
   const ICON_DONE_SMALL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
   const ICON_PLANNED_SMALL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`;
+
+  // v5.27: SVG-стрелка для аккордеона в карточке рецепта.
+  // В CSS поворачивается через transform: закрыто → −90° (вправо),
+  // открыто → 0° (вниз). Толщина 2.5 — чтобы не терялась в тёмных темах.
+  const ICON_CHEVRON_DOWN = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>';
 
   function pluralizeRu(n, one, few, many) {
     const mod10 = n % 10;
@@ -153,9 +147,6 @@ export const Renderer = (function() {
 
   // ============================================================
   // ВСПОМОГАТЕЛЬНОЕ: ТЕКСТ С АВТОЛИНКОВКОЙ URL (v5.25, Блок 6)
-  // Разбивает строку по URL-паттерну и вставляет <a> для каждого
-  // https?://-совпадения. Хвостовую пунктуацию (точка, запятая,
-  // скобка) оставляем текстом, чтобы она не попала в href.
   // ============================================================
   function appendTextWithLinks(container, text) {
     if (text == null) return;
@@ -651,7 +642,6 @@ export const Renderer = (function() {
     });
 
     // v5.26: блок «Источник рецептов» виден только при source='recipes'.
-    // Живёт в одном месте — при любом рендере источника синхронизируется.
     const recipesSourceWrap = document.getElementById(CONSTANTS.SELECTORS.choiceRecipesSourceWrap);
     if (recipesSourceWrap) {
       recipesSourceWrap.hidden = choiceSource !== 'recipes';
@@ -792,8 +782,7 @@ export const Renderer = (function() {
     choiceFilterMealType = mealTypePreset || '';
     choiceFilterCategory = 'all';
     choiceFilterOnlyFavorites = false;
-    // v5.26: каждый раз начинаем с «Все», даже если пользователь
-    // в прошлый раз переключал. Фильтр источника — про текущий сеанс.
+    // v5.26: каждый раз начинаем с «Все».
     choiceRecipesSource = RECIPE_SOURCES.ALL;
     choiceOffset = 0;
     choiceRankedCache = null;
@@ -1838,7 +1827,7 @@ export const Renderer = (function() {
   function setCategoryFilter(f) { categoryFilter = f; renderMenu(); }
 
   // ============================================================
-  // КАРТОЧКА РЕЦЕПТА (v6.5 → v5.25)
+  // КАРТОЧКА РЕЦЕПТА (v6.5 → v5.27)
   // ============================================================
 
   function formatNutriValue(n) {
@@ -1898,17 +1887,23 @@ export const Renderer = (function() {
     return row;
   }
 
-  // Вспомогательная: собирает <summary> для аккордеона секции карточки.
-  // Возвращает summary с заголовком и chevron (стрелка вправо → вниз при open).
+  // v5.27: собирает <summary> для аккордеона.
+  // Текст — в span (flex: 1), chevron — SVG в круглой подложке справа.
+  // Поворот стрелки — в CSS через [open] (закрыто: −90° → вправо,
+  // открыто: 0° → вниз).
   function buildRecipeSummary(text) {
     const summary = document.createElement('summary');
     summary.className = 'recipe-section-title';
-    summary.textContent = text;
+
+    const textSpan = document.createElement('span');
+    textSpan.className = 'recipe-accordion-text';
+    textSpan.textContent = text;
+    summary.appendChild(textSpan);
 
     const chevron = document.createElement('span');
     chevron.className = 'recipe-accordion-chevron';
     chevron.setAttribute('aria-hidden', 'true');
-    chevron.textContent = '▶';
+    chevron.innerHTML = ICON_CHEVRON_DOWN;
     summary.appendChild(chevron);
 
     return summary;
@@ -1954,7 +1949,6 @@ export const Renderer = (function() {
 
     titleRow.appendChild(badgesRow);
 
-    // ===== Оценки 👍/👎 =====
     const thumbsRow = document.createElement('div');
     thumbsRow.className = 'recipe-view-thumbs';
 
@@ -2230,9 +2224,8 @@ export const Renderer = (function() {
       modal.appendChild(allergensBlock);
     }
 
-    // ---- v5.25: ингредиенты в <details open> (раскрыты по умолчанию).
-    //      Инструкция — <details> без open (свёрнута), длинная и нужна
-    //      не всегда. Шеврон крутится через [open] в CSS. ----
+    // v5.25: ингредиенты — раскрыты. v5.27: заголовок стал
+    // панелью-кнопкой с круглым chevron.
     const ingredientsDetails = document.createElement('details');
     ingredientsDetails.className = 'recipe-section recipe-accordion recipe-ingredients';
     ingredientsDetails.open = true;
@@ -2259,7 +2252,6 @@ export const Renderer = (function() {
       modal.appendChild(instructionsDetails);
     }
 
-    // ---- v5.25: блок «Заметка» (recipe.comments) ----
     const commentsText = recipe.comments != null ? String(recipe.comments).trim() : '';
     if (commentsText) {
       const commentsBlock = document.createElement('div');
@@ -2411,7 +2403,7 @@ export const Renderer = (function() {
     setChoiceMealType,
     setChoiceCategory,
     setChoiceOnlyFavorites,
-    setChoiceRecipesSource, // v5.26
+    setChoiceRecipesSource,
     rerollChoiceDish
   };
 })();
@@ -2422,5 +2414,5 @@ export const setChoiceSource = Renderer.setChoiceSource;
 export const setChoiceMealType = Renderer.setChoiceMealType;
 export const setChoiceCategory = Renderer.setChoiceCategory;
 export const setChoiceOnlyFavorites = Renderer.setChoiceOnlyFavorites;
-export const setChoiceRecipesSource = Renderer.setChoiceRecipesSource; // v5.26
+export const setChoiceRecipesSource = Renderer.setChoiceRecipesSource;
 export const rerollChoiceDish = Renderer.rerollChoiceDish;
