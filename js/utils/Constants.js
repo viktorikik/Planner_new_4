@@ -9,16 +9,20 @@ export const CATEGORIES = {
   SOUP: 'soup',
   SALAD: 'salad',
   MAIN: 'main',
+  APPETIZER: 'appetizer', // Закуска (v5.25, Блок 6)
   BAKERY: 'bakery',
+  DESSERT: 'dessert',     // Десерт (v5.25, Блок 6)
   OTHER: 'other'
 };
 
 export const CATEGORY_LABELS = {
-  [CATEGORIES.SOUP]: '🍲 Супы',
-  [CATEGORIES.SALAD]: '🥗 Салаты',
-  [CATEGORIES.MAIN]: '🍖 Основные блюда',
-  [CATEGORIES.BAKERY]: '🥐 Выпечка',
-  [CATEGORIES.OTHER]: '🍽️ Другое'
+  [CATEGORIES.SOUP]:      '🍲 Супы',
+  [CATEGORIES.SALAD]:     '🥗 Салаты',
+  [CATEGORIES.MAIN]:      '🍖 Основные блюда',
+  [CATEGORIES.APPETIZER]: '🥪 Закуски',
+  [CATEGORIES.BAKERY]:    '🥐 Выпечка',
+  [CATEGORIES.DESSERT]:   '🍰 Десерты',
+  [CATEGORIES.OTHER]:     '🍽️ Другое'
 };
 
 // Приёмы пищи (v4.0)
@@ -31,12 +35,12 @@ export const MEAL_TYPES = {
 
 export const MEAL_TYPE_LABELS = {
   [MEAL_TYPES.BREAKFAST]: 'Завтрак',
-  [MEAL_TYPES.LUNCH]: 'Обед',
-  [MEAL_TYPES.DINNER]: 'Ужин',
-  [MEAL_TYPES.SNACK]: 'Перекус'
+  [MEAL_TYPES.LUNCH]:     'Обед',
+  [MEAL_TYPES.DINNER]:    'Ужин',
+  [MEAL_TYPES.SNACK]:     'Перекус'
 };
 
-// Кухни (для карточки рецепта, v6.0)
+// Кухни
 export const CUISINES = {
   RUSSIAN: 'russian',
   UKRAINIAN: 'ukrainian',
@@ -56,24 +60,24 @@ export const CUISINES = {
 };
 
 export const CUISINE_LABELS = {
-  [CUISINES.RUSSIAN]: 'Русская',
-  [CUISINES.UKRAINIAN]: 'Украинская',
-  [CUISINES.CAUCASIAN]: 'Кавказская',
-  [CUISINES.ITALIAN]: 'Итальянская',
-  [CUISINES.FRENCH]: 'Французская',
+  [CUISINES.RUSSIAN]:       'Русская',
+  [CUISINES.UKRAINIAN]:     'Украинская',
+  [CUISINES.CAUCASIAN]:     'Кавказская',
+  [CUISINES.ITALIAN]:       'Итальянская',
+  [CUISINES.FRENCH]:        'Французская',
   [CUISINES.MEDITERRANEAN]: 'Средиземноморская',
-  [CUISINES.GREEK]: 'Греческая',
-  [CUISINES.AMERICAN]: 'Американская',
-  [CUISINES.MEXICAN]: 'Мексиканская',
-  [CUISINES.CHINESE]: 'Китайская',
-  [CUISINES.JAPANESE]: 'Японская',
-  [CUISINES.KOREAN]: 'Корейская',
-  [CUISINES.INDIAN]: 'Индийская',
-  [CUISINES.ASIAN]: 'Азиатская',
+  [CUISINES.GREEK]:         'Греческая',
+  [CUISINES.AMERICAN]:      'Американская',
+  [CUISINES.MEXICAN]:       'Мексиканская',
+  [CUISINES.CHINESE]:       'Китайская',
+  [CUISINES.JAPANESE]:      'Японская',
+  [CUISINES.KOREAN]:        'Корейская',
+  [CUISINES.INDIAN]:        'Индийская',
+  [CUISINES.ASIAN]:         'Азиатская',
   [CUISINES.INTERNATIONAL]: 'Международная'
 };
 
-// Аллергены (для карточки рецепта, v6.0)
+// Аллергены
 export const ALLERGENS = {
   NUTS: 'nuts',
   EGGS: 'eggs',
@@ -93,24 +97,24 @@ export const ALLERGENS = {
 };
 
 export const ALLERGEN_LABELS = {
-  [ALLERGENS.NUTS]: 'Орехи',
-  [ALLERGENS.EGGS]: 'Яйцо',
-  [ALLERGENS.GLUTEN]: 'Злаки, содержащие глютен',
-  [ALLERGENS.FISH]: 'Рыба',
-  [ALLERGENS.MILK]: 'Белок коровьего молока',
-  [ALLERGENS.PEANUT]: 'Арахис',
-  [ALLERGENS.ADDITIVES]: 'Пищевые добавки',
-  [ALLERGENS.MUSTARD]: 'Горчица',
-  [ALLERGENS.SESAME]: 'Кунжут',
-  [ALLERGENS.MOLLUSCS]: 'Моллюски',
+  [ALLERGENS.NUTS]:        'Орехи',
+  [ALLERGENS.EGGS]:        'Яйцо',
+  [ALLERGENS.GLUTEN]:      'Злаки, содержащие глютен',
+  [ALLERGENS.FISH]:        'Рыба',
+  [ALLERGENS.MILK]:        'Белок коровьего молока',
+  [ALLERGENS.PEANUT]:      'Арахис',
+  [ALLERGENS.ADDITIVES]:   'Пищевые добавки',
+  [ALLERGENS.MUSTARD]:     'Горчица',
+  [ALLERGENS.SESAME]:      'Кунжут',
+  [ALLERGENS.MOLLUSCS]:    'Моллюски',
   [ALLERGENS.CRUSTACEANS]: 'Ракообразные',
-  [ALLERGENS.STRAWBERRY]: 'Клубника',
-  [ALLERGENS.SOY]: 'Соя',
-  [ALLERGENS.CELERY]: 'Сельдерей',
-  [ALLERGENS.LUPIN]: 'Люпин и продукты его переработки'
+  [ALLERGENS.STRAWBERRY]:  'Клубника',
+  [ALLERGENS.SOY]:         'Соя',
+  [ALLERGENS.CELERY]:      'Сельдерей',
+  [ALLERGENS.LUPIN]:       'Люпин и продукты его переработки'
 };
 
-// Единицы измерения ингредиентов (v6.0)
+// Единицы измерения
 export const UNITS = {
   G: 'g',
   KG: 'kg',
@@ -125,13 +129,13 @@ export const UNITS = {
 };
 
 export const UNIT_LABELS = {
-  [UNITS.G]: 'г',
-  [UNITS.KG]: 'кг',
-  [UNITS.ML]: 'мл',
-  [UNITS.L]: 'л',
-  [UNITS.PCS]: 'шт',
-  [UNITS.TBSP]: 'ст.л.',
-  [UNITS.TSP]: 'ч.л.',
+  [UNITS.G]:     'г',
+  [UNITS.KG]:    'кг',
+  [UNITS.ML]:    'мл',
+  [UNITS.L]:     'л',
+  [UNITS.PCS]:   'шт',
+  [UNITS.TBSP]:  'ст.л.',
+  [UNITS.TSP]:   'ч.л.',
   [UNITS.PINCH]: 'щепотка',
   [UNITS.CLOVE]: 'зубчик',
   [UNITS.BUNCH]: 'пучок'
@@ -157,7 +161,7 @@ export const SPICINESS_LABELS = {
   5: 'Очень остро'
 };
 
-// Список продуктов для распознавания ингредиентов
+// Список продуктов для распознавания ингредиентов (без изменений)
 export const PRODUCT_WORDS = [
   'лук', 'морковь', 'картофель', 'капуста', 'свекла', 'редис', 'репа',
   'огурец', 'помидор', 'перец', 'баклажан', 'кабачок', 'тыква',
@@ -197,14 +201,7 @@ export const PRODUCT_WORDS = [
   'желатин', 'пудра', 'цукаты', 'карамель', 'сгущёнка', 'ванильный сахар'
 ];
 
-// ============================================================
-// ТЕМЫ ОФОРМЛЕНИЯ (v5.15, Блок 4 · подэтапы 4.1–4.3)
-// ============================================================
-// Четыре темы: две классических (исходная палитра) и две авторских
-// (стиль канала «Ещё одна галочка»). Ключ хранения —
-// CONSTANTS.STORAGE_KEYS.THEME ('mealPlannerTheme').
-// Применение — атрибут data-theme на <html>.
-// UI выбора — модалка «Оформление» (main.js → buildThemeTiles).
+// Темы
 export const THEMES = {
   CLASSIC_LIGHT: 'classic-light',
   CLASSIC_DARK:  'classic-dark',
@@ -212,18 +209,13 @@ export const THEMES = {
   BRAND_DARK:    'brand-dark'
 };
 
-// Тема по умолчанию (если в localStorage пусто и ОС не подсказала тёмную).
 export const DEFAULT_THEME = THEMES.CLASSIC_LIGHT;
 
-// Карта миграции старых значений 'light'/'dark' → новые.
-// Применяется один раз при чтении из localStorage; после миграции
-// в хранилище пишется новое значение (Блок 4 · 4.1, решение A).
 export const THEME_LEGACY_MAP = {
   'light': THEMES.CLASSIC_LIGHT,
   'dark':  THEMES.CLASSIC_DARK
 };
 
-// Объект с ключами хранилища, событиями, селекторами и настройками
 export const CONSTANTS = {
   STORAGE_KEYS: {
     RECIPES: 'smartMenuRecipes_v2',
@@ -237,13 +229,7 @@ export const CONSTANTS = {
     DISHES_CHANGED: 'dishes:changed',
     RECIPES_CHANGED: 'recipes:changed'
   },
-  // Настройки экрана «Что приготовить?» (v5.13, Блок 2 · подэтап 2.3)
   CHOICE: {
-    // Сколько дней вперёд считаются «ближайшим меню».
-    // Рецепт не предлагается в источнике «Из рецептов», если связанное
-    // с ним блюдо (dish.recipeId === recipe.id) уже запланировано
-    // на отрезок [сегодня, сегодня + EXCLUDE_DAYS] включительно.
-    // 5 → горизонт 6 дней: сегодня и 5 вперёд.
     EXCLUDE_DAYS: 5
   },
   SELECTORS: {
@@ -271,7 +257,6 @@ export const CONSTANTS = {
     newDishMealTypesGroup: 'newDishMealTypesGroup',
     newDishRecipe: 'newDishRecipe',
     addModalSave: 'addModalSave',
-    // ---- Модалка редактирования блюда ----
     editDishOverlay: 'editDishOverlay',
     editDishClose: 'editDishClose',
     editDishId: 'editDishId',
@@ -283,14 +268,12 @@ export const CONSTANTS = {
     editDishRecipe: 'editDishRecipe',
     editDishCancel: 'editDishCancel',
     editDishSave: 'editDishSave',
-    // ---- Модалка «Повторить меню» ----
     repeatMenuOverlay: 'repeatMenuOverlay',
     repeatMenuClose: 'repeatMenuClose',
     repeatMenuDate: 'repeatMenuDate',
     repeatMenuSourceDate: 'repeatMenuSourceDate',
     repeatMenuCancel: 'repeatMenuCancel',
     repeatMenuSave: 'repeatMenuSave',
-    // ---------------------------------------------
     exportModalOverlay: 'exportModalOverlay',
     exportModalClose: 'exportModalClose',
     choiceOverlay: 'choiceOverlay',
@@ -299,7 +282,6 @@ export const CONSTANTS = {
     welcomeOverlay: 'welcomeOverlay',
     welcomeStartBtn: 'welcomeStartBtn',
     todayContent: 'todayContent',
-    // ---- Таб «Рецепты» ----
     recipesTitle: 'recipesTitle',
     recipesBackBtn: 'recipesBackBtn',
     recipesList: 'recipesList',
@@ -312,7 +294,6 @@ export const CONSTANTS = {
     recipeExportOverlay: 'recipeExportOverlay',
     recipeExportClose: 'recipeExportClose',
     recipeExportOptions: '.recipe-export-option',
-    // ---- Форма рецепта v2 (v6.3) ----
     recipeFormOverlay: 'recipeFormOverlay',
     recipeFormClose: 'recipeFormClose',
     recipeFormTitle: 'recipeFormTitle',
@@ -337,13 +318,12 @@ export const CONSTANTS = {
     recipeNutritionFat: 'recipeNutritionFat',
     recipeNutritionCarbs: 'recipeNutritionCarbs',
     recipeInstructions: 'recipeInstructions',
-    // ---- Модалка парсера (v6.3) ----
+    recipeComments: 'recipeComments',
     recipeParserOverlay: 'recipeParserOverlay',
     recipeParserClose: 'recipeParserClose',
     recipeParserTextarea: 'recipeParserTextarea',
     recipeParserCancel: 'recipeParserCancel',
     recipeParserApply: 'recipeParserApply',
-    // ---- Таб «Покупки» ----
     shoppingDateFrom: 'shoppingDateFrom',
     shoppingDateTo: 'shoppingDateTo',
     generateShoppingListBtn: 'generateShoppingListBtn',
@@ -357,7 +337,6 @@ export const CONSTANTS = {
     exportShoppingListTxtBtn: 'exportShoppingListTxtBtn',
     shoppingListView: 'shoppingListView',
     shoppingListEditBtn: 'shoppingListEditBtn',
-    // ---- Импорт/экспорт данных ----
     importFileInput: 'importFileInput',
     importBtn: 'importBtn',
     exportBtn: 'exportBtn',
@@ -367,17 +346,11 @@ export const CONSTANTS = {
     calendarWrap: 'calendarWrap',
     viewToggleButtons: '#viewToggle button',
     exportOptions: '.export-option',
-
-    // ---- Bottom navigation (v4.0) ----
     bottomNav: 'bottomNav',
     bottomNavButtons: '.bottom-nav-btn',
-
-    // ---- Модалка «Оформление» (v5.15, Блок 4 · 4.3) ----
     themeOverlay: 'themeOverlay',
     themeClose: 'themeClose',
     themeGrid: 'themeGrid',
-
-    // ---- Обучающий тур ----
     onboardingHelpBtn: 'onboardingHelpBtn',
     onboardingOverlay: 'onboardingOverlay',
     onboardingSlides: 'onboardingSlides',
