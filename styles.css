@@ -526,16 +526,15 @@ textarea:focus-visible {
   outline-offset: 2px;
   box-shadow: 0 0 0 3px var(--accent-light);
 }
+
 .meal-type-checkbox:has(input:checked) {
-  background: var(--accent-light);
+  background: var(--accent-color); /* Сплошной цвет вместо прозрачного */
   border-color: var(--accent-color);
-  color: var(--accent-color);
+  color: var(--accent-text); /* Цвет текста подстраивается под фон */
   font-weight: 600;
 }
 
-[data-theme="brand-dark"] .meal-type-checkbox:has(input:checked) {
-  color: var(--text-primary); /* Делаем текст молочным, чтобы не сливался с лаймом */
-}
+
 
 .meal-type-checkbox span {
   line-height: 1.3;
@@ -1736,10 +1735,11 @@ textarea:focus-visible {
   flex-shrink: 0;
   margin: 0;
 }
+
 .choice-favorite-toggle:has(input:checked) {
-  background: var(--accent-light);
+  background: var(--accent-color);
   border-color: var(--accent-color);
-  color: var(--text-primary); /* <-- ИСПРАВЛЕНО */
+  color: var(--accent-text);
   font-weight: 600;
 }
 
