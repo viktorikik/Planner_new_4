@@ -1,3 +1,14 @@
+/**
+ * main.js — точка входа приложения.
+ * Инициализирует сторы, роутинг по табам, темы, обработчики модалок,
+ * экран «Что приготовить?», drag-and-drop, PWA.
+ *
+ * v5.26 (Блок 6):
+ *   • Экран «Что приготовить?» — фильтр источника рецептов
+ *     (Все · Мои · База), обработчики чипов.
+ *   • Видимостью блока «Источник рецептов» управляет Renderer
+ *     (renderChoiceSourceButtons): показываем только когда источник «Из рецептов».
+ */
 import { STATUSES, CONSTANTS, THEMES, DEFAULT_THEME, THEME_LEGACY_MAP } from './utils/Constants.js';
 import { Utils } from './utils/Utils.js';
 import { EventBus } from './utils/EventBus.js';
@@ -13,6 +24,7 @@ import {
   setChoiceMealType,
   setChoiceCategory,
   setChoiceOnlyFavorites,
+  setChoiceRecipesSource, // v5.26
   rerollChoiceDish
 } from './ui/Renderer.js';
 import { exportData, importData } from './features/ExportImport.js';
@@ -564,6 +576,17 @@ import { printWeeklyMenu } from './features/Print.js';
     chip.addEventListener('click', function() {
       const type = this.dataset.mealType || '';
       setChoiceMealType(type);
+    });
+  });
+
+  // v5.26: чипы источника рецептов (Все · Мои · База).
+  // Блок виден только когда основной источник — «Из рецептов»;
+  // показом управляет Renderer в renderChoiceSourceButtons().
+  const choiceRecipesSourceChips = document.querySelectorAll('#choiceRecipesSourceChips .choice-chip');
+  choiceRecipesSourceChips.forEach(chip => {
+    chip.addEventListener('click', function() {
+      const src = this.dataset.recipesSource || 'all';
+      setChoiceRecipesSource(src);
     });
   });
 
