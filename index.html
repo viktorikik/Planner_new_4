@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <!--
   Меню и рецепты · index.html
-  v5.25 (Блок 6): новые категории «Закуска» и «Десерт», поле comments в форме рецепта.
-  CSS: styles.css?v=5.4.9
+  v5.26 (Блок 6): три таба источника рецептов (Все · Мои · База),
+  чекбокс «Показать скрытые», фильтр источника в «Что приготовить?».
+  CSS: styles.css?v=5.4.10
 -->
 <html lang="ru" data-theme="classic-light">
 <head>
@@ -10,20 +11,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
   <title>Меню и рецепты · Календарь</title>
 
-  <!-- PWA (v4.0) -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#ff6b35" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#1e1e2e" media="(prefers-color-scheme: dark)">
 
-  <!-- iOS: установка на домашний экран -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Меню и рецепты">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
-  <link rel="stylesheet" href="styles.css?v=5.4.9">
+  <link rel="stylesheet" href="styles.css?v=5.4.10">
 
-  <!-- Мгновенное применение темы до отрисовки (фикс мигания) -->
   <script>
     (function() {
       try {
@@ -143,10 +141,17 @@
   <div class="tab-view" data-tab-view="recipes">
     <div class="recipes-tab">
       <div class="recipes-tab-header">
-        <h2 id="recipesTitle">📖 Мои рецепты</h2>
+        <h2 id="recipesTitle">📖 Рецепты</h2>
       </div>
 
       <button id="recipesBackBtn" class="recipes-back-btn" type="button" hidden>← Назад</button>
+
+      <!-- v5.26: табы источника рецептов -->
+      <div class="recipes-source-tabs" id="recipeSourceTabs" role="tablist" aria-label="Источник рецептов">
+        <button type="button" class="recipe-source-tab active" data-source="all" role="tab" aria-selected="true">Все</button>
+        <button type="button" class="recipe-source-tab" data-source="my" role="tab" aria-selected="false">Мои</button>
+        <button type="button" class="recipe-source-tab" data-source="base" role="tab" aria-selected="false">База</button>
+      </div>
 
       <div class="recipes-toolbar">
         <button class="btn-done" id="addRecipeBtn">Добавить</button>
@@ -166,6 +171,11 @@
           <option value="dessert">Десерты</option>
           <option value="other">Другое</option>
         </select>
+        <!-- v5.26: показываем только на табе «База» -->
+        <label class="recipes-show-hidden-toggle" id="recipesShowHiddenToggleLabel" hidden>
+          <input type="checkbox" id="recipesShowHiddenToggle">
+          <span>Показать скрытые</span>
+        </label>
       </div>
 
       <input type="file" id="importRecipesFileInput" class="import-hidden" accept=".json" aria-label="Загрузить файл с рецептами">
@@ -220,7 +230,7 @@
   </div>
 </div>
 
-<!-- Модалка добавления блюда (глобальная) -->
+<!-- Модалка добавления блюда -->
 <div class="modal-overlay add-modal" id="addModalOverlay" role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
   <div class="modal">
     <div class="modal-header">
@@ -261,22 +271,10 @@
     <div class="form-group">
       <label>Приём пищи</label>
       <div class="meal-types-group" id="newDishMealTypesGroup">
-        <label class="meal-type-checkbox">
-          <input type="checkbox" data-meal-type="breakfast">
-          <span>Завтрак</span>
-        </label>
-        <label class="meal-type-checkbox">
-          <input type="checkbox" data-meal-type="lunch">
-          <span>Обед</span>
-        </label>
-        <label class="meal-type-checkbox">
-          <input type="checkbox" data-meal-type="dinner">
-          <span>Ужин</span>
-        </label>
-        <label class="meal-type-checkbox">
-          <input type="checkbox" data-meal-type="snack">
-          <span>Перекус</span>
-        </label>
+        <label class="meal-type-checkbox"><input type="checkbox" data-meal-type="breakfast"><span>Завтрак</span></label>
+        <label class="meal-type-checkbox"><input type="checkbox" data-meal-type="lunch"><span>Обед</span></label>
+        <label class="meal-type-checkbox"><input type="checkbox" data-meal-type="dinner"><span>Ужин</span></label>
+        <label class="meal-type-checkbox"><input type="checkbox" data-meal-type="snack"><span>Перекус</span></label>
       </div>
     </div>
     <div class="form-group">
@@ -325,29 +323,15 @@
     <div class="form-group">
       <label>Приём пищи</label>
       <div class="meal-types-group" id="editDishMealTypesGroup">
-        <label class="meal-type-checkbox">
-          <input type="checkbox" data-meal-type="breakfast">
-          <span>Завтрак</span>
-        </label>
-        <label class="meal-type-checkbox">
-          <input type="checkbox" data-meal-type="lunch">
-          <span>Обед</span>
-        </label>
-        <label class="meal-type-checkbox">
-          <input type="checkbox" data-meal-type="dinner">
-          <span>Ужин</span>
-        </label>
-        <label class="meal-type-checkbox">
-          <input type="checkbox" data-meal-type="snack">
-          <span>Перекус</span>
-        </label>
+        <label class="meal-type-checkbox"><input type="checkbox" data-meal-type="breakfast"><span>Завтрак</span></label>
+        <label class="meal-type-checkbox"><input type="checkbox" data-meal-type="lunch"><span>Обед</span></label>
+        <label class="meal-type-checkbox"><input type="checkbox" data-meal-type="dinner"><span>Ужин</span></label>
+        <label class="meal-type-checkbox"><input type="checkbox" data-meal-type="snack"><span>Перекус</span></label>
       </div>
     </div>
     <div class="form-group">
       <label for="editDishRecipe">Рецепт</label>
-      <select id="editDishRecipe">
-        <option value="">Без рецепта</option>
-      </select>
+      <select id="editDishRecipe"><option value="">Без рецепта</option></select>
     </div>
     <div class="form-group">
       <label for="editDishNote">Заметка (рецепт, продукты…)</label>
@@ -462,6 +446,17 @@
       </select>
     </div>
 
+    <!-- v5.26: источник рецептов. Показывается только когда выбран
+         источник «Из рецептов». -->
+    <div class="choice-filter-group" id="choiceRecipesSourceWrap" hidden>
+      <div class="choice-filter-label">Источник рецептов</div>
+      <div class="choice-chips" id="choiceRecipesSourceChips" role="group" aria-label="Источник рецептов">
+        <button type="button" class="choice-chip active" data-recipes-source="all">Все</button>
+        <button type="button" class="choice-chip" data-recipes-source="my">Мои</button>
+        <button type="button" class="choice-chip" data-recipes-source="base">База</button>
+      </div>
+    </div>
+
     <label class="choice-favorite-toggle">
       <input type="checkbox" id="choiceOnlyFavorites">
       <span>👍 Только любимые</span>
@@ -561,9 +556,7 @@
   </div>
 </div>
 
-<!-- ============================================================
-     МОДАЛКА ДОБАВЛЕНИЯ / РЕДАКТИРОВАНИЯ РЕЦЕПТА (v6.3, схема v2)
-     ============================================================ -->
+<!-- МОДАЛКА ДОБАВЛЕНИЯ / РЕДАКТИРОВАНИЯ РЕЦЕПТА -->
 <div class="modal-overlay add-modal recipe-form-overlay" id="recipeFormOverlay" role="dialog" aria-modal="true" aria-labelledby="recipeFormTitle">
   <div class="modal recipe-form-modal">
     <div class="modal-header">
@@ -571,7 +564,6 @@
       <button class="modal-close" id="recipeFormClose" aria-label="Закрыть">✕</button>
     </div>
 
-    <!-- ===== ОСНОВНОЕ ===== -->
     <div class="form-group">
       <label for="recipeName">Название</label>
       <input type="text" id="recipeName" placeholder="Например, Свинина в соевом соусе">
@@ -618,7 +610,6 @@
       <input type="number" id="recipeServings" min="1" step="1" value="1">
     </div>
 
-    <!-- ===== ВРЕМЯ И СЛОЖНОСТЬ ===== -->
     <div class="form-row">
       <div class="form-group">
         <label for="recipeCookTime">Время, мин</label>
@@ -655,7 +646,6 @@
       </div>
     </div>
 
-    <!-- ===== ИНГРЕДИЕНТЫ ===== -->
     <div class="form-group">
       <label>Ингредиенты</label>
       <div class="ingredients-list" id="recipeIngredientsList"></div>
@@ -665,36 +655,21 @@
       </div>
     </div>
 
-    <!-- ===== ПРИЁМЫ ПИЩИ ===== -->
     <div class="form-group">
       <label>Приёмы пищи</label>
       <div class="meal-types-group" id="recipeMealTypesGroup">
-        <label class="meal-type-checkbox">
-          <input type="checkbox" data-meal-type="breakfast">
-          <span>Завтрак</span>
-        </label>
-        <label class="meal-type-checkbox">
-          <input type="checkbox" data-meal-type="lunch">
-          <span>Обед</span>
-        </label>
-        <label class="meal-type-checkbox">
-          <input type="checkbox" data-meal-type="dinner">
-          <span>Ужин</span>
-        </label>
-        <label class="meal-type-checkbox">
-          <input type="checkbox" data-meal-type="snack">
-          <span>Перекус</span>
-        </label>
+        <label class="meal-type-checkbox"><input type="checkbox" data-meal-type="breakfast"><span>Завтрак</span></label>
+        <label class="meal-type-checkbox"><input type="checkbox" data-meal-type="lunch"><span>Обед</span></label>
+        <label class="meal-type-checkbox"><input type="checkbox" data-meal-type="dinner"><span>Ужин</span></label>
+        <label class="meal-type-checkbox"><input type="checkbox" data-meal-type="snack"><span>Перекус</span></label>
       </div>
     </div>
 
-    <!-- ===== ИНСТРУКЦИЯ ===== -->
     <div class="form-group">
       <label for="recipeInstructions">Инструкция (необязательно)</label>
       <textarea id="recipeInstructions" rows="4" placeholder="Пошаговое приготовление..."></textarea>
     </div>
 
-    <!-- ===== ДОПОЛНИТЕЛЬНО (свёрнуто) ===== -->
     <details class="recipe-form-details">
       <summary class="recipe-form-details-summary">
         <span class="recipe-form-details-icon" aria-hidden="true">💡</span>
@@ -707,66 +682,21 @@
         <div class="form-group">
           <label>Аллергены</label>
           <div class="allergens-group" id="recipeAllergensGroup">
-            <label class="meal-type-checkbox">
-              <input type="checkbox" data-allergen="nuts">
-              <span>Орехи</span>
-            </label>
-            <label class="meal-type-checkbox">
-              <input type="checkbox" data-allergen="eggs">
-              <span>Яйцо</span>
-            </label>
-            <label class="meal-type-checkbox">
-              <input type="checkbox" data-allergen="gluten">
-              <span>Глютен</span>
-            </label>
-            <label class="meal-type-checkbox">
-              <input type="checkbox" data-allergen="fish">
-              <span>Рыба</span>
-            </label>
-            <label class="meal-type-checkbox">
-              <input type="checkbox" data-allergen="milk">
-              <span>Молоко</span>
-            </label>
-            <label class="meal-type-checkbox">
-              <input type="checkbox" data-allergen="peanut">
-              <span>Арахис</span>
-            </label>
-            <label class="meal-type-checkbox">
-              <input type="checkbox" data-allergen="additives">
-              <span>Добавки</span>
-            </label>
-            <label class="meal-type-checkbox">
-              <input type="checkbox" data-allergen="mustard">
-              <span>Горчица</span>
-            </label>
-            <label class="meal-type-checkbox">
-              <input type="checkbox" data-allergen="sesame">
-              <span>Кунжут</span>
-            </label>
-            <label class="meal-type-checkbox">
-              <input type="checkbox" data-allergen="molluscs">
-              <span>Моллюски</span>
-            </label>
-            <label class="meal-type-checkbox">
-              <input type="checkbox" data-allergen="crustaceans">
-              <span>Ракообразные</span>
-            </label>
-            <label class="meal-type-checkbox">
-              <input type="checkbox" data-allergen="strawberry">
-              <span>Клубника</span>
-            </label>
-            <label class="meal-type-checkbox">
-              <input type="checkbox" data-allergen="soy">
-              <span>Соя</span>
-            </label>
-            <label class="meal-type-checkbox">
-              <input type="checkbox" data-allergen="celery">
-              <span>Сельдерей</span>
-            </label>
-            <label class="meal-type-checkbox">
-              <input type="checkbox" data-allergen="lupin">
-              <span>Люпин</span>
-            </label>
+            <label class="meal-type-checkbox"><input type="checkbox" data-allergen="nuts"><span>Орехи</span></label>
+            <label class="meal-type-checkbox"><input type="checkbox" data-allergen="eggs"><span>Яйцо</span></label>
+            <label class="meal-type-checkbox"><input type="checkbox" data-allergen="gluten"><span>Глютен</span></label>
+            <label class="meal-type-checkbox"><input type="checkbox" data-allergen="fish"><span>Рыба</span></label>
+            <label class="meal-type-checkbox"><input type="checkbox" data-allergen="milk"><span>Молоко</span></label>
+            <label class="meal-type-checkbox"><input type="checkbox" data-allergen="peanut"><span>Арахис</span></label>
+            <label class="meal-type-checkbox"><input type="checkbox" data-allergen="additives"><span>Добавки</span></label>
+            <label class="meal-type-checkbox"><input type="checkbox" data-allergen="mustard"><span>Горчица</span></label>
+            <label class="meal-type-checkbox"><input type="checkbox" data-allergen="sesame"><span>Кунжут</span></label>
+            <label class="meal-type-checkbox"><input type="checkbox" data-allergen="molluscs"><span>Моллюски</span></label>
+            <label class="meal-type-checkbox"><input type="checkbox" data-allergen="crustaceans"><span>Ракообразные</span></label>
+            <label class="meal-type-checkbox"><input type="checkbox" data-allergen="strawberry"><span>Клубника</span></label>
+            <label class="meal-type-checkbox"><input type="checkbox" data-allergen="soy"><span>Соя</span></label>
+            <label class="meal-type-checkbox"><input type="checkbox" data-allergen="celery"><span>Сельдерей</span></label>
+            <label class="meal-type-checkbox"><input type="checkbox" data-allergen="lupin"><span>Люпин</span></label>
           </div>
         </div>
 
@@ -780,9 +710,6 @@
           </div>
         </div>
 
-        <!-- v5.25 (Блок 6): комментарий/источник.
-             Хранится в recipe.comments. Отображается в карточке рецепта
-             внизу, под инструкцией. URL автолинкуется. -->
         <div class="form-group">
           <label for="recipeComments">Заметка или источник</label>
           <textarea id="recipeComments" rows="2" placeholder="Ссылка на оригинал, пометка…"></textarea>
@@ -799,9 +726,7 @@
   </div>
 </div>
 
-<!-- ============================================================
-     МОДАЛКА ПАРСЕРА ИНГРЕДИЕНТОВ (v6.3)
-     ============================================================ -->
+<!-- МОДАЛКА ПАРСЕРА ИНГРЕДИЕНТОВ -->
 <div class="modal-overlay add-modal" id="recipeParserOverlay" role="dialog" aria-modal="true" aria-labelledby="recipeParserTitle">
   <div class="modal">
     <div class="modal-header">
@@ -819,9 +744,7 @@
   </div>
 </div>
 
-<!-- ============================================================
-     МОДАЛКА «ОФОРМЛЕНИЕ» (v5.15, Блок 4 · подэтап 4.3)
-     ============================================================ -->
+<!-- МОДАЛКА «ОФОРМЛЕНИЕ» -->
 <div class="modal-overlay add-modal theme-modal" id="themeOverlay" role="dialog" aria-modal="true" aria-labelledby="themeTitle">
   <div class="modal">
     <div class="modal-header">
@@ -833,10 +756,7 @@
   </div>
 </div>
 
-<!-- Live region -->
 <div id="liveRegion" class="sr-only" aria-live="polite" aria-atomic="true"></div>
-
-<!-- Печатная область -->
 <div id="printArea" aria-hidden="true"></div>
 
 <!-- Нижняя навигация -->
