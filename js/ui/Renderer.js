@@ -4,21 +4,24 @@
  *             RecommendationEngine, notifications, focusTrap.
  *
  * v5.25 (Блок 6):
- *   • Новые категории «Закуска» (appetizer) и «Десерт» (dessert) —
- *     в селектах формы, эмодзи и подписях карточки рецепта.
- *   • Аккордеон в карточке рецепта: ингредиенты раскрыты,
- *     инструкция свёрнута. Нативно через <details>/<summary>,
- *     без JS-стейта.
- *   • Блок «Заметка» (recipe.comments) внизу карточки рецепта,
- *     с автолинковкой URL (appendTextWithLinks).
- *   • В renderMenu категория блюда → CSS-класс через CATEGORY_CLASS_MAP
- *     вместо цепочки if/else — при добавлении новых категорий
- *     больше не нужно править рендер.
+ *   • Новые категории «Закуска» (appetizer) и «Десерт» (dessert).
+ *   • Аккордеон в карточке рецепта (ингредиенты раскрыты,
+ *     инструкция свёрнута), нативно через <details>/<summary>.
+ *   • Блок «Заметка» (recipe.comments) с автолинковкой URL.
+ *   • renderMenu использует CATEGORY_CLASS_MAP.
+ *
+ * v5.26 (Блок 6):
+ *   • Экран «Что приготовить?» — фильтр источника рецептов
+ *     (Все · Мои · База). Блок виден только при source='recipes'.
+ *   • rebuildChoiceRecipesRanking пропускает рецепты с hidden=true
+ *     и уважает choiceRecipesSource.
+ *   • Сеттер setChoiceRecipesSource; экспорт наружу.
  */
 import {
   STATUSES, CATEGORIES, MEAL_TYPES, MEAL_TYPE_LABELS, CONSTANTS,
   CUISINE_LABELS, ALLERGEN_LABELS, UNITS,
-  NON_SCALABLE_UNITS, DIFFICULTY_LABELS, SPICINESS_LABELS
+  NON_SCALABLE_UNITS, DIFFICULTY_LABELS, SPICINESS_LABELS,
+  RECIPE_SOURCES
 } from '../utils/Constants.js';
 import { Utils } from '../utils/Utils.js';
 import { EventBus } from '../utils/EventBus.js';
@@ -45,6 +48,10 @@ export const Renderer = (function() {
   let choiceFilterMealType = '';
   let choiceFilterCategory = 'all';
   let choiceFilterOnlyFavorites = false;
+  // v5.26: источник рецептов — 'all' | 'my' | 'base'. Применяется
+  // только когда choiceSource === 'recipes'. При смене основного
+  // источника не сбрасывается — пользователь мог осознанно выбрать.
+  let choiceRecipesSource = RECIPE_SOURCES.ALL;
   let choiceOffset = 0;
   let choiceRankedCache = null;
 
@@ -104,8 +111,6 @@ export const Renderer = (function() {
   };
 
   // Блюдо → CSS-класс для полоски слева в .menu-item.
-  // Вынесено из renderMenu, чтобы новые категории не требовали
-  // правки длинной цепочки if/else.
   const CATEGORY_CLASS_MAP = {
     [CATEGORIES.SOUP]:      'category-soup',
     [CATEGORIES.SALAD]:     'category-salad',
@@ -151,7 +156,6 @@ export const Renderer = (function() {
   // Разбивает строку по URL-паттерну и вставляет <a> для каждого
   // https?://-совпадения. Хвостовую пунктуацию (точка, запятая,
   // скобка) оставляем текстом, чтобы она не попала в href.
-  // Используется в блоке «Заметка» карточки рецепта.
   // ============================================================
   function appendTextWithLinks(container, text) {
     if (text == null) return;
@@ -167,12 +171,9 @@ export const Renderer = (function() {
       if (before) container.appendChild(document.createTextNode(before));
 
       const rawUrl = match[0];
-      // Отделяем хвостовую пунктуацию: «https://x.ru,» → ссылка + запятая.
       const cleaned = rawUrl.replace(/[.,;:!?)]+$/g, '');
       const trailing = rawUrl.slice(cleaned.length);
 
-      // Регекс гарантирует http(s), но проверим повторно — на случай
-      // экзотических контролов внутри строки.
       if (/^https?:\/\//i.test(cleaned)) {
         const a = document.createElement('a');
         a.href = cleaned;
@@ -604,6 +605,13 @@ export const Renderer = (function() {
     const futureStr = Utils.formatDateLocal(futureDate);
 
     all.forEach(recipe => {
+      // v5.26: скрытые базовые рецепты в рекомендации не попадают.
+      if (recipe.hidden) return;
+
+      // v5.26: источник рецептов — Все / Мои / База.
+      if (choiceRecipesSource === RECIPE_SOURCES.MY && recipe.builtIn) return;
+      if (choiceRecipesSource === RECIPE_SOURCES.BASE && !recipe.builtIn) return;
+
       if (RecipeStore.isRecipeNameDisliked(recipe.name)) return;
 
       if (DishStore.hasPlannedDishForRecipeInRange(recipe.id, todayStr, futureStr)) return;
@@ -640,6 +648,24 @@ export const Renderer = (function() {
       const isActive = (btn.dataset.source || 'menu') === choiceSource;
       btn.classList.toggle('active', isActive);
       btn.setAttribute('aria-pressed', String(isActive));
+    });
+
+    // v5.26: блок «Источник рецептов» виден только при source='recipes'.
+    // Живёт в одном месте — при любом рендере источника синхронизируется.
+    const recipesSourceWrap = document.getElementById(CONSTANTS.SELECTORS.choiceRecipesSourceWrap);
+    if (recipesSourceWrap) {
+      recipesSourceWrap.hidden = choiceSource !== 'recipes';
+    }
+    renderChoiceRecipesSourceChips();
+  }
+
+  // v5.26: подсветка активного чипа источника рецептов.
+  function renderChoiceRecipesSourceChips() {
+    const chips = document.querySelectorAll('#choiceRecipesSourceChips .choice-chip');
+    chips.forEach(chip => {
+      const isActive = (chip.dataset.recipesSource || RECIPE_SOURCES.ALL) === choiceRecipesSource;
+      chip.classList.toggle('active', isActive);
+      chip.setAttribute('aria-pressed', String(isActive));
     });
   }
 
@@ -683,7 +709,7 @@ export const Renderer = (function() {
       const empty = document.createElement('div');
       empty.className = 'choice-empty';
       empty.textContent = choiceSource === 'recipes'
-        ? '😌 Подходящих рецептов нет. Добавьте их на вкладке «Рецепты» или ослабьте фильтры.'
+        ? '😌 Подходящих рецептов нет. Добавьте их на вкладке «Рецепты», загрузите базу или ослабьте фильтры.'
         : '😌 Ничего не найдено. Попробуйте ослабить фильтры.';
       container.appendChild(empty);
       if (rerollBtn) rerollBtn.hidden = true;
@@ -766,6 +792,9 @@ export const Renderer = (function() {
     choiceFilterMealType = mealTypePreset || '';
     choiceFilterCategory = 'all';
     choiceFilterOnlyFavorites = false;
+    // v5.26: каждый раз начинаем с «Все», даже если пользователь
+    // в прошлый раз переключал. Фильтр источника — про текущий сеанс.
+    choiceRecipesSource = RECIPE_SOURCES.ALL;
     choiceOffset = 0;
     choiceRankedCache = null;
 
@@ -824,6 +853,20 @@ export const Renderer = (function() {
     choiceFilterOnlyFavorites = !!flag;
     choiceOffset = 0;
     choiceRankedCache = null;
+    renderChoiceResults();
+  }
+
+  // v5.26: смена источника рецептов (Все · Мои · База).
+  function setChoiceRecipesSource(src) {
+    const next =
+      (src === RECIPE_SOURCES.MY)   ? RECIPE_SOURCES.MY :
+      (src === RECIPE_SOURCES.BASE) ? RECIPE_SOURCES.BASE :
+                                      RECIPE_SOURCES.ALL;
+    if (choiceRecipesSource === next) return;
+    choiceRecipesSource = next;
+    choiceOffset = 0;
+    choiceRankedCache = null;
+    renderChoiceRecipesSourceChips();
     renderChoiceResults();
   }
 
@@ -1336,8 +1379,6 @@ export const Renderer = (function() {
       dateEl.textContent = displayDate;
       group.appendChild(dateEl);
       dayDishes.forEach(dish => {
-        // v5.25: категория → CSS-класс через карту, а не if/else.
-        // При добавлении новой категории правится только CATEGORY_CLASS_MAP.
         const categoryClass = CATEGORY_CLASS_MAP[dish.category] || '';
         const item = document.createElement('div');
         item.className = `menu-item ${dish.status} ${categoryClass}`;
@@ -2189,9 +2230,9 @@ export const Renderer = (function() {
       modal.appendChild(allergensBlock);
     }
 
-    // ---- v5.25: ингредиенты в <details open> (всегда раскрыты) ----
-    // Ингредиенты — главное, что смотрят первым. Оставляем их открытыми
-    // по умолчанию, чтобы пользователю не приходилось кликать.
+    // ---- v5.25: ингредиенты в <details open> (раскрыты по умолчанию).
+    //      Инструкция — <details> без open (свёрнута), длинная и нужна
+    //      не всегда. Шеврон крутится через [open] в CSS. ----
     const ingredientsDetails = document.createElement('details');
     ingredientsDetails.className = 'recipe-section recipe-accordion recipe-ingredients';
     ingredientsDetails.open = true;
@@ -2204,9 +2245,6 @@ export const Renderer = (function() {
 
     modal.appendChild(ingredientsDetails);
 
-    // ---- v5.25: инструкция в <details> без open (свёрнута) ----
-    // Инструкция длинная и нужна не всегда — держим свёрнутой,
-    // чтобы карточка не разрасталась до бесконечности.
     if (recipe.instructions) {
       const instructionsDetails = document.createElement('details');
       instructionsDetails.className = 'recipe-section recipe-accordion recipe-instructions';
@@ -2222,8 +2260,6 @@ export const Renderer = (function() {
     }
 
     // ---- v5.25: блок «Заметка» (recipe.comments) ----
-    // Показываем всегда, когда поле непустое. URL внутри текста
-    // автолинкуются отдельной функцией.
     const commentsText = recipe.comments != null ? String(recipe.comments).trim() : '';
     if (commentsText) {
       const commentsBlock = document.createElement('div');
@@ -2375,6 +2411,7 @@ export const Renderer = (function() {
     setChoiceMealType,
     setChoiceCategory,
     setChoiceOnlyFavorites,
+    setChoiceRecipesSource, // v5.26
     rerollChoiceDish
   };
 })();
@@ -2385,4 +2422,5 @@ export const setChoiceSource = Renderer.setChoiceSource;
 export const setChoiceMealType = Renderer.setChoiceMealType;
 export const setChoiceCategory = Renderer.setChoiceCategory;
 export const setChoiceOnlyFavorites = Renderer.setChoiceOnlyFavorites;
+export const setChoiceRecipesSource = Renderer.setChoiceRecipesSource; // v5.26
 export const rerollChoiceDish = Renderer.rerollChoiceDish;
