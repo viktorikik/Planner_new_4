@@ -1,4 +1,11 @@
 /* ============================================================
+   Меню и рецепты · styles.css
+   v5.4.9 (Блок 6, v5.25):
+     • Добавлены категории «Закуска» и «Десерт» — переменные
+       --color-appetizer, --color-dessert во всех темах.
+     • Раздел 43 — аккордеон в карточке рецепта.
+     • Раздел 44 — блок «Заметка» (recipe.comments).
+
    1. ПЕРЕМЕННЫЕ — ТЕМЫ ОФОРМЛЕНИЯ (v5.15, Блок 4 · 4.1–4.3)
    Тема применяется через data-theme на <html>:
      • classic-light — светлая классическая (по умолчанию)
@@ -41,7 +48,9 @@
   --color-soup: #b87830;
   --color-salad: #5a8a63;
   --color-main: #c44a3d;
+  --color-appetizer: #4a7a8a; /* v5.25: Закуска */
   --color-bakery: #a86a2c;
+  --color-dessert: #a0427d;   /* v5.25: Десерт */
   --search-bg: #ffffff;
   --search-border: #d9cfc2;
 
@@ -103,7 +112,9 @@
   --color-soup: #e0b365;
   --color-salad: #8dc19a;
   --color-main: #e88578;
+  --color-appetizer: #6fa0b0; /* v5.25: Закуска */
   --color-bakery: #d9a558;
+  --color-dessert: #d07aab;   /* v5.25: Десерт */
   --search-bg: rgba(50, 42, 35, 0.6);
   --search-border: rgba(255, 240, 220, 0.1);
   --card-bg: rgba(45, 38, 32, 0.7);
@@ -175,7 +186,9 @@
   --color-soup: #A0404F;
   --color-salad: #687B59;
   --color-main: #C25A3A;
+  --color-appetizer: #4A6B7A; /* v5.25: Закуска */
   --color-bakery: #8B6914;
+  --color-dessert: #B0426A;   /* v5.25: Десерт */
 
   /* ---- Акцент ---- */
   /* accent-color = графит (текст/границы/focus), accent-text = лайм
@@ -238,7 +251,9 @@
   --color-soup: #E88A9A;
   --color-salad: #8DC19A;
   --color-main: #E88578;
+  --color-appetizer: #8DB8C8; /* v5.25: Закуска */
   --color-bakery: #D9A558;
+  --color-dessert: #E0A0C8;   /* v5.25: Десерт */
 
   /* ---- Акцент ---- */
   /* В тёмной бренд-теме accent-color = лайм (текст, границы, фон
@@ -250,12 +265,8 @@
   --accent-shadow: rgba(0, 0, 0, 0.4);
 }
 
-/* Указываем браузеру, что тёмные темы — это тёмный интерфейс */
-[data-theme="classic-dark"],
-[data-theme="brand-dark"] {
-  color-scheme: dark;
-}
-
+/* Указываем браузеру, что тёмные темы — это тёмный интерфейс.
+   Раньше дублировалось два раза — оставил один. */
 [data-theme="classic-dark"],
 [data-theme="brand-dark"] {
   color-scheme: dark;
@@ -496,7 +507,7 @@ button:active:not(:disabled),
   color: var(--text-primary);
   user-select: none;
   -webkit-tap-highlight-color: transparent;
-   transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
 }
 .meal-type-checkbox:active {
   transform: scale(0.97);
@@ -512,15 +523,15 @@ button:active:not(:disabled),
 .add-modal .form-group .allergens-group .meal-type-checkbox input[type="checkbox"],
 .meal-types-group .meal-type-checkbox input[type="checkbox"],
 .allergens-group .meal-type-checkbox input[type="checkbox"],
-.choice-favorite-toggle input[type="checkbox"] { /* <-- ДОБАВЛЕН */
+.choice-favorite-toggle input[type="checkbox"] {
   width: 18px;
   height: 18px;
   min-width: 18px;
   padding: 0;
   margin: 0;
   border-radius: 4px;
-  background: var(--input-bg); /* <-- ДОБАВЛЕНО */
-  border: 1px solid var(--text-muted); /* <-- ДОБАВЛЕНО */
+  background: var(--input-bg);
+  border: 1px solid var(--text-muted);
   accent-color: var(--accent-color);
   cursor: pointer;
   flex-shrink: 0;
@@ -539,13 +550,11 @@ button:active:not(:disabled),
 }
 
 .meal-type-checkbox:has(input:checked) {
-  background: var(--accent-color); /* Сплошной цвет вместо прозрачного */
+  background: var(--accent-color);
   border-color: var(--accent-color);
-  color: var(--accent-text); /* Цвет текста подстраивается под фон */
+  color: var(--accent-text);
   font-weight: 600;
 }
-
-
 
 .meal-type-checkbox span {
   line-height: 1.3;
@@ -1000,8 +1009,8 @@ button:active:not(:disabled),
 
 .modal {
   background: var(--modal-bg);
-  border-radius: var(--radius-md); /* Было 32px, стало 24px для единообразия */
-  padding: var(--spacing-xl) var(--spacing-lg); /* Сделали отступы ровнее */
+  border-radius: var(--radius-md);
+  padding: var(--spacing-xl) var(--spacing-lg);
   max-width: 540px;
   width: 100%;
   max-height: 85vh;
@@ -1014,32 +1023,32 @@ button:active:not(:disabled),
 .modal-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start; /* Прижимаем к верху, если текст в 2 строки */
+  align-items: flex-start;
   margin-bottom: 20px;
   gap: 12px;
 }
 
 .modal-header h3 {
-  font-size: 20px; /* Единый размер */
+  font-size: 20px;
   font-weight: 700;
   color: var(--modal-text);
   line-height: 1.3;
   display: flex;
   align-items: center;
-  gap: 8px; /* Отступ между эмодзи и текстом */
+  gap: 8px;
   margin: 0;
 }
 
 .modal-close {
   background: none;
   border: none;
-  font-size: 24px; /* Уменьшили, чтобы не выбивалась */
+  font-size: 24px;
   cursor: pointer;
   color: var(--text-muted);
   padding: 0;
   line-height: 1;
   transition: var(--transition-fast);
-  width: 32px; /* Жёсткий размер для ровного тапа */
+  width: 32px;
   height: 32px;
   display: flex;
   align-items: center;
@@ -1615,8 +1624,8 @@ button:active:not(:disabled),
 
 .choice-modal {
   background: var(--modal-bg);
-  border-radius: var(--radius-md); /* 24px */
-  padding: var(--spacing-xl) var(--spacing-lg); /* Как у базовой модалки */
+  border-radius: var(--radius-md);
+  padding: var(--spacing-xl) var(--spacing-lg);
   max-width: 500px;
   width: 100%;
   max-height: 88vh;
@@ -1633,7 +1642,7 @@ button:active:not(:disabled),
   margin-bottom: 20px;
   display: flex;
   align-items: center;
-  justify-content: center; /* Здесь оставим по центру */
+  justify-content: center;
   gap: 8px;
 }
 
@@ -1765,7 +1774,7 @@ button:active:not(:disabled),
   transition: var(--transition-fast);
   margin-bottom: 16px;
   -webkit-tap-highlight-color: transparent;
-   transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
 }
 
 .choice-favorite-toggle:hover {
@@ -1788,7 +1797,6 @@ button:active:not(:disabled),
   color: var(--accent-text);
   font-weight: 600;
 }
-
 
 .choice-results {
   min-height: 80px;
@@ -2077,7 +2085,7 @@ button:active:not(:disabled),
 }
 
 .recipe-view-titlerow h3 {
-  font-size: 20px; /* Было 22px */
+  font-size: 20px;
   font-weight: 700;
   line-height: 1.25;
   color: var(--text-primary);
@@ -2106,11 +2114,14 @@ button:active:not(:disabled),
   border: 1px solid var(--cell-border);
   white-space: nowrap;
 }
-.recipe-category-badge.category-soup   { color: var(--color-soup);   border-color: var(--color-soup); }
-.recipe-category-badge.category-salad  { color: var(--color-salad);  border-color: var(--color-salad); }
-.recipe-category-badge.category-main   { color: var(--color-main);   border-color: var(--color-main); }
-.recipe-category-badge.category-bakery { color: var(--color-bakery); border-color: var(--color-bakery); }
-.recipe-category-badge.category-other  { color: var(--text-secondary); }
+.recipe-category-badge.category-soup      { color: var(--color-soup);      border-color: var(--color-soup); }
+.recipe-category-badge.category-salad     { color: var(--color-salad);     border-color: var(--color-salad); }
+.recipe-category-badge.category-main      { color: var(--color-main);      border-color: var(--color-main); }
+/* v5.25: новые категории */
+.recipe-category-badge.category-appetizer { color: var(--color-appetizer); border-color: var(--color-appetizer); }
+.recipe-category-badge.category-bakery    { color: var(--color-bakery);    border-color: var(--color-bakery); }
+.recipe-category-badge.category-dessert   { color: var(--color-dessert);   border-color: var(--color-dessert); }
+.recipe-category-badge.category-other     { color: var(--text-secondary); }
 
 .recipe-view-modal .recipe-section {
   margin-bottom: 24px;
@@ -2799,11 +2810,6 @@ button:active:not(:disabled),
   color: var(--text-primary);
 }
 
-[data-theme="classic-dark"] .saved-list-item .list-date,
-[data-theme="classic-dark"] #savedListsList .saved-list-item {
-  color: var(--text-primary);
-}
-
 [data-theme="classic-dark"] .shopping-tab h4 {
   color: var(--text-primary);
 }
@@ -3468,10 +3474,6 @@ button:active:not(:disabled),
   transform: translateY(-2px);
 }
 
-.bottom-nav-btn.active .bottom-nav-icon {
-  transform: translateY(-2px);
-}
-
 .bottom-nav-label {
   line-height: 1.2;
   white-space: nowrap;
@@ -3920,14 +3922,14 @@ body {
     padding: var(--spacing-xs) var(--spacing-sm);
   }
 
-   .modal {
-    padding: var(--spacing-lg) var(--spacing-md); /* 24px 16px */
+  .modal {
+    padding: var(--spacing-lg) var(--spacing-md);
     border-radius: var(--radius-md);
   }
   .modal-header h3 {
-    font-size: 18px; /* Чуть уменьшаем на мобилках */
+    font-size: 18px;
   }
-   
+
   .modal-dish {
     font-size: 15px;
     padding: 12px 2px;
@@ -4888,4 +4890,91 @@ body {
     font-size: 11px;
     padding: 0 8px;
   }
+}
+
+/* ============================================================
+   43. АККОРДЕОН В КАРТОЧКЕ РЕЦЕПТА (v5.25, Блок 6)
+
+   Ингредиенты и инструкция в карточке рецепта оборачиваются в
+   <details class="recipe-accordion">. Заголовок — <summary>
+   с классом .recipe-section-title (стили наследуются из раздела 19).
+   Ингредиенты по умолчанию открыты, инструкция — свёрнута;
+   это задаётся в Renderer через атрибут open.
+
+   Правило: <summary> не должен терять вид кнопки — курсор, :focus,
+   отсутствие маркера. Сам chevron — отдельный <span>, крутится по [open].
+   ============================================================ */
+.recipe-view-modal .recipe-accordion > summary.recipe-section-title {
+  margin: 0;
+  padding: 4px 0;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  border-radius: 4px;
+}
+.recipe-view-modal .recipe-accordion > summary.recipe-section-title::-webkit-details-marker {
+  display: none;
+}
+.recipe-view-modal .recipe-accordion[open] > summary.recipe-section-title {
+  margin: 0 0 8px 0;
+}
+.recipe-view-modal .recipe-accordion > summary.recipe-section-title:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+/* Chevron: по умолчанию повёрнут вправо (закрыто), при [open] — вниз. */
+.recipe-view-modal .recipe-accordion-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--accent-color);
+  transition: transform var(--transition-fast);
+  transform: rotate(0deg);
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.recipe-view-modal .recipe-accordion[open] .recipe-accordion-chevron {
+  transform: rotate(90deg);
+}
+
+/* ============================================================
+   44. БЛОК «ЗАМЕТКА» В КАРТОЧКЕ РЕЦЕПТА (v5.25, Блок 6)
+
+   Показывает recipe.comments, если поле непустое. Ссылки внутри
+   текста автолинкуются в Renderer, стилизуем их отдельно.
+   Блок не участвует в разделителе .recipe-section (нет бордера
+   снизу) — он завершает карточку перед кнопками.
+   ============================================================ */
+.recipe-view-modal .recipe-comments {
+  margin: 16px 0;
+  padding: 12px 16px;
+  background: var(--cell-bg);
+  border: 1px solid var(--cell-border);
+  border-radius: var(--radius-sm);
+}
+.recipe-view-modal .recipe-comments-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  letter-spacing: 0.2px;
+}
+.recipe-view-modal .recipe-comments-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+.recipe-view-modal .recipe-comments-text a {
+  color: var(--accent-color);
+  text-decoration: underline;
+  word-break: break-all;
+}
+.recipe-view-modal .recipe-comments-text a:hover {
+  color: var(--accent-hover);
 }
