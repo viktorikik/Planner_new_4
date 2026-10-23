@@ -4,10 +4,14 @@
  * Зависит от: Constants, Utils, RecipeStore, DishStore, Renderer,
  *             notifications, focusTrap, ExportImport.
  *
- * v5.25 (Блок 6): категории «Закуска» и «Десерт» в порядке сортировки.
- * Неизвестные категории отправляются в конец списка, а не в начало.
+ * v5.26 (Блок 6):
+ *   • Три таба источника рецептов — Все · Мои · База.
+ *   • Базовый рецепт при попытке редактирования клонируется в «Мои».
+ *   • Удаление базового рецепта = скрытие (hidden: true), с возможностью
+ *     вернуть через чекбокс «Показать скрытые» на табе «База».
+ *   • Выбор источника сохраняется в localStorage.
  */
-import { CATEGORIES, CATEGORY_LABELS, CONSTANTS, UNIT_LABELS } from '../utils/Constants.js';
+import { CATEGORIES, CATEGORY_LABELS, RECIPE_SOURCES, CONSTANTS, UNIT_LABELS } from '../utils/Constants.js';
 import { Utils } from '../utils/Utils.js';
 import { RecipeStore } from '../stores/RecipeStore.js';
 import { DishStore } from '../stores/DishStore.js';
@@ -32,6 +36,8 @@ const CATEGORY_ORDER = [
 // ---------- Состояние фильтров таба «Рецепты» ----------
 let recipesSearchQuery = '';
 let recipesCategoryFilter = 'all';
+let recipesSourceFilter = loadSourceFilter(); // 'all' | 'my' | 'base'
+let showHiddenBase = loadShowHidden();
 
 // ---------- Контекст открытия таба ----------
 let openedFromChoice = false;
@@ -53,25 +59,61 @@ function loadCollapsedState() {
 function saveCollapsedState() {
   try {
     localStorage.setItem(CONSTANTS.STORAGE_KEYS.RECIPES_COLLAPSED, JSON.stringify(collapsedCategories));
-  } catch (e) {
-    // Если localStorage недоступен — молча игнорируем.
-  }
+  } catch (e) {}
+}
+
+// v5.26: чтение/запись выбранного таба источника.
+function loadSourceFilter() {
+  try {
+    const v = localStorage.getItem(CONSTANTS.STORAGE_KEYS.RECIPES_SOURCE_FILTER);
+    if (v === RECIPE_SOURCES.ALL || v === RECIPE_SOURCES.MY || v === RECIPE_SOURCES.BASE) {
+      return v;
+    }
+  } catch (e) {}
+  return RECIPE_SOURCES.ALL;
+}
+function saveSourceFilter() {
+  try { localStorage.setItem(CONSTANTS.STORAGE_KEYS.RECIPES_SOURCE_FILTER, recipesSourceFilter); } catch (e) {}
+}
+function loadShowHidden() {
+  try { return localStorage.getItem(CONSTANTS.STORAGE_KEYS.RECIPES_SHOW_HIDDEN) === '1'; } catch (e) { return false; }
+}
+function saveShowHidden() {
+  try { localStorage.setItem(CONSTANTS.STORAGE_KEYS.RECIPES_SHOW_HIDDEN, showHiddenBase ? '1' : '0'); } catch (e) {}
 }
 
 // ---------- Заголовок таба со счётчиком ----------
-function updateRecipesTitle(total, found, isFiltered) {
+function updateRecipesTitle(scopedTotal, found, isFiltered) {
   const title = document.getElementById(CONSTANTS.SELECTORS.recipesTitle);
   if (!title) return;
   if (isFiltered) {
-    title.textContent = `📖 Мои рецепты (${found} из ${total})`;
+    title.textContent = `📖 Рецепты (${found} из ${scopedTotal})`;
   } else {
-    title.textContent = `📖 Мои рецепты (${total})`;
+    title.textContent = `📖 Рецепты (${scopedTotal})`;
   }
 }
 
 function updateBackBtnVisibility() {
   const backBtn = document.getElementById(CONSTANTS.SELECTORS.recipesBackBtn);
   if (backBtn) backBtn.hidden = !openedFromChoice;
+}
+
+// Подсветка активного таба источника + видимость чекбокса «Показать скрытые».
+// Чекбокс показывается только на табе «База» — больше ему негде быть.
+function renderSourceTabs() {
+  document.querySelectorAll(CONSTANTS.SELECTORS.recipeSourceTabs).forEach(btn => {
+    const isActive = btn.dataset.source === recipesSourceFilter;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-selected', String(isActive));
+  });
+
+  const showHiddenWrap = document.getElementById(CONSTANTS.SELECTORS.recipesShowHiddenToggleLabel);
+  if (showHiddenWrap) {
+    showHiddenWrap.hidden = recipesSourceFilter !== RECIPE_SOURCES.BASE;
+  }
+
+  const hiddenToggle = document.getElementById(CONSTANTS.SELECTORS.recipesShowHiddenToggle);
+  if (hiddenToggle) hiddenToggle.checked = showHiddenBase;
 }
 
 export function openRecipesTab(fromChoice = false) {
@@ -93,10 +135,25 @@ export function renderRecipesList() {
   const allRecipes = RecipeStore.getAll();
   list.innerHTML = '';
 
+  renderSourceTabs();
+
+  // 1. Отбираем по источнику (Все / Мои / База) и скрытым.
+  //    Везде, кроме «База + показать скрытые», скрытые рецепты
+  //    не показываются.
+  let scoped = allRecipes;
+  if (recipesSourceFilter === RECIPE_SOURCES.MY) {
+    scoped = scoped.filter(r => !r.builtIn);
+  } else if (recipesSourceFilter === RECIPE_SOURCES.BASE) {
+    scoped = scoped.filter(r => r.builtIn && (showHiddenBase || !r.hidden));
+  } else {
+    scoped = scoped.filter(r => !r.hidden);
+  }
+
+  // 2. Поиск и фильтр по категории.
   const query = recipesSearchQuery.trim().toLowerCase();
   const isFiltered = query !== '' || recipesCategoryFilter !== 'all';
 
-  let recipes = allRecipes;
+  let recipes = scoped;
   if (query) {
     recipes = recipes.filter(r => r.name.toLowerCase().includes(query));
   }
@@ -104,12 +161,18 @@ export function renderRecipesList() {
     recipes = recipes.filter(r => (r.category || Utils.guessCategory(r.name)) === recipesCategoryFilter);
   }
 
-  updateRecipesTitle(allRecipes.length, recipes.length, isFiltered);
+  updateRecipesTitle(scoped.length, recipes.length, isFiltered);
 
-  if (allRecipes.length === 0) {
+  if (scoped.length === 0) {
     const empty = document.createElement('div');
     empty.className = 'modal-empty';
-    empty.textContent = '😌 У вас пока нет рецептов. Нажмите «Добавить рецепт».';
+    if (recipesSourceFilter === RECIPE_SOURCES.MY) {
+      empty.textContent = '😌 У вас пока нет своих рецептов. Нажмите «Добавить» — или откройте базовый и сохраните копию.';
+    } else if (recipesSourceFilter === RECIPE_SOURCES.BASE) {
+      empty.textContent = '😌 База пуста. Загрузите её через «Импорт» на этой вкладке.';
+    } else {
+      empty.textContent = '😌 Рецептов пока нет. Добавьте свой или загрузите базу через «Импорт».';
+    }
     list.appendChild(empty);
     return;
   }
@@ -130,8 +193,7 @@ export function renderRecipesList() {
   });
 
   // Устойчивая сортировка: indexOf === -1 → категория неизвестна →
-  // отправляем в конец, чтобы не выпрыгнула над супами. Раньше при
-  // -1 рецепт уезжал в самое начало списка.
+  // отправляем в конец, чтобы не выпрыгнула над супами.
   const sortedCategories = Object.keys(grouped).sort((a, b) => {
     const ia = CATEGORY_ORDER.indexOf(a);
     const ib = CATEGORY_ORDER.indexOf(b);
@@ -185,6 +247,7 @@ export function renderRecipesList() {
     items.forEach(recipe => {
       const li = document.createElement('li');
       li.className = 'recipe-list-item';
+      if (recipe.hidden) li.classList.add('recipe-list-item-hidden');
 
       const nameSpan = document.createElement('span');
       nameSpan.textContent = recipe.name;
@@ -203,11 +266,22 @@ export function renderRecipesList() {
       });
       li.appendChild(nameSpan);
 
+      // Метка «из базы» — чтобы визуально отличать базовые от пользовательских.
+      if (recipe.builtIn) {
+        const badge = document.createElement('span');
+        badge.className = 'recipe-list-badge';
+        badge.textContent = 'база';
+        badge.title = 'Рецепт из базы';
+        li.appendChild(badge);
+      }
+
       const editBtn = document.createElement('button');
       editBtn.textContent = '✎';
       editBtn.className = 'recipe-edit-btn';
-      editBtn.title = 'Редактировать рецепт';
-      editBtn.setAttribute('aria-label', `Редактировать рецепт ${recipe.name}`);
+      editBtn.title = recipe.builtIn
+        ? 'Создать копию в «Моих» и отредактировать'
+        : 'Редактировать рецепт';
+      editBtn.setAttribute('aria-label', editBtn.title);
       editBtn.addEventListener('click', function(e) {
         e.stopPropagation();
         openRecipeForm(recipe.id);
@@ -215,19 +289,20 @@ export function renderRecipesList() {
       li.appendChild(editBtn);
 
       const deleteBtn = document.createElement('button');
-      deleteBtn.textContent = '🗑️';
-      deleteBtn.className = 'recipe-delete-btn';
-      deleteBtn.title = 'Удалить рецепт';
-      deleteBtn.setAttribute('aria-label', `Удалить рецепт ${recipe.name}`);
+      if (recipe.builtIn) {
+        // Для базовых — скрыть/вернуть, не удалять.
+        deleteBtn.textContent = recipe.hidden ? '👁' : '🚫';
+        deleteBtn.className = 'recipe-delete-btn';
+        deleteBtn.title = recipe.hidden ? 'Вернуть в базу' : 'Скрыть из базы';
+      } else {
+        deleteBtn.textContent = '🗑️';
+        deleteBtn.className = 'recipe-delete-btn';
+        deleteBtn.title = 'Удалить рецепт';
+      }
+      deleteBtn.setAttribute('aria-label', deleteBtn.title);
       deleteBtn.addEventListener('click', function(e) {
         e.stopPropagation();
-        const answer = confirm(
-          `Удалить рецепт "${recipe.name}"?\n\n` +
-          `Блюда, которые на него ссылаются, потеряют связь с рецептом.`
-        );
-        if (!answer) return;
-        DishStore.clearRecipeRefs(recipe.id);
-        RecipeStore.remove(recipe.id);
+        handleDeleteOrHide(recipe);
       });
       li.appendChild(deleteBtn);
 
@@ -239,11 +314,35 @@ export function renderRecipesList() {
   });
 }
 
+// Удаление пользовательского рецепта / скрытие базового.
+function handleDeleteOrHide(recipe) {
+  if (recipe.builtIn) {
+    const wasHidden = !!recipe.hidden;
+    const answer = confirm(
+      wasHidden
+        ? `Вернуть рецепт «${recipe.name}» в базу?`
+        : `Скрыть рецепт «${recipe.name}» из базы?\n\n` +
+          `Его можно будет вернуть через «Показать скрытые» на вкладке «База».`
+    );
+    if (!answer) return;
+    RecipeStore.toggleHidden(recipe.id);
+    renderRecipesList();
+    return;
+  }
+
+  const answer = confirm(
+    `Удалить рецепт "${recipe.name}"?\n\n` +
+    `Блюда, которые на него ссылаются, потеряют связь с рецептом.`
+  );
+  if (!answer) return;
+  DishStore.clearRecipeRefs(recipe.id);
+  RecipeStore.remove(recipe.id);
+}
+
 // ============================================================
 // ФОРМА РЕЦЕПТА — ЛОГИКА (v6.3, схема v2)
 // ============================================================
 
-// Обновляет список подсказок для ингредиентов.
 function updateIngredientDatalist() {
   let datalist = document.getElementById('ingredientNamesList');
   if (!datalist) {
@@ -260,7 +359,6 @@ function updateIngredientDatalist() {
   });
 }
 
-// Создаёт одну строку ингредиента: [название] [количество] [единица] [✕].
 function createIngredientRow(ing = {}) {
   const row = document.createElement('div');
   row.className = 'ingredient-row';
@@ -316,7 +414,6 @@ function createIngredientRow(ing = {}) {
   return row;
 }
 
-// Перерисовывает список ингредиентов в форме.
 function renderIngredientRows(ingredients) {
   const container = document.getElementById(CONSTANTS.SELECTORS.recipeIngredientsList);
   if (!container) return;
@@ -330,7 +427,6 @@ function renderIngredientRows(ingredients) {
   });
 }
 
-// Собирает ингредиенты из строк формы в массив объектов.
 function collectIngredientRows() {
   const container = document.getElementById(CONSTANTS.SELECTORS.recipeIngredientsList);
   if (!container) return [];
@@ -351,7 +447,6 @@ function collectIngredientRows() {
   return result;
 }
 
-// Хелпер: парсит число из поля формы. Пустое или мусор → null.
 function parseNumField(value) {
   if (value == null) return null;
   const s = String(value).trim();
@@ -365,9 +460,33 @@ function openRecipeForm(recipeId = null) {
   const overlay = document.getElementById(CONSTANTS.SELECTORS.recipeFormOverlay);
   if (!overlay) return;
 
-  const isEdit = !!recipeId;
-  const recipe = isEdit ? RecipeStore.getById(recipeId) : null;
+  let isEdit = !!recipeId;
+  let recipe = isEdit ? RecipeStore.getById(recipeId) : null;
   if (isEdit && !recipe) { showMessage('Рецепт не найден', 'error'); return; }
+
+  // v5.26: базовый рецепт напрямую не редактируется — предлагаем
+  // создать копию в «Моих» и открыть её. База остаётся эталоном.
+  if (isEdit && recipe.builtIn) {
+    const answer = confirm(
+      `«${recipe.name}» — рецепт из базы.\n\n` +
+      `OK — создать копию в «Моих рецептах» и открыть её для редактирования.\n` +
+      `Отмена — закрыть без изменений.`
+    );
+    if (!answer) return;
+
+    const copy = RecipeStore.cloneFromBase(recipe.id);
+    if (!copy) { showMessage('Не удалось создать копию', 'error'); return; }
+
+    // Переключаемся на «Мои», чтобы пользователь сразу увидел копию.
+    recipesSourceFilter = RECIPE_SOURCES.MY;
+    saveSourceFilter();
+    renderSourceTabs();
+
+    recipeId = copy.id;
+    recipe = copy;
+    isEdit = true;
+    showMessage(`📋 Создана копия «${copy.name}» в «Моих рецептах»`);
+  }
 
   updateIngredientDatalist();
 
@@ -449,7 +568,6 @@ function openRecipeForm(recipeId = null) {
     document.getElementById(CONSTANTS.SELECTORS.recipeFormTitle).textContent = '📝 Новый рецепт';
   }
 
-  // Всегда сворачиваем «Дополнительно» при открытии.
   const details = overlay.querySelector('.recipe-form-details');
   if (details) details.open = false;
 
@@ -467,7 +585,6 @@ export function closeRecipeForm() {
   }
 }
 
-// ---------- Сохранение формы ----------
 function saveRecipeForm() {
   const id = document.getElementById(CONSTANTS.SELECTORS.recipeFormId).value;
   const name = document.getElementById(CONSTANTS.SELECTORS.recipeName).value.trim();
@@ -512,7 +629,6 @@ function saveRecipeForm() {
     allergens.push(cb.dataset.allergen);
   });
 
-  // v5.25: заметка/источник (recipe.comments).
   const commentsInput = document.getElementById(CONSTANTS.SELECTORS.recipeComments);
   const comments = commentsInput ? commentsInput.value.trim() : '';
 
@@ -604,7 +720,6 @@ function applyRecipeParser() {
   showMessage(`✅ Добавлено ингредиентов: ${result.ingredients.length}`);
 }
 
-// ---------- Модалка выбора формата экспорта рецептов ----------
 function openRecipeExportModal() {
   const overlay = document.getElementById(CONSTANTS.SELECTORS.recipeExportOverlay);
   if (!overlay) return;
@@ -626,7 +741,6 @@ function closeRecipeExportModal() {
 // ИНИЦИАЛИЗАЦИЯ ОБРАБОТЧИКОВ ТАБА «РЕЦЕПТЫ»
 // ============================================================
 export function initRecipesHandlers() {
-  // Кнопка «← Назад» — видна только при открытии из «Что приготовить?».
   const backBtn = document.getElementById(CONSTANTS.SELECTORS.recipesBackBtn);
   if (backBtn) {
     backBtn.addEventListener('click', function() {
@@ -640,17 +754,37 @@ export function initRecipesHandlers() {
     });
   }
 
-  // «➕ Добавить» — открыть пустую форму
+  // v5.26: три таба источника рецептов.
+  document.querySelectorAll(CONSTANTS.SELECTORS.recipeSourceTabs).forEach(btn => {
+    btn.addEventListener('click', function() {
+      const next = btn.dataset.source;
+      if (next !== RECIPE_SOURCES.ALL && next !== RECIPE_SOURCES.MY && next !== RECIPE_SOURCES.BASE) return;
+      if (next === recipesSourceFilter) return;
+      recipesSourceFilter = next;
+      saveSourceFilter();
+      renderRecipesList();
+    });
+  });
+
+  // v5.26: чекбокс «Показать скрытые» на табе «База».
+  const hiddenToggle = document.getElementById(CONSTANTS.SELECTORS.recipesShowHiddenToggle);
+  if (hiddenToggle) {
+    hiddenToggle.checked = showHiddenBase;
+    hiddenToggle.addEventListener('change', function() {
+      showHiddenBase = this.checked;
+      saveShowHidden();
+      renderRecipesList();
+    });
+  }
+
   document.getElementById(CONSTANTS.SELECTORS.addRecipeBtn).addEventListener('click', function() {
     openRecipeForm(null);
   });
 
-  // «📤 Экспорт»
   document.getElementById(CONSTANTS.SELECTORS.exportRecipesBtn).addEventListener('click', function() {
     openRecipeExportModal();
   });
 
-  // «📥 Импорт»
   document.getElementById(CONSTANTS.SELECTORS.importRecipesBtn).addEventListener('click', function() {
     document.getElementById(CONSTANTS.SELECTORS.importRecipesFileInput).click();
   });
@@ -662,7 +796,6 @@ export function initRecipesHandlers() {
     }
   });
 
-  // Поиск рецептов
   const searchInput = document.getElementById(CONSTANTS.SELECTORS.recipesSearchInput);
   const debouncedSearch = Utils.debounce(function() {
     recipesSearchQuery = this.value;
@@ -670,17 +803,14 @@ export function initRecipesHandlers() {
   }, 250);
   searchInput.addEventListener('input', debouncedSearch);
 
-  // Фильтр по категории
   document.getElementById(CONSTANTS.SELECTORS.recipesCategoryFilter).addEventListener('change', function() {
     recipesCategoryFilter = this.value;
     renderRecipesList();
   });
 
-  // ---- Кнопки формы рецепта ----
   document.getElementById(CONSTANTS.SELECTORS.recipeFormCancel).addEventListener('click', closeRecipeForm);
   document.getElementById(CONSTANTS.SELECTORS.recipeFormSave).addEventListener('click', saveRecipeForm);
 
-  // «+ Добавить ингредиент» — добавляет пустую строку в конец таблицы.
   document.getElementById(CONSTANTS.SELECTORS.recipeAddIngredientBtn).addEventListener('click', function() {
     const container = document.getElementById(CONSTANTS.SELECTORS.recipeIngredientsList);
     if (!container) return;
@@ -693,10 +823,8 @@ export function initRecipesHandlers() {
     }
   });
 
-  // «🔍 Парсить из текста» — открывает модалку парсера.
   document.getElementById(CONSTANTS.SELECTORS.recipeParseBtn).addEventListener('click', openRecipeParser);
 
-  // ---- Модалка парсера ----
   const parserOverlay = document.getElementById(CONSTANTS.SELECTORS.recipeParserOverlay);
   if (parserOverlay) {
     document.getElementById(CONSTANTS.SELECTORS.recipeParserClose).addEventListener('click', closeRecipeParser);
@@ -707,16 +835,13 @@ export function initRecipesHandlers() {
     });
   }
 
-  // ---- Модалка выбора формата экспорта рецептов ----
   const exportOverlay = document.getElementById(CONSTANTS.SELECTORS.recipeExportOverlay);
   if (exportOverlay) {
     const closeBtn = document.getElementById(CONSTANTS.SELECTORS.recipeExportClose);
     if (closeBtn) closeBtn.addEventListener('click', closeRecipeExportModal);
-
     exportOverlay.addEventListener('click', function(e) {
       if (e.target === this) closeRecipeExportModal();
     });
-
     exportOverlay.querySelectorAll(CONSTANTS.SELECTORS.recipeExportOptions).forEach(btn => {
       btn.addEventListener('click', function() {
         const format = this.dataset.format;
