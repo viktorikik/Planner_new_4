@@ -1,4 +1,9 @@
 <!DOCTYPE html>
+<!--
+  Меню и рецепты · index.html
+  v5.25 (Блок 6): новые категории «Закуска» и «Десерт», поле comments в форме рецепта.
+  CSS: styles.css?v=5.4.9
+-->
 <html lang="ru" data-theme="classic-light">
 <head>
   <meta charset="UTF-8">
@@ -14,9 +19,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Меню и рецепты">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
-  <link rel="stylesheet" href="styles.css?v=5.4.8">
+  <link rel="stylesheet" href="styles.css?v=5.4.9">
 
   <!-- Мгновенное применение темы до отрисовки (фикс мигания) -->
   <script>
@@ -109,7 +114,9 @@
         <option value="soup">Супы</option>
         <option value="salad">Салаты</option>
         <option value="main">Основные</option>
+        <option value="appetizer">Закуски</option>
         <option value="bakery">Выпечка</option>
+        <option value="dessert">Десерты</option>
         <option value="other">Другое</option>
       </select>
     </section>
@@ -154,7 +161,9 @@
           <option value="soup">Супы</option>
           <option value="salad">Салаты</option>
           <option value="main">Основные</option>
+          <option value="appetizer">Закуски</option>
           <option value="bakery">Выпечка</option>
+          <option value="dessert">Десерты</option>
           <option value="other">Другое</option>
         </select>
       </div>
@@ -243,7 +252,9 @@
         <option value="soup">🍲 Суп</option>
         <option value="salad">🥗 Салат</option>
         <option value="main">🍖 Основное</option>
+        <option value="appetizer">🥪 Закуска</option>
         <option value="bakery">🥐 Выпечка</option>
+        <option value="dessert">🍰 Десерт</option>
         <option value="other">🍽️ Другое</option>
       </select>
     </div>
@@ -305,7 +316,9 @@
         <option value="soup">🍲 Суп</option>
         <option value="salad">🥗 Салат</option>
         <option value="main">🍖 Основное</option>
+        <option value="appetizer">🥪 Закуска</option>
         <option value="bakery">🥐 Выпечка</option>
+        <option value="dessert">🍰 Десерт</option>
         <option value="other">🍽️ Другое</option>
       </select>
     </div>
@@ -442,7 +455,9 @@
         <option value="soup">🍲 Супы</option>
         <option value="salad">🥗 Салаты</option>
         <option value="main">🍖 Основное</option>
+        <option value="appetizer">🥪 Закуски</option>
         <option value="bakery">🥐 Выпечка</option>
+        <option value="dessert">🍰 Десерты</option>
         <option value="other">🍽️ Другое</option>
       </select>
     </div>
@@ -569,7 +584,9 @@
           <option value="soup">🍲 Суп</option>
           <option value="salad">🥗 Салат</option>
           <option value="main">🍖 Основное</option>
+          <option value="appetizer">🥪 Закуска</option>
           <option value="bakery">🥐 Выпечка</option>
+          <option value="dessert">🍰 Десерт</option>
           <option value="other">🍽️ Другое</option>
         </select>
       </div>
@@ -761,6 +778,14 @@
             <input type="number" id="recipeNutritionFat" placeholder="жиры" min="0" step="any" inputmode="decimal">
             <input type="number" id="recipeNutritionCarbs" placeholder="углеводы" min="0" step="any" inputmode="decimal">
           </div>
+        </div>
+
+        <!-- v5.25 (Блок 6): комментарий/источник.
+             Хранится в recipe.comments. Отображается в карточке рецепта
+             внизу, под инструкцией. URL автолинкуется. -->
+        <div class="form-group">
+          <label for="recipeComments">Заметка или источник</label>
+          <textarea id="recipeComments" rows="2" placeholder="Ссылка на оригинал, пометка…"></textarea>
         </div>
 
       </div>
