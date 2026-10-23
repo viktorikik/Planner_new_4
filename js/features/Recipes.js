@@ -1,3 +1,12 @@
+/**
+ * Recipes — таб «Рецепты»: список, форма v2, парсер ингредиентов,
+ * экспорт/импорт рецептов.
+ * Зависит от: Constants, Utils, RecipeStore, DishStore, Renderer,
+ *             notifications, focusTrap, ExportImport.
+ *
+ * v5.25 (Блок 6): категории «Закуска» и «Десерт» в порядке сортировки.
+ * Неизвестные категории отправляются в конец списка, а не в начало.
+ */
 import { CATEGORIES, CATEGORY_LABELS, CONSTANTS, UNIT_LABELS } from '../utils/Constants.js';
 import { Utils } from '../utils/Utils.js';
 import { RecipeStore } from '../stores/RecipeStore.js';
@@ -6,6 +15,19 @@ import { Renderer } from '../ui/Renderer.js';
 import { showMessage } from '../utils/notifications.js';
 import { trapFocus } from '../utils/focusTrap.js';
 import { exportRecipesAsJson, exportRecipesAsTxt, importRecipesOnly } from './ExportImport.js';
+
+// Порядок категорий в табе «Рецепты». Повторяет визуальный порядок
+// в index.html и ExportImport.categoryOrder. При добавлении новой
+// категории — правится здесь и в Constants.
+const CATEGORY_ORDER = [
+  CATEGORIES.SOUP,
+  CATEGORIES.SALAD,
+  CATEGORIES.MAIN,
+  CATEGORIES.APPETIZER,
+  CATEGORIES.BAKERY,
+  CATEGORIES.DESSERT,
+  CATEGORIES.OTHER
+];
 
 // ---------- Состояние фильтров таба «Рецепты» ----------
 let recipesSearchQuery = '';
@@ -107,9 +129,13 @@ export function renderRecipesList() {
     grouped[cat].push(recipe);
   });
 
-  const categoryOrder = [CATEGORIES.SOUP, CATEGORIES.SALAD, CATEGORIES.MAIN, CATEGORIES.BAKERY, CATEGORIES.OTHER];
+  // Устойчивая сортировка: indexOf === -1 → категория неизвестна →
+  // отправляем в конец, чтобы не выпрыгнула над супами. Раньше при
+  // -1 рецепт уезжал в самое начало списка.
   const sortedCategories = Object.keys(grouped).sort((a, b) => {
-    return categoryOrder.indexOf(a) - categoryOrder.indexOf(b);
+    const ia = CATEGORY_ORDER.indexOf(a);
+    const ib = CATEGORY_ORDER.indexOf(b);
+    return (ia === -1 ? CATEGORY_ORDER.length : ia) - (ib === -1 ? CATEGORY_ORDER.length : ib);
   });
 
   const forceExpand = isFiltered;
@@ -245,7 +271,7 @@ function createIngredientRow(ing = {}) {
   nameInput.placeholder = 'Название';
   nameInput.value = ing.name || '';
   nameInput.setAttribute('aria-label', 'Название ингредиента');
-  nameInput.setAttribute('list', 'ingredientNamesList'); // <-- Подключаем автодополнение
+  nameInput.setAttribute('list', 'ingredientNamesList');
   row.appendChild(nameInput);
 
   const amountInput = document.createElement('input');
@@ -343,7 +369,7 @@ function openRecipeForm(recipeId = null) {
   const recipe = isEdit ? RecipeStore.getById(recipeId) : null;
   if (isEdit && !recipe) { showMessage('Рецепт не найден', 'error'); return; }
 
-  updateIngredientDatalist(); // Обновляем подсказки перед открытием
+  updateIngredientDatalist();
 
   const idField       = document.getElementById(CONSTANTS.SELECTORS.recipeFormId);
   const nameInput     = document.getElementById(CONSTANTS.SELECTORS.recipeName);
@@ -361,6 +387,7 @@ function openRecipeForm(recipeId = null) {
   const proteinInput  = document.getElementById(CONSTANTS.SELECTORS.recipeNutritionProtein);
   const fatInput      = document.getElementById(CONSTANTS.SELECTORS.recipeNutritionFat);
   const carbsInput    = document.getElementById(CONSTANTS.SELECTORS.recipeNutritionCarbs);
+  const commentsInput = document.getElementById(CONSTANTS.SELECTORS.recipeComments);
 
   if (isEdit) {
     idField.value = recipe.id;
@@ -379,6 +406,8 @@ function openRecipeForm(recipeId = null) {
     proteinInput.value = (n.protein != null) ? n.protein : '';
     fatInput.value = (n.fat != null) ? n.fat : '';
     carbsInput.value = (n.carbs != null) ? n.carbs : '';
+
+    if (commentsInput) commentsInput.value = recipe.comments || '';
 
     const types = Array.isArray(recipe.mealTypes) ? recipe.mealTypes : [];
     mtGroup.querySelectorAll('input[type=checkbox]').forEach(cb => {
@@ -409,6 +438,8 @@ function openRecipeForm(recipeId = null) {
     proteinInput.value = '';
     fatInput.value = '';
     carbsInput.value = '';
+
+    if (commentsInput) commentsInput.value = '';
 
     mtGroup.querySelectorAll('input[type=checkbox]').forEach(cb => { cb.checked = false; });
     alGroup.querySelectorAll('input[type=checkbox]').forEach(cb => { cb.checked = false; });
@@ -481,6 +512,10 @@ function saveRecipeForm() {
     allergens.push(cb.dataset.allergen);
   });
 
+  // v5.25: заметка/источник (recipe.comments).
+  const commentsInput = document.getElementById(CONSTANTS.SELECTORS.recipeComments);
+  const comments = commentsInput ? commentsInput.value.trim() : '';
+
   const extra = {
     servings,
     cookTime,
@@ -490,7 +525,8 @@ function saveRecipeForm() {
     cuisine,
     allergens,
     mealTypes,
-    nutrition
+    nutrition,
+    comments
   };
 
   if (id) {
@@ -542,25 +578,21 @@ function applyRecipeParser() {
   const container = document.getElementById(CONSTANTS.SELECTORS.recipeIngredientsList);
   if (!container) { closeRecipeParser(); return; }
 
-  // Убираем пустые строки перед добавлением новых.
   container.querySelectorAll('.ingredient-row').forEach(row => {
     const nameVal = row.querySelector('.ingredient-name').value.trim();
     if (!nameVal) row.remove();
   });
 
-  // Умная унификация имён на основе существующих рецептов
   const uniqueNamesMap = RecipeStore.getUniqueIngredientNames();
 
-  // Добавляем распознанные строки.
   result.ingredients.forEach(ing => {
     const norm = ing.name.toLowerCase().replace(/ё/g, 'е');
     if (uniqueNamesMap.has(norm)) {
-      ing.name = uniqueNamesMap.get(norm); // Заменяем на эталонное имя
+      ing.name = uniqueNamesMap.get(norm);
     }
     container.appendChild(createIngredientRow(ing));
   });
 
-  // Если поле «Название» пустое и парсер нашёл заголовок — подставляем.
   const nameInput = document.getElementById(CONSTANTS.SELECTORS.recipeName);
   if (result.title && nameInput && !nameInput.value.trim()) {
     nameInput.value = result.title;
@@ -653,7 +685,6 @@ export function initRecipesHandlers() {
     const container = document.getElementById(CONSTANTS.SELECTORS.recipeIngredientsList);
     if (!container) return;
     container.appendChild(createIngredientRow());
-    // Фокус — на новую строку, в поле названия.
     const rows = container.querySelectorAll('.ingredient-row');
     const last = rows[rows.length - 1];
     if (last) {
