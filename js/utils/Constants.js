@@ -25,6 +25,16 @@ export const CATEGORY_LABELS = {
   [CATEGORIES.OTHER]:     '🍽️ Другое'
 };
 
+// Источник рецептов (v5.26, Блок 6): «Все» / «Мои» / «База».
+// Используется в табе «Рецепты» и в фильтре экрана «Что приготовить?».
+// Базовые рецепты приходят из recipes.json с builtIn: true,
+// пользовательские — builtIn: false.
+export const RECIPE_SOURCES = {
+  ALL: 'all',
+  MY: 'my',
+  BASE: 'base'
+};
+
 // Приёмы пищи (v4.0)
 export const MEAL_TYPES = {
   BREAKFAST: 'breakfast',
@@ -223,7 +233,11 @@ export const CONSTANTS = {
     DISHES: 'smartMenuDishes_v5',
     THEME: 'mealPlannerTheme',
     ONBOARDING_SHOWN: 'smartMenuOnboardingShown_v1',
-    RECIPES_COLLAPSED: 'smartMenuRecipesCollapsed_v1'
+    RECIPES_COLLAPSED: 'smartMenuRecipesCollapsed_v1',
+    // v5.26: таб «Все · Мои · База» и чекбокс «Показать скрытые».
+    // Запоминаем выбор, чтобы после перезагрузки вернуться туда же.
+    RECIPES_SOURCE_FILTER: 'smartMenuRecipesSourceFilter_v1',
+    RECIPES_SHOW_HIDDEN: 'smartMenuRecipesShowHidden_v1'
   },
   EVENTS: {
     DISHES_CHANGED: 'dishes:changed',
@@ -285,6 +299,10 @@ export const CONSTANTS = {
     recipesTitle: 'recipesTitle',
     recipesBackBtn: 'recipesBackBtn',
     recipesList: 'recipesList',
+    // v5.26: табы источника рецептов + чекбокс «Показать скрытые»
+    recipeSourceTabs: '.recipe-source-tab',
+    recipesShowHiddenToggle: 'recipesShowHiddenToggle',
+    recipesShowHiddenToggleLabel: 'recipesShowHiddenToggleLabel',
     addRecipeBtn: 'addRecipeBtn',
     exportRecipesBtn: 'exportRecipesBtn',
     importRecipesBtn: 'importRecipesBtn',
@@ -358,6 +376,9 @@ export const CONSTANTS = {
     onboardingPrev: 'onboardingPrev',
     onboardingNext: 'onboardingNext',
     onboardingSkip: 'onboardingSkip',
-    onboardingClose: 'onboardingClose'
+    onboardingClose: 'onboardingClose',
+    // v5.26: источник рецептов в «Что приготовить?»
+    choiceRecipesSourceWrap: 'choiceRecipesSourceWrap',
+    choiceRecipesSourceChips: 'choiceRecipesSourceChips'
   }
 };
