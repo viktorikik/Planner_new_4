@@ -1,18 +1,12 @@
 /* ============================================================
    Меню и рецепты · styles.css
-   v5.4.9 (Блок 6, v5.25):
-     • Добавлены категории «Закуска» и «Десерт» — переменные
-       --color-appetizer, --color-dessert во всех темах.
-     • Раздел 43 — аккордеон в карточке рецепта.
-     • Раздел 44 — блок «Заметка» (recipe.comments).
+   v5.4.12 (Блок 6, v5.28):
+     • Фикс белой заливки чекбоксов и лейблов на iOS при тапе/фокусе.
+     • Фикс наложения бейджа «база» и кнопок в списке рецептов.
+     • Убрана обводка (outline) при клике на название рецепта.
+     • Ранее (v5.4.11): аккордеон-панели, фикс «вспышки» кнопок.
 
    1. ПЕРЕМЕННЫЕ — ТЕМЫ ОФОРМЛЕНИЯ (v5.15, Блок 4 · 4.1–4.3)
-   Тема применяется через data-theme на <html>:
-     • classic-light — светлая классическая (по умолчанию)
-     • classic-dark  — тёмная классическая
-     • brand-light   — бренд-светлая (канал «Ещё одна галочка»)
-     • brand-dark    — бренд-тёмная
-   :root держит светлые значения как fallback до применения JS.
    ============================================================ */
 :root,
 [data-theme="classic-light"] {
@@ -48,9 +42,9 @@
   --color-soup: #b87830;
   --color-salad: #5a8a63;
   --color-main: #c44a3d;
-  --color-appetizer: #4a7a8a; /* v5.25: Закуска */
+  --color-appetizer: #4a7a8a;
   --color-bakery: #a86a2c;
-  --color-dessert: #a0427d;   /* v5.25: Десерт */
+  --color-dessert: #a0427d;
   --search-bg: #ffffff;
   --search-border: #d9cfc2;
 
@@ -112,9 +106,9 @@
   --color-soup: #e0b365;
   --color-salad: #8dc19a;
   --color-main: #e88578;
-  --color-appetizer: #6fa0b0; /* v5.25: Закуска */
+  --color-appetizer: #6fa0b0;
   --color-bakery: #d9a558;
-  --color-dessert: #d07aab;   /* v5.25: Десерт */
+  --color-dessert: #d07aab;
   --search-bg: rgba(50, 42, 35, 0.6);
   --search-border: rgba(255, 240, 220, 0.1);
   --card-bg: rgba(45, 38, 32, 0.7);
@@ -128,15 +122,8 @@
 
 /* ============================================================
    1b. БРЕНД-ПАЛИТРА (Блок 4 · подэтап 4.2)
-   Источник: визуальный стиль канала «Ещё одна галочка».
-   Молочный #F4EBDD, графит #292724, лайм #DCEB32,
-   коралл #F27691, шалфей #687B59.
-   Размеры, радиусы, тени-смещения и transition — наследуются
-   из :root, здесь только цвета и цветовые производные.
    ============================================================ */
-
 [data-theme="brand-light"] {
-  /* ---- Фоны ---- */
   --bg-primary: #F4EBDD;
   --bg-app: #FFFAF1;
   --bg-app-border: rgba(41, 39, 36, 0.10);
@@ -152,47 +139,37 @@
   --menu-item-bg: #F8F0DF;
   --week-row-bg: rgba(255, 250, 241, 0.85);
 
-  /* ---- Текст ---- */
   --text-primary: #292724;
   --text-secondary: #4A4439;
   --text-muted: #756F65;
   --modal-text: #292724;
 
-  /* ---- Тени ---- */
   --shadow: 0 20px 40px -12px rgba(41, 39, 36, 0.18);
 
-  /* ---- Кнопки ---- */
   --btn-bg: #292724;
   --btn-text: #DCEB32;
 
-  /* ---- Мелкие подложки ---- */
   --badge-bg: rgba(41, 39, 36, 0.05);
   --empty-border: rgba(41, 39, 36, 0.08);
   --day-hover: rgba(41, 39, 36, 0.05);
   --suggest-item-bg: rgba(41, 39, 36, 0.04);
   --rec-item-bg: rgba(41, 39, 36, 0.04);
 
-  /* ---- Оверлей модалок ---- */
   --modal-overlay: rgba(41, 39, 36, 0.5);
 
-  /* ---- Статусы ---- */
   --planned-color: #A86A2C;
   --done-color: #687B59;
   --liked-color: #F27691;
   --planned-bg: rgba(168, 106, 44, 0.12);
   --done-bg: rgba(104, 123, 89, 0.15);
 
-  /* ---- Цвета категорий ---- */
   --color-soup: #A0404F;
   --color-salad: #687B59;
   --color-main: #C25A3A;
-  --color-appetizer: #4A6B7A; /* v5.25: Закуска */
+  --color-appetizer: #4A6B7A;
   --color-bakery: #8B6914;
-  --color-dessert: #B0426A;   /* v5.25: Десерт */
+  --color-dessert: #B0426A;
 
-  /* ---- Акцент ---- */
-  /* accent-color = графит (текст/границы/focus), accent-text = лайм
-     (текст на графит-кнопке), accent-light = лайм-подложка. */
   --accent-color: #292724;
   --accent-hover: #3A3632;
   --accent-light: rgba(220, 235, 50, 0.22);
@@ -201,7 +178,6 @@
 }
 
 [data-theme="brand-dark"] {
-  /* ---- Фоны ---- */
   --bg-primary: #1A1816;
   --bg-app: rgba(41, 39, 36, 0.95);
   --bg-app-border: rgba(244, 235, 221, 0.06);
@@ -217,47 +193,37 @@
   --menu-item-bg: rgba(60, 56, 50, 0.5);
   --week-row-bg: rgba(60, 56, 50, 0.5);
 
-  /* ---- Текст ---- */
   --text-primary: #F4EBDD;
   --text-secondary: #D9CFC2;
   --text-muted: #948880;
   --modal-text: #F4EBDD;
 
-  /* ---- Тени ---- */
   --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75);
 
-  /* ---- Кнопки ---- */
   --btn-bg: #DCEB32;
   --btn-text: #292724;
 
-  /* ---- Мелкие подложки ---- */
   --badge-bg: rgba(244, 235, 221, 0.05);
   --empty-border: rgba(244, 235, 221, 0.03);
   --day-hover: rgba(244, 235, 221, 0.05);
   --suggest-item-bg: rgba(80, 75, 65, 0.4);
   --rec-item-bg: rgba(80, 75, 65, 0.4);
 
-  /* ---- Оверлей модалок ---- */
   --modal-overlay: rgba(0, 0, 0, 0.75);
 
-  /* ---- Статусы ---- */
   --planned-color: #D9A558;
   --done-color: #8DC19A;
   --liked-color: #F89BAF;
   --planned-bg: rgba(217, 165, 88, 0.14);
   --done-bg: rgba(141, 193, 154, 0.14);
 
-  /* ---- Цвета категорий ---- */
   --color-soup: #E88A9A;
   --color-salad: #8DC19A;
   --color-main: #E88578;
-  --color-appetizer: #8DB8C8; /* v5.25: Закуска */
+  --color-appetizer: #8DB8C8;
   --color-bakery: #D9A558;
-  --color-dessert: #E0A0C8;   /* v5.25: Десерт */
+  --color-dessert: #E0A0C8;
 
-  /* ---- Акцент ---- */
-  /* В тёмной бренд-теме accent-color = лайм (текст, границы, фон
-     кнопок). accent-text = графит — текст на лайм-кнопке. */
   --accent-color: #DCEB32;
   --accent-hover: #C7D42A;
   --accent-light: rgba(220, 235, 50, 0.15);
@@ -265,8 +231,6 @@
   --accent-shadow: rgba(0, 0, 0, 0.4);
 }
 
-/* Указываем браузеру, что тёмные темы — это тёмный интерфейс.
-   Раньше дублировалось два раза — оставил один. */
 [data-theme="classic-dark"],
 [data-theme="brand-dark"] {
   color-scheme: dark;
@@ -331,22 +295,20 @@ textarea:focus-visible {
   margin: 0 auto;
 }
 
-/* Глобальный тактильный отклик для всех кнопок */
 button:active:not(:disabled),
 .btn:active:not(:disabled) {
   transform: scale(0.96) !important;
   transition: transform 0.05s ease !important;
 }
 
-/* v5.27: убираем системную «вспышку» при тапе на кнопки и лейблы.
-   Иначе на мобильных кнопка на мгновение становится светлой — это и
-   было видно как «белый фон» в некоторых темах. */
+/* v5.28: убираем системную вспышку при тапе */
 button,
 .btn,
 .meal-type-checkbox,
 .choice-favorite-toggle,
 .recipes-show-hidden-toggle,
-.recipe-source-tab {
+.recipe-source-tab,
+.recipe-name-clickable {
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -529,8 +491,6 @@ button,
   border-color: var(--accent-color);
 }
 
-/* Специфичность поднята, чтобы перебить `.add-modal .form-group input`
-   из раздела 15 — иначе appearance убивался и чекбокс превращался в круг. */
 .add-modal .form-group .meal-types-group .meal-type-checkbox input[type="checkbox"],
 .add-modal .form-group .allergens-group .meal-type-checkbox input[type="checkbox"],
 .meal-types-group .meal-type-checkbox input[type="checkbox"],
@@ -561,16 +521,23 @@ button,
   box-shadow: 0 0 0 3px var(--accent-light);
 }
 
-/* v5.27: мягкое выделение вместо инверсии (accent-text на accent-color).
-   В брендовых темах accent-color сам яркий (лайм), инверсия читалась
-   плохо. accent-light + accent-color работает предсказуемо во всех
-   четырёх темах. */
-.meal-type-checkbox:has(input:checked) {
+/* v5.28: отключаем белый фон iOS при тапе и фокусе */
+.meal-type-checkbox:focus-within,
+.recipes-show-hidden-toggle:focus-within,
+.choice-favorite-toggle:focus-within {
+  background: var(--input-bg);
+  outline: none;
+}
+
+/* Мягкое выделение выбранных чекбоксов */
+.meal-type-checkbox:has(input:checked),
+.meal-type-checkbox:has(input:checked):focus-within {
   background: var(--accent-light);
   border-color: var(--accent-color);
   color: var(--accent-color);
   font-weight: 600;
 }
+
 .meal-type-checkbox span {
   line-height: 1.3;
 }
@@ -739,10 +706,6 @@ button,
   margin-bottom: 2px;
 }
 
-/* Статус дня — тонкая полоска внизу клетки, а не заливка.
-   Зелёная = есть приготовленные, оранжевая = есть запланированные,
-   двухцветная = и то, и другое. Цвет цифры и фон клетки больше
-   не зависят от статуса — их несёт только «сегодня». */
 .day-cell.has-done::after,
 .day-cell.has-planned::after,
 .day-cell.has-both::after {
@@ -1460,7 +1423,6 @@ button,
 .add-modal .modal {
   max-width: 400px;
 }
-/* Модалка формы рецепта — шире обычной: там таблица ингредиентов, сетки полей. */
 .add-modal .modal.recipe-form-modal {
   max-width: 540px;
 }
@@ -1661,7 +1623,6 @@ button,
   gap: 8px;
 }
 
-/* ===== Выбор источника: «Из моего меню» / «Из рецептов» (v5.11) ===== */
 .choice-source-group {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1806,7 +1767,8 @@ button,
   margin: 0;
 }
 
-.choice-favorite-toggle:has(input:checked) {
+.choice-favorite-toggle:has(input:checked),
+.choice-favorite-toggle:has(input:checked):focus-within {
   background: var(--accent-light);
   border-color: var(--accent-color);
   color: var(--accent-color);
@@ -2077,7 +2039,6 @@ button,
   min-width: 0;
 }
 
-/* Контейнер бейджей под заголовком: категория + кухня */
 .recipe-view-badges {
   display: flex;
   flex-wrap: wrap;
@@ -2085,7 +2046,6 @@ button,
   align-items: center;
 }
 
-/* Бейдж кухни. Формат — как у бейджа категории, но нейтрального цвета. */
 .recipe-cuisine-badge {
   display: inline-block;
   padding: 3px 10px;
@@ -2132,7 +2092,6 @@ button,
 .recipe-category-badge.category-soup      { color: var(--color-soup);      border-color: var(--color-soup); }
 .recipe-category-badge.category-salad     { color: var(--color-salad);     border-color: var(--color-salad); }
 .recipe-category-badge.category-main      { color: var(--color-main);      border-color: var(--color-main); }
-/* v5.25: новые категории */
 .recipe-category-badge.category-appetizer { color: var(--color-appetizer); border-color: var(--color-appetizer); }
 .recipe-category-badge.category-bakery    { color: var(--color-bakery);    border-color: var(--color-bakery); }
 .recipe-category-badge.category-dessert   { color: var(--color-dessert);   border-color: var(--color-dessert); }
@@ -2254,7 +2213,6 @@ button,
    20. ТАБ «РЕЦЕПТЫ» — ПАНЕЛЬ, ФИЛЬТРЫ, СПИСОК
    ============================================================ */
 .recipes-tab {
-  /* контейнер таба — весь отступ уже даёт .app */
 }
 .recipes-tab-header {
   margin-bottom: 16px;
@@ -2267,7 +2225,6 @@ button,
   margin: 0;
 }
 
-/* v5.26: табы источника рецептов (Все · Мои · База) */
 .recipes-source-tabs {
   display: flex;
   gap: 4px;
@@ -2304,7 +2261,6 @@ button,
   outline-offset: 2px;
 }
 
-/* v5.26: чекбокс «Показать скрытые» — виден только на табе «База» */
 .recipes-show-hidden-toggle {
   display: flex;
   align-items: center;
@@ -2402,13 +2358,6 @@ button,
   box-shadow: 0 6px 20px var(--accent-shadow);
   filter: brightness(1.05);
 }
-.recipes-toolbar > .btn-done:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px var(--accent-shadow);
-  filter: brightness(1.05);
-}
-/* v5.27: :active — «вдавливание» вместо вспышки цвета. Специфичность
-   выше глобального `button:active`, поэтому scale переопределяем тоже. */
 .recipes-toolbar > .btn-done:active {
   transform: scale(0.97) translateY(0);
   filter: brightness(0.9);
@@ -2441,7 +2390,6 @@ button,
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
 }
 
-/* Фильтры «Мои рецепты» */
 .recipes-filters {
   display: flex;
   flex-wrap: wrap;
@@ -2477,7 +2425,6 @@ button,
   box-shadow: 0 0 0 3px var(--accent-light);
 }
 
-/* Список рецептов с группировкой */
 .recipe-category-section {
   margin-bottom: 12px;
 }
@@ -2561,10 +2508,12 @@ button,
   margin: 0;
 }
 
+/* v5.28: фикс наложения элементов в строке рецепта */
 .recipe-list-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 6px;
   padding: 8px 12px;
   border-bottom: 1px solid var(--cell-border);
   border-radius: var(--radius-sm);
@@ -2592,14 +2541,32 @@ button,
   border-radius: 4px;
 }
 
+/* Убираем обводку при клике на название рецепта (оставляем только для Tab) */
+.recipe-name-clickable:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.recipe-list-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--accent-light);
+  color: var(--accent-color);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .recipe-edit-btn {
   background: none;
   border: none;
-  font-size: 16px;
+  font-size: 14px;
   cursor: pointer;
   color: var(--text-muted);
   transition: var(--transition-fast);
   padding: 0 6px;
+  flex-shrink: 0;
 }
 .recipe-edit-btn:hover {
   color: var(--text-primary);
@@ -2609,11 +2576,12 @@ button,
 .recipe-delete-btn {
   background: none;
   border: none;
-  font-size: 16px;
+  font-size: 14px;
   cursor: pointer;
   color: var(--text-muted);
   transition: var(--transition-fast);
   padding: 0 6px;
+  flex-shrink: 0;
 }
 .recipe-delete-btn:hover {
   color: #e55a5a;
@@ -2624,7 +2592,6 @@ button,
    21. ТАБ «ПОКУПКИ»
    ============================================================ */
 .shopping-tab {
-  /* контейнер таба — весь отступ уже даёт .app */
 }
 .shopping-tab-title {
   font-size: 22px;
@@ -4302,8 +4269,6 @@ body {
 /* ============================================================
    40. ФОРМА РЕЦЕПТА v2 (v6.3)
    ============================================================ */
-
-/* Двухколоночные строки формы: «Категория + Кухня», «Время + Активное» и т.п. */
 .add-modal .recipe-form-modal .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -4314,7 +4279,6 @@ body {
   margin-bottom: 0;
 }
 
-/* ---- Таблица ингредиентов ---- */
 .add-modal .recipe-form-modal .ingredients-list {
   display: flex;
   flex-direction: column;
@@ -4329,9 +4293,6 @@ body {
   align-items: center;
 }
 
-/* Поля ингредиента. Специфичность поднята, чтобы перебить
-   `.add-modal .form-group input` из раздела 15 — иначе padding и
-   font-size 15px ломают сетку. */
 .add-modal .recipe-form-modal .ingredient-row input,
 .add-modal .recipe-form-modal .ingredient-row select {
   width: 100%;
@@ -4379,7 +4340,6 @@ body {
   outline-offset: 2px;
 }
 
-/* Кнопки под таблицей: «+ Добавить ингредиент» / «🔍 Парсить из текста» */
 .add-modal .recipe-form-modal .ingredients-actions {
   display: flex;
   flex-wrap: wrap;
@@ -4409,7 +4369,6 @@ body {
   outline-offset: 2px;
 }
 
-/* ---- Свёрнутый блок «Дополнительно» ---- */
 .add-modal .recipe-form-modal .recipe-form-details {
   margin-bottom: 16px;
   padding: 0;
@@ -4467,7 +4426,6 @@ body {
   background: rgba(255, 255, 255, 0.04);
 }
 
-/* ---- Аллергены (сетка, как приёмы пищи) ---- */
 .add-modal .recipe-form-modal .allergens-group {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -4475,7 +4433,6 @@ body {
   margin-top: 4px;
 }
 
-/* ---- КБЖУ на 1 порцию: 4 поля в строку ---- */
 .add-modal .recipe-form-modal .nutrition-row {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr;
@@ -4501,7 +4458,6 @@ body {
   box-shadow: 0 0 0 3px var(--accent-light);
 }
 
-/* ---- Мобильная адаптация формы рецепта ---- */
 @media (max-width: 480px) {
   .add-modal .recipe-form-modal .form-row {
     grid-template-columns: 1fr;
@@ -4535,8 +4491,6 @@ body {
 /* ============================================================
    41. КАРТОЧКА РЕЦЕПТА v2 (v6.5)
    ============================================================ */
-
-/* ---- Калькулятор порций ---- */
 .recipe-view-modal .recipe-servings-row {
   display: flex;
   align-items: center;
@@ -4595,7 +4549,6 @@ body {
   color: var(--text-primary);
 }
 
-/* ---- Блок КБЖУ ---- */
 .recipe-view-modal .recipe-nutrition {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -4633,7 +4586,6 @@ body {
   margin-bottom: 16px;
 }
 
-/* ---- Время ---- */
 .recipe-view-modal .recipe-times {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -4663,7 +4615,6 @@ body {
   color: var(--text-primary);
 }
 
-/* ---- Шкалы: сложность, острота ---- */
 .recipe-view-modal .recipe-scales {
   display: flex;
   flex-direction: column;
@@ -4712,7 +4663,6 @@ body {
   flex: 1 1 auto;
 }
 
-/* ---- Аллергены ---- */
 .recipe-view-modal .recipe-allergens {
   padding: 12px 16px;
   margin-bottom: 16px;
@@ -4757,7 +4707,6 @@ body {
   border-color: rgba(216, 120, 90, 0.35);
 }
 
-/* ---- Оценки 👍/👎 в карточке рецепта (v6.5) ---- */
 .recipe-view-thumbs {
   display: flex;
   align-items: center;
@@ -4801,7 +4750,6 @@ body {
   outline-offset: 2px;
 }
 
-/* ---- Мобильная адаптация карточки рецепта ---- */
 @media (max-width: 480px) {
   .recipe-view-modal .recipe-nutrition {
     grid-template-columns: repeat(2, 1fr);
@@ -4856,9 +4804,6 @@ body {
 
 /* ============================================================
    42. МОДАЛКА «ОФОРМЛЕНИЕ» (Блок 4 · подэтап 4.3)
-   Плитки-превью: фон темы + «кнопка» в её акцентном цвете.
-   Цвета плитки задаются inline в JS (main.js → buildThemeTiles),
-   чтобы превью не зависело от активной темы.
    ============================================================ */
 .theme-modal .modal {
   max-width: 480px;
@@ -4986,13 +4931,6 @@ body {
 
 /* ============================================================
    43. АККОРДЕОН В КАРТОЧКЕ РЕЦЕПТА (v5.25 → v5.27)
-
-   v5.25: базовая реализация через <details>/<summary>.
-   v5.27: заголовок стал явной «панелью-кнопкой» (фон, рамка, hover),
-   chevron — SVG в круглой подложке 28×28. Закрыто: стрелка вправо
-   (−90°), открыто: вниз (0°). При open summary подсвечивается
-   accent-light + accent-color — без инверсии accent-text на accent-color,
-   чтобы в брендовых темах не было резкого контраста.
    ============================================================ */
 .recipe-view-modal .recipe-accordion > summary.recipe-section-title {
   margin: 0 0 8px 0;
@@ -5026,14 +4964,12 @@ body {
   border-color: var(--accent-color);
 }
 
-/* Текст заголовка занимает всю доступную ширину — chevron уходит вправо. */
 .recipe-view-modal .recipe-accordion-text {
   flex: 1 1 auto;
   min-width: 0;
   word-break: break-word;
 }
 
-/* Круглая подложка с SVG-стрелкой. */
 .recipe-view-modal .recipe-accordion-chevron {
   display: inline-flex;
   align-items: center;
@@ -5045,19 +4981,14 @@ body {
   background: var(--accent-light);
   color: var(--accent-color);
   transition: transform var(--transition-fast);
-  transform: rotate(-90deg); /* закрыто — смотрит вправо */
+  transform: rotate(-90deg);
 }
 .recipe-view-modal .recipe-accordion[open] .recipe-accordion-chevron {
-  transform: rotate(0deg); /* открыто — смотрит вниз */
+  transform: rotate(0deg);
 }
 
 /* ============================================================
    44. БЛОК «ЗАМЕТКА» В КАРТОЧКЕ РЕЦЕПТА (v5.25, Блок 6)
-
-   Показывает recipe.comments, если поле непустое. Ссылки внутри
-   текста автолинкуются в Renderer, стилизуем их отдельно.
-   Блок не участвует в разделителе .recipe-section (нет бордера
-   снизу) — он завершает карточку перед кнопками.
    ============================================================ */
 .recipe-view-modal .recipe-comments {
   margin: 16px 0;
