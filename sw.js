@@ -6,7 +6,7 @@
 // При обновлении приложения всегда тянет свежие файлы из сети.
 // ============================================================
 
-const CACHE_NAME = 'menu-recipes-v1';
+const CACHE_NAME = 'menu-recipes-v3';
 
 // Установка: сразу активируемся, не ждём закрытия всех вкладок
 self.addEventListener('install', function(event) {
