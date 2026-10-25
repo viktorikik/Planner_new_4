@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <!--
   Меню и рецепты · index.html
-  v5.29 (Блок 6): поднята версия CSS до 5.4.12 (фиксы iOS для чекбоксов,
-  фикс вспышки при тапе, исправление наложения в списке рецептов).
-  v5.26: три таба источника рецептов (Все · Мои · База), чекбокс
-  «Показать скрытые», фильтр источника в «Что приготовить?».
+  v5.30 (Блок 7 · UX-полировка): 
+  - Экспорт/Импорт рецептов перенесены вниз.
+  - Добавлено пустое состояние для вкладки «Покупки».
+  - Кнопки удаления/редактирования убраны из списка рецептов.
+  v5.29: Фиксы iOS для чекбоксов, три таба источника рецептов.
 -->
 <html lang="ru" data-theme="classic-light">
 <head>
@@ -21,6 +22,7 @@
   <meta name="apple-mobile-web-app-title" content="Меню и рецепты">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
+  <!-- Версия CSS будет обновлена на шаге со стилями -->
   <link rel="stylesheet" href="styles.css?v=5.4.15">
 
   <script>
@@ -154,10 +156,9 @@
         <button type="button" class="recipe-source-tab" data-source="base" role="tab" aria-selected="false">База</button>
       </div>
 
+      <!-- v5.30: Экспорт и импорт убраны отсюда -->
       <div class="recipes-toolbar">
         <button class="btn-done" id="addRecipeBtn">Добавить</button>
-        <button class="btn-secondary" id="exportRecipesBtn">Экспорт</button>
-        <button class="btn-secondary" id="importRecipesBtn">Импорт</button>
       </div>
 
       <div class="recipes-filters">
@@ -182,6 +183,12 @@
       <input type="file" id="importRecipesFileInput" class="import-hidden" accept=".json" aria-label="Загрузить файл с рецептами">
 
       <div id="recipesList"></div>
+
+      <!-- v5.30: Кнопки экспорта/импорта перенесены вниз -->
+      <div class="recipes-bottom-actions">
+        <button class="btn-secondary" id="exportRecipesBtn">Экспорт рецептов</button>
+        <button class="btn-secondary" id="importRecipesBtn">Импорт рецептов</button>
+      </div>
     </div>
   </div>
 
@@ -198,7 +205,13 @@
       </div>
       <button class="btn-primary shopping-generate-btn" id="generateShoppingListBtn">Собрать список</button>
 
-      <div id="savedListsContainer" class="shopping-saved-block">
+      <!-- v5.30: Пустое состояние, если список ещё не собран -->
+      <div id="shoppingEmptyState" class="shopping-empty-state">
+        <div class="shopping-empty-icon">🛒</div>
+        <p class="shopping-empty-text">Выберите период и нажмите «Собрать список», чтобы увидеть, что нужно купить.</p>
+      </div>
+
+      <div id="savedListsContainer" class="shopping-saved-block" style="display: none;">
         <h4>💾 Сохранённые списки</h4>
         <div id="savedListsList"></div>
       </div>
@@ -447,8 +460,6 @@
       </select>
     </div>
 
-    <!-- v5.26: источник рецептов. Показывается только когда выбран
-         источник «Из рецептов». -->
     <div class="choice-filter-group" id="choiceRecipesSourceWrap" hidden>
       <div class="choice-filter-label">Источник рецептов</div>
       <div class="choice-chips" id="choiceRecipesSourceChips" role="group" aria-label="Источник рецептов">
