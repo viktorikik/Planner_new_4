@@ -4,12 +4,9 @@
  * Зависит от: Constants, Utils, RecipeStore, DishStore, Renderer,
  *             notifications, focusTrap, ExportImport.
  *
- * v5.26 (Блок 6):
- *   • Три таба источника рецептов — Все · Мои · База.
- *   • Базовый рецепт при попытке редактирования клонируется в «Мои».
- *   • Удаление базового рецепта = скрытие (hidden: true), с возможностью
- *     вернуть через чекбокс «Показать скрытые» на табе «База».
- *   • Выбор источника сохраняется в localStorage.
+ * v5.30 (Блок 7 · UX-полировка):
+ *   • Из списка убраны иконки редактирования и удаления (перенесены в карточку).
+ *   • Убран запрещающий знак 🚫. Базовые рецепты скрываются через карточку.
  */
 import { CATEGORIES, CATEGORY_LABELS, RECIPE_SOURCES, CONSTANTS, UNIT_LABELS } from '../utils/Constants.js';
 import { Utils } from '../utils/Utils.js';
@@ -99,7 +96,6 @@ function updateBackBtnVisibility() {
 }
 
 // Подсветка активного таба источника + видимость чекбокса «Показать скрытые».
-// Чекбокс показывается только на табе «База» — больше ему негде быть.
 function renderSourceTabs() {
   document.querySelectorAll(CONSTANTS.SELECTORS.recipeSourceTabs).forEach(btn => {
     const isActive = btn.dataset.source === recipesSourceFilter;
@@ -138,8 +134,6 @@ export function renderRecipesList() {
   renderSourceTabs();
 
   // 1. Отбираем по источнику (Все / Мои / База) и скрытым.
-  //    Везде, кроме «База + показать скрытые», скрытые рецепты
-  //    не показываются.
   let scoped = allRecipes;
   if (recipesSourceFilter === RECIPE_SOURCES.MY) {
     scoped = scoped.filter(r => !r.builtIn);
@@ -192,8 +186,7 @@ export function renderRecipesList() {
     grouped[cat].push(recipe);
   });
 
-  // Устойчивая сортировка: indexOf === -1 → категория неизвестна →
-  // отправляем в конец, чтобы не выпрыгнула над супами.
+  // Устойчивая сортировка: indexOf === -1 → категория неизвестна → отправляем в конец.
   const sortedCategories = Object.keys(grouped).sort((a, b) => {
     const ia = CATEGORY_ORDER.indexOf(a);
     const ib = CATEGORY_ORDER.indexOf(b);
@@ -266,7 +259,7 @@ export function renderRecipesList() {
       });
       li.appendChild(nameSpan);
 
-      // Метка «из базы» — чтобы визуально отличать базовые от пользовательских.
+      // Метка «из базы» — оставляем только аккуратный бейдж.
       if (recipe.builtIn) {
         const badge = document.createElement('span');
         badge.className = 'recipe-list-badge';
@@ -275,36 +268,8 @@ export function renderRecipesList() {
         li.appendChild(badge);
       }
 
-      const editBtn = document.createElement('button');
-      editBtn.textContent = '✎';
-      editBtn.className = 'recipe-edit-btn';
-      editBtn.title = recipe.builtIn
-        ? 'Создать копию в «Моих» и отредактировать'
-        : 'Редактировать рецепт';
-      editBtn.setAttribute('aria-label', editBtn.title);
-      editBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        openRecipeForm(recipe.id);
-      });
-      li.appendChild(editBtn);
-
-      const deleteBtn = document.createElement('button');
-      if (recipe.builtIn) {
-        // Для базовых — скрыть/вернуть, не удалять.
-        deleteBtn.textContent = recipe.hidden ? '👁' : '🚫';
-        deleteBtn.className = 'recipe-delete-btn';
-        deleteBtn.title = recipe.hidden ? 'Вернуть в базу' : 'Скрыть из базы';
-      } else {
-        deleteBtn.textContent = '🗑️';
-        deleteBtn.className = 'recipe-delete-btn';
-        deleteBtn.title = 'Удалить рецепт';
-      }
-      deleteBtn.setAttribute('aria-label', deleteBtn.title);
-      deleteBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        handleDeleteOrHide(recipe);
-      });
-      li.appendChild(deleteBtn);
+      // v5.30: Кнопки ✎ и 🗑️/🚫 полностью убраны из списка.
+      // Редактирование и удаление происходят в модалке (карточке) рецепта.
 
       ul.appendChild(li);
     });
@@ -314,8 +279,9 @@ export function renderRecipesList() {
   });
 }
 
-// Удаление пользовательского рецепта / скрытие базового.
-function handleDeleteOrHide(recipe) {
+// v5.30: Функция handleDeleteOrHide больше не вызывается из списка, 
+// но оставлена для использования в Renderer.js (в карточке рецепта).
+export function handleDeleteOrHide(recipe) {
   if (recipe.builtIn) {
     const wasHidden = !!recipe.hidden;
     const answer = confirm(
@@ -337,6 +303,7 @@ function handleDeleteOrHide(recipe) {
   if (!answer) return;
   DishStore.clearRecipeRefs(recipe.id);
   RecipeStore.remove(recipe.id);
+  renderRecipesList(); // v5.30: Принудительно обновляем список после удаления
 }
 
 // ============================================================
@@ -456,7 +423,7 @@ function parseNumField(value) {
 }
 
 // ---------- Открытие / закрытие формы ----------
-function openRecipeForm(recipeId = null) {
+export function openRecipeForm(recipeId = null) {
   const overlay = document.getElementById(CONSTANTS.SELECTORS.recipeFormOverlay);
   if (!overlay) return;
 
@@ -464,8 +431,7 @@ function openRecipeForm(recipeId = null) {
   let recipe = isEdit ? RecipeStore.getById(recipeId) : null;
   if (isEdit && !recipe) { showMessage('Рецепт не найден', 'error'); return; }
 
-  // v5.26: базовый рецепт напрямую не редактируется — предлагаем
-  // создать копию в «Моих» и открыть её. База остаётся эталоном.
+  // v5.26: базовый рецепт напрямую не редактируется — предлагаем создать копию.
   if (isEdit && recipe.builtIn) {
     const answer = confirm(
       `«${recipe.name}» — рецепт из базы.\n\n` +
@@ -477,7 +443,6 @@ function openRecipeForm(recipeId = null) {
     const copy = RecipeStore.cloneFromBase(recipe.id);
     if (!copy) { showMessage('Не удалось создать копию', 'error'); return; }
 
-    // Переключаемся на «Мои», чтобы пользователь сразу увидел копию.
     recipesSourceFilter = RECIPE_SOURCES.MY;
     saveSourceFilter();
     renderSourceTabs();
@@ -754,7 +719,6 @@ export function initRecipesHandlers() {
     });
   }
 
-  // v5.26: три таба источника рецептов.
   document.querySelectorAll(CONSTANTS.SELECTORS.recipeSourceTabs).forEach(btn => {
     btn.addEventListener('click', function() {
       const next = btn.dataset.source;
@@ -766,7 +730,6 @@ export function initRecipesHandlers() {
     });
   });
 
-  // v5.26: чекбокс «Показать скрытые» на табе «База».
   const hiddenToggle = document.getElementById(CONSTANTS.SELECTORS.recipesShowHiddenToggle);
   if (hiddenToggle) {
     hiddenToggle.checked = showHiddenBase;
