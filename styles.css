@@ -1,13 +1,11 @@
 /* ============================================================
    Меню и рецепты · styles.css
-   v5.5.1 (Блок 7 · UX-полировка, v5.31):
-     • Оптимизированы кнопки в карточке рецепта (добавлены flex-wrap и базовая ширина для 4-х кнопок).
-     • Снижена визуальная нагрузка: типографика стала спокойнее.
-     • Список рецептов очищен от лишних кнопок и тяжелых плашек категорий.
-     • Экспорт/Импорт рецептов стилизованы как второстепенные кнопки внизу.
-     • Добавлено спокойное пустое состояние для экрана «Покупки».
-     • ГЛОБАЛЬНЫЙ ФИКС: увеличен нижний отступ body, чтобы контент не перекрывался навигацией.
-     • Ранее (v5.4.15): глобальный фикс iOS для <summary> (аккордеоны).
+   v5.5.2 (Блок 7 · UX-полировка, v5.32):
+     • ГЛОБАЛЬНЫЙ ФИКС iOS: отключен белый фон при нажатии на <summary>.
+     • Фикс iOS: принудительно переопределен фон аккордеона в карточке рецепта в состоянии :active и :focus.
+     • Иерархия в списке рецептов: заголовки категорий увеличены, названия рецептов приглушены.
+     • Выбранная (раскрытая) категория теперь подсвечивается обводкой и фоном, как в карточке рецепта.
+     • (Ранее v5.5.1): Оптимизированы кнопки в карточке, снижена визуальная нагрузка, исправлен отступ навигации.
 
    1. ПЕРЕМЕННЫЕ — ТЕМЫ ОФОРМЛЕНИЯ (v5.15, Блок 4 · 4.1–4.3)
    ============================================================ */
@@ -249,9 +247,14 @@
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
 }
 
-/* v5.4.15: Глобальный сброс для iOS. Браузер ломает кастомные стили <summary> при раскрытии. */
+/* v5.5.2: ГЛОБАЛЬНЫЙ ФИКС iOS для <summary>. 
+   Браузер принудительно красит элемент в белый при нажатии.
+   appearance: none и transparent фон помогают это перебить. */
 summary {
   -webkit-appearance: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  background-color: transparent;
 }
 
 body {
@@ -261,7 +264,7 @@ body {
   align-items: flex-start;
   min-height: 100vh;
   padding: var(--spacing-md);
-  /* v5.5.0: Увеличен нижний отступ, чтобы контент не перекрывался нижним меню (навигацией) */
+  /* Увеличен нижний отступ, чтобы контент не перекрывался нижним меню (навигацией) */
   padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
   transition: background var(--transition-normal), color var(--transition-normal);
 }
@@ -311,7 +314,7 @@ button:active:not(:disabled),
   transition: transform 0.05s ease !important;
 }
 
-/* v5.28, v5.4.13: iOS Safari принудительно рисует серую/белую системную 
+/* iOS Safari принудительно рисует серую/белую системную 
    вспышку при тапе на интерактивные элементы. Отключаем для кастомных стилей. */
 button,
 .btn,
@@ -324,7 +327,7 @@ button,
 }
 
 /* ============================================================
-   ТИПОГРАФИКА — УМЕНЬШАЕМ ГРАДИЕНТ (v5.5.0)
+   ТИПОГРАФИКА — УМЕНЬШАЕМ ГРАДИЕНТ
    ============================================================ */
 .recipes-tab-header h2,
 .shopping-tab-title,
@@ -2185,7 +2188,6 @@ button,
   overflow-wrap: anywhere;
 }
 
-/* v5.5.1: Подготовка к 4-м кнопкам (Добавить, Копия/Ред, Скрыть, Закрыть) */
 .recipe-view-modal .recipe-card-buttons {
   display: flex;
   flex-wrap: wrap;
@@ -2194,7 +2196,7 @@ button,
 }
 
 .recipe-view-modal .recipe-card-buttons button {
-  flex: 1 1 calc(50% - 4px); /* По 2 в ряд на десктопе */
+  flex: 1 1 calc(50% - 4px);
   min-width: 120px;
   justify-content: center;
   text-align: center;
@@ -2414,7 +2416,6 @@ button,
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
 }
 
-/* v5.5.0: Новый блок для кнопок в самом низу вкладки */
 .recipes-bottom-actions {
   display: flex;
   gap: 8px;
@@ -2446,7 +2447,6 @@ button,
   margin-bottom: 14px;
 }
 
-/* v5.4.14: Исключаем чекбоксы из этого селектора, иначе они растягиваются как текстовые поля */
 .recipes-filters input:not([type="checkbox"]),
 .recipes-filters select {
   padding: 8px 14px;
@@ -2476,10 +2476,10 @@ button,
 }
 
 .recipe-category-section {
-  margin-bottom: 4px; /* v5.5.0: уменьшили отступ между категориями */
+  margin-bottom: 8px; /* v5.5.2: Увеличили отступ между категориями для воздуха */
 }
 
-/* v5.5.0: Убрали фон и полоску, сделали аккуратный разделитель */
+/* v5.5.2: Иерархия. Заголовок категории теперь главный. */
 .recipe-category-header {
   display: flex;
   align-items: center;
@@ -2487,31 +2487,43 @@ button,
   width: 100%;
   text-align: left;
   font-family: inherit;
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 18px; /* Крупнее */
+  font-weight: 700; /* Жирнее */
   color: var(--text-primary);
-  padding: 12px 4px;
+  padding: 12px 14px;
   background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--cell-border);
-  border-radius: 0;
-  margin-bottom: 0;
+  border: 1px solid transparent; /* Резерв под рамку */
+  border-radius: var(--radius-sm);
+  margin-bottom: 4px;
   cursor: pointer;
   transition: var(--transition-fast);
   appearance: none;
   box-sizing: border-box;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  outline: none;
 }
+
 .recipe-category-header:hover {
-  background: var(--day-hover);
+  background: var(--card-hover-bg);
 }
+
 .recipe-category-header:focus-visible {
   outline: 2px solid var(--accent-color);
   outline-offset: 2px;
 }
-.recipe-category-header:active {
-  transform: none;
+
+/* v5.5.2: Выделение выбранной (раскрытой) категории — в стиле карточки рецепта */
+.recipe-category-section:not(.collapsed) .recipe-category-header {
+  background: var(--accent-light) !important;
+  border-color: var(--accent-color) !important;
+  color: var(--accent-color) !important;
+}
+
+.recipe-category-section:not(.collapsed) .recipe-category-arrow,
+.recipe-category-section:not(.collapsed) .recipe-category-count {
+  color: var(--accent-color) !important;
+  opacity: 0.8;
 }
 
 .recipe-category-arrow {
@@ -2552,18 +2564,21 @@ button,
   margin: 0;
 }
 
-/* v5.5.0: Облегчили строку рецепта. Убрали тяжелые рамки, оставили пунктир. */
+/* v5.5.2: Названия рецептов — второстепенный уровень */
 .recipe-list-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 6px;
-  padding: 12px 4px;
+  padding: 10px 14px;
   border-bottom: 1px dashed var(--cell-border);
   border-radius: 0;
   background: transparent;
   transition: var(--transition-fast);
-  color: var(--text-primary);
+  color: var(--text-secondary); /* Приглушенный цвет */
+}
+.recipe-list-item:last-child {
+  border-bottom: none;
 }
 .recipe-list-item:hover {
   background: transparent;
@@ -2579,8 +2594,9 @@ button,
   min-width: 0;
   word-break: break-word;
   font-size: 15px;
-  font-weight: 500;
-  color: var(--text-primary);
+  font-weight: 400; /* Убрали жирность */
+  color: var(--text-secondary); /* Приглушенный */
+  transition: var(--transition-fast);
 }
 .recipe-name-clickable:hover {
   color: var(--accent-color);
@@ -2594,7 +2610,6 @@ button,
   outline: none;
 }
 
-/* v5.5.0: Бейдж «база» стал едва заметным */
 .recipe-list-badge {
   display: inline-block;
   font-size: 11px;
@@ -2608,8 +2623,6 @@ button,
   white-space: nowrap;
 }
 
-/* v5.5.0: Кнопки в списке больше не используются (удалены из JS), 
-   но на случай кэша оставляем им аккуратный вид */
 .recipe-edit-btn,
 .recipe-delete-btn {
   opacity: 0.4;
@@ -2693,7 +2706,6 @@ button,
   transform: translateY(0);
 }
 
-/* v5.5.0: Новое пустое состояние для корзины */
 .shopping-empty-state {
   display: flex;
   flex-direction: column;
@@ -3116,10 +3128,11 @@ button,
   display: none;
 }
 
-/* v5.4.15: Принудительный сброс фона для iOS, когда аккордеон раскрыт */
+/* v5.5.2: Принудительный сброс фона для iOS, когда аккордеон раскрыт */
 .today-hints[open] > .today-hints-summary {
   background: var(--badge-bg) !important;
   color: var(--text-primary) !important;
+  outline: none !important;
 }
 
 .today-hints-icon {
@@ -4071,7 +4084,6 @@ button,
     padding: 6px 16px;
   }
 
-  /* v5.5.1: На мобильных кнопки в карточке рецепта выстраиваются в колонку */
   .recipe-view-modal .recipe-card-buttons {
     flex-direction: column;
   }
@@ -4318,7 +4330,7 @@ button,
 }
 
 /* ============================================================
-   40. ФОРМА РЕЦЕПТА v2 (v6.3)
+   40. ФОРМА РЕЦЕПТА v2
    ============================================================ */
 .add-modal .recipe-form-modal .form-row {
   display: grid;
@@ -4450,6 +4462,7 @@ button,
 .add-modal .recipe-form-modal .recipe-form-details[open] > .recipe-form-details-summary {
   background: var(--badge-bg) !important;
   color: var(--text-primary) !important;
+  outline: none !important;
 }
 
 .add-modal .recipe-form-modal .recipe-form-details-icon {
@@ -4542,7 +4555,7 @@ button,
 }
 
 /* ============================================================
-   41. КАРТОЧКА РЕЦЕПТА v2 (v6.5)
+   41. КАРТОЧКА РЕЦЕПТА v2
    ============================================================ */
 .recipe-view-modal .recipe-servings-row {
   display: flex;
@@ -4974,45 +4987,48 @@ button,
 }
 
 /* ============================================================
-   43. АККОРДЕОН В КАРТОЧКЕ РЕЦЕПТА (v5.25 → v5.27)
+   43. АККОРДЕОН В КАРТОЧКЕ РЕЦЕПТА (v5.5.2 - фикс iOS)
    ============================================================ */
-.recipe-view-modal .recipe-accordion > summary.recipe-section-title {
+
+/* Базовое состояние + принудительный сброс для iOS */
+.recipe-view-modal .recipe-accordion > summary.recipe-section-title,
+.recipe-view-modal .recipe-accordion > summary.recipe-section-title:active,
+.recipe-view-modal .recipe-accordion > summary.recipe-section-title:focus {
   margin: 0 0 8px 0;
   padding: 10px 14px;
   cursor: pointer;
   list-style: none;
   user-select: none;
+  -webkit-appearance: none;
+  appearance: none;
   -webkit-tap-highlight-color: transparent;
-  -webkit-appearance: none; /* v5.4.13: критический фикс iOS. Safari принудительно рисует белую заливку под <summary> */
   border-radius: var(--radius-sm);
-  background: var(--cell-bg);
+  background: var(--cell-bg) !important; /* Принудительно задаем фон */
   border: 1px solid var(--cell-border);
   display: flex;
   align-items: center;
   gap: 8px;
   transition: background var(--transition-fast), border-color var(--transition-fast);
+  outline: none; /* Убираем системный фокус, чтобы не было белой рамки */
 }
+
 .recipe-view-modal .recipe-accordion > summary.recipe-section-title::-webkit-details-marker {
   display: none;
 }
+
 .recipe-view-modal .recipe-accordion > summary.recipe-section-title:hover {
-  background: var(--card-hover-bg);
+  background: var(--card-hover-bg) !important;
   border-color: var(--accent-color);
 }
-.recipe-view-modal .recipe-accordion > summary.recipe-section-title:focus-visible {
-  outline: 2px solid var(--accent-color);
-  outline-offset: 2px;
-}
 
-/* v5.4.15: !important критически важен для iOS Safari. 
-   Без него браузер принудительно красит раскрытый <summary> в белый 
-   и делает текст нечитаемым в темной теме. */
-.recipe-view-modal .recipe-accordion[open] > summary.recipe-section-title {
-  margin: 0 0 8px 0;
+/* Открытое состояние + жесткий фикс для iOS :active и :focus */
+.recipe-view-modal .recipe-accordion[open] > summary.recipe-section-title,
+.recipe-view-modal .recipe-accordion[open] > summary.recipe-section-title:active,
+.recipe-view-modal .recipe-accordion[open] > summary.recipe-section-title:focus {
   background: var(--accent-light) !important;
   border-color: var(--accent-color) !important;
   color: var(--accent-color) !important;
-  -webkit-appearance: none;
+  outline: none !important;
 }
 
 .recipe-view-modal .recipe-accordion-text {
@@ -5033,17 +5049,16 @@ button,
   color: var(--accent-color);
   transition: transform var(--transition-fast);
   transform: rotate(-90deg);
-  -webkit-appearance: none; /* v5.4.13 */
+  -webkit-appearance: none;
 }
 .recipe-view-modal .recipe-accordion[open] .recipe-accordion-chevron {
   transform: rotate(0deg);
-  /* v5.4.15: Делаем стрелку контрастной (заливка цветом акцента, текст - цветом фона) */
   background: var(--accent-color) !important;
   color: var(--accent-text) !important;
 }
 
 /* ============================================================
-   44. БЛОК «ЗАМЕТКА» В КАРТОЧКЕ РЕЦЕПТА (v5.25, Блок 6)
+   44. БЛОК «ЗАМЕТКА» В КАРТОЧКЕ РЕЦЕПТА
    ============================================================ */
 .recipe-view-modal .recipe-comments {
   margin: 16px 0;
