@@ -1,9 +1,10 @@
 /* ============================================================
    Меню и рецепты · styles.css
-   v5.4.14 (Блок 6, v5.29):
-     • Фикс верстки: исключены чекбоксы из общих стилей полей ввода в фильтрах рецептов.
-     • Ранее (v5.4.13): Глобальный фикс темной темы, убраны жестко заданные светлые фоны. iOS Safari: внедрен -webkit-appearance: none для <summary>.
-     • Ранее (v5.4.12): фикс наложения бейджа, убрана обводка при клике на название.
+   v5.4.15 (Блок 6, v5.29):
+     • ГЛОБАЛЬНЫЙ ФИКС iOS: принудительное переопределение фона для всех <summary> в состоянии [open].
+     • iOS Safari красит раскрытые аккордеоны в белый, делая текст нечитаемым в темной теме. Использован !important.
+     • Ранее (v5.4.14): фикс чекбоксов в фильтрах рецептов.
+     • Ранее (v5.4.13): фикс жестких цветов в темной теме.
 
    1. ПЕРЕМЕННЫЕ — ТЕМЫ ОФОРМЛЕНИЯ (v5.15, Блок 4 · 4.1–4.3)
    ============================================================ */
@@ -243,6 +244,11 @@
   padding: 0;
   box-sizing: border-box;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+}
+
+/* v5.4.15: Глобальный сброс для iOS. Браузер ломает кастомные стили <summary> при раскрытии. */
+summary {
+  -webkit-appearance: none;
 }
 
 body {
@@ -3051,6 +3057,12 @@ button,
   display: none;
 }
 
+/* v5.4.15: Принудительный сброс фона для iOS, когда аккордеон раскрыт */
+.today-hints[open] > .today-hints-summary {
+  background: var(--badge-bg) !important;
+  color: var(--text-primary) !important;
+}
+
 .today-hints-icon {
   font-size: 15px;
   line-height: 1;
@@ -4383,6 +4395,12 @@ body {
   display: none;
 }
 
+/* v5.4.15: Принудительный сброс фона для iOS, когда аккордеон раскрыт */
+.add-modal .recipe-form-modal .recipe-form-details[open] > .recipe-form-details-summary {
+  background: var(--badge-bg) !important;
+  color: var(--text-primary) !important;
+}
+
 .add-modal .recipe-form-modal .recipe-form-details-icon {
   font-size: 16px;
   line-height: 1;
@@ -4935,11 +4953,16 @@ body {
   outline: 2px solid var(--accent-color);
   outline-offset: 2px;
 }
+
+/* v5.4.15: !important критически важен для iOS Safari. 
+   Без него браузер принудительно красит раскрытый <summary> в белый 
+   и делает текст нечитаемым в темной теме. */
 .recipe-view-modal .recipe-accordion[open] > summary.recipe-section-title {
   margin: 0 0 8px 0;
-  background: var(--accent-light);
-  border-color: var(--accent-color);
-  -webkit-appearance: none; /* v5.4.13 */
+  background: var(--accent-light) !important;
+  border-color: var(--accent-color) !important;
+  color: var(--accent-color) !important;
+  -webkit-appearance: none;
 }
 
 .recipe-view-modal .recipe-accordion-text {
@@ -4964,6 +4987,9 @@ body {
 }
 .recipe-view-modal .recipe-accordion[open] .recipe-accordion-chevron {
   transform: rotate(0deg);
+  /* v5.4.15: Делаем стрелку контрастной (заливка цветом акцента, текст - цветом фона) */
+  background: var(--accent-color) !important;
+  color: var(--accent-text) !important;
 }
 
 /* ============================================================
