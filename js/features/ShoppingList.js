@@ -316,6 +316,34 @@ function setHeaderLabel(label) {
 }
 
 // ============================================================
+// УПРАВЛЕНИЕ ПУСТЫМ СОСТОЯНИЕМ (v5.30)
+// ============================================================
+function showShoppingEmpty() {
+  const emptyState = document.getElementById('shoppingEmptyState');
+  const listDisplay = document.getElementById(CONSTANTS.SELECTORS.shoppingListDisplay);
+  const savedBlock = document.getElementById(CONSTANTS.SELECTORS.savedListsContainer);
+  
+  if (emptyState) emptyState.style.display = 'flex';
+  if (listDisplay) listDisplay.style.display = 'none';
+  
+  // Сохранённые списки показываем, только если они есть
+  if (savedBlock) {
+    const keys = getSavedShoppingListKeys();
+    savedBlock.style.display = keys.length > 0 ? 'block' : 'none';
+  }
+}
+
+function showShoppingList() {
+  const emptyState = document.getElementById('shoppingEmptyState');
+  const listDisplay = document.getElementById(CONSTANTS.SELECTORS.shoppingListDisplay);
+  const savedBlock = document.getElementById(CONSTANTS.SELECTORS.savedListsContainer);
+  
+  if (emptyState) emptyState.style.display = 'none';
+  if (listDisplay) listDisplay.style.display = 'block';
+  if (savedBlock) savedBlock.style.display = 'none';
+}
+
+// ============================================================
 // РАБОТА С СОХРАНЁННЫМИ СПИСКАМИ
 // ============================================================
 function getSavedShoppingListKeys() {
@@ -355,10 +383,8 @@ export function initShoppingTab() {
     fromInput.value = Utils.formatDateLocal(today);
     toInput.value = Utils.formatDateLocal(tomorrow);
   }
-  const display = document.getElementById(CONSTANTS.SELECTORS.shoppingListDisplay);
-  if (display) display.style.display = 'none';
-  const savedBlock = document.getElementById(CONSTANTS.SELECTORS.savedListsContainer);
-  if (savedBlock) savedBlock.style.display = 'block';
+  
+  showShoppingEmpty();
   renderSavedLists();
 }
 
@@ -397,6 +423,7 @@ export function renderSavedLists() {
       if (confirm(`Удалить список "${label}"?`)) {
         localStorage.removeItem(key);
         renderSavedLists();
+        showShoppingEmpty();
       }
     });
     item.appendChild(deleteBtn);
@@ -419,9 +446,7 @@ export function loadShoppingList(key) {
     if (parsed && parsed.groups) text = groupsToText(parsed.groups);
   } catch(e) { /* это уже текст */ }
 
-  document.getElementById(CONSTANTS.SELECTORS.savedListsContainer).style.display = 'none';
-  const displayDiv = document.getElementById(CONSTANTS.SELECTORS.shoppingListDisplay);
-  displayDiv.style.display = 'block';
+  showShoppingList();
 
   const resultTextarea = document.getElementById(CONSTANTS.SELECTORS.shoppingListResult);
   resultTextarea.value = text;
@@ -439,6 +464,7 @@ export function loadShoppingList(key) {
     editBtn.dataset.mode = 'view';
   }
 
+  const displayDiv = document.getElementById(CONSTANTS.SELECTORS.shoppingListDisplay);
   displayDiv.dataset.currentKey = key;
   document.getElementById(CONSTANTS.SELECTORS.saveCurrentListBtn).style.display = 'none';
   document.getElementById(CONSTANTS.SELECTORS.deleteCurrentListBtn).style.display = 'inline-block';
@@ -476,6 +502,7 @@ export function generateShoppingList() {
 
   if (rawIngredients.length === 0) {
     showMessage('😌 За выбранный период нет блюд с рецептами.');
+    showShoppingEmpty();
     return;
   }
 
@@ -491,9 +518,7 @@ export function generateShoppingList() {
 
   const text = groupsToText(grouped);
 
-  document.getElementById(CONSTANTS.SELECTORS.savedListsContainer).style.display = 'none';
-  const displayDiv = document.getElementById(CONSTANTS.SELECTORS.shoppingListDisplay);
-  displayDiv.style.display = 'block';
+  showShoppingList();
 
   const resultTextarea = document.getElementById(CONSTANTS.SELECTORS.shoppingListResult);
   resultTextarea.value = text;
@@ -514,6 +539,7 @@ export function generateShoppingList() {
     editBtn.dataset.mode = 'view';
   }
 
+  const displayDiv = document.getElementById(CONSTANTS.SELECTORS.shoppingListDisplay);
   displayDiv.dataset.fromDate = fromDate;
   displayDiv.dataset.toDate = toDate;
 
@@ -567,9 +593,10 @@ export function saveCurrentList() {
 
   localStorage.setItem(key, text);
   showMessage('✅ Список сохранён!');
-  document.getElementById(CONSTANTS.SELECTORS.shoppingListDisplay).style.display = 'none';
-  document.getElementById(CONSTANTS.SELECTORS.savedListsContainer).style.display = 'block';
+  
+  showShoppingEmpty();
   renderSavedLists();
+  
   delete displayDiv.dataset.fromDate;
   delete displayDiv.dataset.toDate;
   delete displayDiv.dataset.currentKey;
@@ -584,8 +611,8 @@ export function deleteCurrentList() {
   if (!key) return;
   if (!confirm(`Удалить этот список?`)) return;
   localStorage.removeItem(key);
-  document.getElementById(CONSTANTS.SELECTORS.shoppingListDisplay).style.display = 'none';
-  document.getElementById(CONSTANTS.SELECTORS.savedListsContainer).style.display = 'block';
+  
+  showShoppingEmpty();
   renderSavedLists();
 }
 
@@ -593,8 +620,7 @@ export function deleteCurrentList() {
 // ВОЗВРАТ К СПИСКУ СОХРАНЁННЫХ
 // ============================================================
 export function backToSavedLists() {
-  document.getElementById(CONSTANTS.SELECTORS.shoppingListDisplay).style.display = 'none';
-  document.getElementById(CONSTANTS.SELECTORS.savedListsContainer).style.display = 'block';
+  showShoppingEmpty();
   renderSavedLists();
 }
 
