@@ -1,10 +1,12 @@
 /* ============================================================
    Меню и рецепты · styles.css
-   v5.4.15 (Блок 6, v5.29):
-     • ГЛОБАЛЬНЫЙ ФИКС iOS: принудительное переопределение фона для всех <summary> в состоянии [open].
-     • iOS Safari красит раскрытые аккордеоны в белый, делая текст нечитаемым в темной теме. Использован !important.
-     • Ранее (v5.4.14): фикс чекбоксов в фильтрах рецептов.
-     • Ранее (v5.4.13): фикс жестких цветов в темной теме.
+   v5.5.0 (Блок 7 · UX-полировка, v5.30):
+     • Снижена визуальная нагрузка: типографика стала спокойнее.
+     • Список рецептов очищен от лишних кнопок и тяжелых плашек категорий.
+     • Экспорт/Импорт рецептов стилизованы как второстепенные кнопки внизу.
+     • Добавлено спокойное пустое состояние для экрана «Покупки».
+     • ГЛОБАЛЬНЫЙ ФИКС: увеличен нижний отступ body, чтобы контент не перекрывался навигацией.
+     • Ранее (v5.4.15): глобальный фикс iOS для <summary> (аккордеоны).
 
    1. ПЕРЕМЕННЫЕ — ТЕМЫ ОФОРМЛЕНИЯ (v5.15, Блок 4 · 4.1–4.3)
    ============================================================ */
@@ -258,6 +260,8 @@ body {
   align-items: flex-start;
   min-height: 100vh;
   padding: var(--spacing-md);
+  /* v5.5.0: Увеличен нижний отступ, чтобы контент не перекрывался нижним меню (навигацией) */
+  padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
   transition: background var(--transition-normal), color var(--transition-normal);
 }
 
@@ -316,6 +320,17 @@ button,
 .recipe-source-tab,
 .recipe-name-clickable {
   -webkit-tap-highlight-color: transparent;
+}
+
+/* ============================================================
+   ТИПОГРАФИКА — УМЕНЬШАЕМ ГРАДИЕНТ (v5.5.0)
+   ============================================================ */
+.recipes-tab-header h2,
+.shopping-tab-title,
+.today-date {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
 }
 
 /* ============================================================
@@ -2225,10 +2240,7 @@ button,
   margin-bottom: 16px;
 }
 .recipes-tab-header h2 {
-  font-size: 22px;
-  font-weight: 700;
   color: var(--text-primary);
-  letter-spacing: -0.3px;
   margin: 0;
 }
 
@@ -2281,7 +2293,7 @@ button,
   cursor: pointer;
   user-select: none;
   transition: var(--transition-fast);
-  width: 100%; /* v5.4.14: гарантируем, что блок займет всю ширину строки и не сожмется */
+  width: 100%; 
   box-sizing: border-box;
 }
 .recipes-show-hidden-toggle:hover {
@@ -2399,6 +2411,31 @@ button,
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
 }
 
+/* v5.5.0: Новый блок для кнопок в самом низу вкладки */
+.recipes-bottom-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid var(--cell-border);
+  justify-content: center;
+}
+.recipes-bottom-actions button {
+  flex: 1;
+  padding: 10px 16px;
+  font-size: 13px;
+  border-radius: var(--radius-md);
+  background: transparent;
+  border: 1px solid var(--cell-border);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+.recipes-bottom-actions button:hover {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
 .recipes-filters {
   display: flex;
   flex-wrap: wrap;
@@ -2436,9 +2473,10 @@ button,
 }
 
 .recipe-category-section {
-  margin-bottom: 12px;
+  margin-bottom: 4px; /* v5.5.0: уменьшили отступ между категориями */
 }
 
+/* v5.5.0: Убрали фон и полоску, сделали аккуратный разделитель */
 .recipe-category-header {
   display: flex;
   align-items: center;
@@ -2446,15 +2484,15 @@ button,
   width: 100%;
   text-align: left;
   font-family: inherit;
-  font-size: 16px;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 600;
   color: var(--text-primary);
-  padding: 8px 10px;
-  background: var(--badge-bg);
+  padding: 12px 4px;
+  background: transparent;
   border: none;
-  border-left: 4px solid var(--accent-color);
-  border-radius: var(--radius-sm);
-  margin-bottom: 8px;
+  border-bottom: 1px solid var(--cell-border);
+  border-radius: 0;
+  margin-bottom: 0;
   cursor: pointer;
   transition: var(--transition-fast);
   appearance: none;
@@ -2470,16 +2508,16 @@ button,
   outline-offset: 2px;
 }
 .recipe-category-header:active {
-  transform: scale(0.995);
+  transform: none;
 }
 
 .recipe-category-arrow {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 10px;
   line-height: 1;
-  color: var(--accent-color);
+  color: var(--text-muted);
   flex-shrink: 0;
   transition: transform var(--transition-fast);
   transform: rotate(90deg);
@@ -2496,7 +2534,7 @@ button,
 
 .recipe-category-count {
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--text-muted);
   flex-shrink: 0;
 }
@@ -2511,26 +2549,25 @@ button,
   margin: 0;
 }
 
-/* v5.28: фикс наложения бейджа «база» и кнопок в строке рецепта. 
-   Используем gap и flex-shrink: 0 для элементов управления. */
+/* v5.5.0: Облегчили строку рецепта. Убрали тяжелые рамки, оставили пунктир. */
 .recipe-list-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--cell-border);
-  border-radius: var(--radius-sm);
+  padding: 12px 4px;
+  border-bottom: 1px dashed var(--cell-border);
+  border-radius: 0;
+  background: transparent;
   transition: var(--transition-fast);
   color: var(--text-primary);
 }
 .recipe-list-item:hover {
-  background: var(--day-hover);
+  background: transparent;
 }
-
 .recipe-list-item:active {
-  transform: scale(0.98);
-  background: var(--badge-bg);
+  transform: none;
+  background: transparent;
 }
 
 .recipe-name-clickable {
@@ -2538,58 +2575,54 @@ button,
   flex: 1;
   min-width: 0;
   word-break: break-word;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.recipe-name-clickable:hover {
+  color: var(--accent-color);
 }
 .recipe-name-clickable:focus-visible {
   outline: 2px solid var(--accent-color);
   outline-offset: 2px;
   border-radius: 4px;
 }
-
-/* v5.28: убираем обводку при клике мышью/тапом, оставляем только для навигации с клавиатуры (Tab) */
 .recipe-name-clickable:focus:not(:focus-visible) {
   outline: none;
 }
 
+/* v5.5.0: Бейдж «база» стал едва заметным */
 .recipe-list-badge {
   display: inline-block;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 500;
   padding: 2px 6px;
-  border-radius: 6px;
-  background: var(--accent-light);
-  color: var(--accent-color);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--cell-border);
   flex-shrink: 0;
   white-space: nowrap;
 }
 
-.recipe-edit-btn {
-  background: none;
-  border: none;
-  font-size: 14px;
-  cursor: pointer;
-  color: var(--text-muted);
-  transition: var(--transition-fast);
-  padding: 0 6px;
-  flex-shrink: 0;
-}
-.recipe-edit-btn:hover {
-  color: var(--text-primary);
-  transform: scale(1.15);
-}
-
+/* v5.5.0: Кнопки в списке больше не используются (удалены из JS), 
+   но на случай кэша оставляем им аккуратный вид */
+.recipe-edit-btn,
 .recipe-delete-btn {
+  opacity: 0.4;
+  font-size: 14px;
+  padding: 0 4px;
+  flex-shrink: 0;
   background: none;
   border: none;
-  font-size: 14px;
   cursor: pointer;
   color: var(--text-muted);
-  transition: var(--transition-fast);
-  padding: 0 6px;
-  flex-shrink: 0;
 }
+.recipe-edit-btn:hover,
 .recipe-delete-btn:hover {
-  color: #e55a5a;
-  transform: scale(1.2);
+  opacity: 1;
+  transform: none;
+  color: var(--accent-color);
 }
 
 /* ============================================================
@@ -2598,10 +2631,7 @@ button,
 .shopping-tab {
 }
 .shopping-tab-title {
-  font-size: 22px;
-  font-weight: 700;
   color: var(--text-primary);
-  letter-spacing: -0.3px;
   margin: 0 0 16px 0;
 }
 
@@ -2658,6 +2688,32 @@ button,
 }
 .shopping-generate-btn:active {
   transform: translateY(0);
+}
+
+/* v5.5.0: Новое пустое состояние для корзины */
+.shopping-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 48px 24px;
+  background: var(--card-bg);
+  border: 1px dashed var(--cell-border);
+  border-radius: var(--radius-md);
+  margin-top: 24px;
+}
+.shopping-empty-icon {
+  font-size: 48px;
+  opacity: 0.5;
+  margin-bottom: 16px;
+}
+.shopping-empty-text {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  max-width: 280px;
+  margin: 0 auto;
 }
 
 .shopping-saved-block {
@@ -3038,13 +3094,13 @@ button,
   list-style: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
-  -webkit-appearance: none; /* v5.4.13: iOS Safari принудительно рисует белую подложку для <summary> */
+  -webkit-appearance: none;
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
   border-radius: 12px;
-  background: var(--badge-bg); /* v5.4.13: было rgba(0,0,0,0.03), ломало темную тему */
+  background: var(--badge-bg); 
   color: var(--text-secondary);
   font-size: 13px;
   font-weight: 500;
@@ -3087,7 +3143,7 @@ button,
   margin-top: 8px;
   padding: 12px 16px;
   border-radius: 12px;
-  background: var(--badge-bg); /* v5.4.13: было rgba(0,0,0,0.03), ломало темную тему */
+  background: var(--badge-bg); 
 }
 
 .today-hint-row {
@@ -3541,10 +3597,6 @@ button,
   box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.4);
 }
 
-body {
-  padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
-}
-
 /* ============================================================
    30. ПЕРЕКЛЮЧЕНИЕ КОНТЕНТА ПО ТАБАМ
    ============================================================ */
@@ -3572,10 +3624,7 @@ body {
   border-bottom: 2px solid var(--cell-border);
 }
 .today-date {
-  font-size: 20px;
-  font-weight: 500;
   color: var(--text-primary);
-  letter-spacing: -0.3px;
 }
 
 .today-relative {
@@ -4371,7 +4420,7 @@ body {
 .add-modal .recipe-form-modal .recipe-form-details {
   margin-bottom: 16px;
   padding: 0;
-  background: var(--badge-bg); /* v5.4.13: было rgba(0,0,0,0.03), ломало темную тему */
+  background: var(--badge-bg);
   border: 1px solid var(--cell-border);
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -4386,7 +4435,7 @@ body {
   list-style: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
-  -webkit-appearance: none; /* v5.4.13: iOS Safari принудительно рисует белую подложку для <summary> */
+  -webkit-appearance: none;
   font-size: 14px;
   font-weight: 500;
   color: var(--text-primary);
@@ -4395,7 +4444,6 @@ body {
   display: none;
 }
 
-/* v5.4.15: Принудительный сброс фона для iOS, когда аккордеон раскрыт */
 .add-modal .recipe-form-modal .recipe-form-details[open] > .recipe-form-details-summary {
   background: var(--badge-bg) !important;
   color: var(--text-primary) !important;
@@ -4665,7 +4713,6 @@ body {
   flex: 1 1 auto;
 }
 
-/* v5.4.13: заменили жесткие rgba на переменные, чтобы блок не светился в темной теме */
 .recipe-view-modal .recipe-allergens {
   padding: 12px 16px;
   margin-bottom: 16px;
