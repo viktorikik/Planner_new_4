@@ -1,11 +1,9 @@
 /* ============================================================
    Меню и рецепты · styles.css
-   v5.4.13 (Блок 6, v5.29):
-     • Глобальный фикс темной темы: убраны все жестко заданные светлые фоны.
-     • Все полупрозрачные плашки переведены на адаптивные переменные (--badge-bg, --accent-light).
-     • iOS Safari: внедрен -webkit-appearance: none для <summary>, чтобы убрать системную белую заливку при раскрытии аккордеонов.
+   v5.4.14 (Блок 6, v5.29):
+     • Фикс верстки: исключены чекбоксы из общих стилей полей ввода в фильтрах рецептов.
+     • Ранее (v5.4.13): Глобальный фикс темной темы, убраны жестко заданные светлые фоны. iOS Safari: внедрен -webkit-appearance: none для <summary>.
      • Ранее (v5.4.12): фикс наложения бейджа, убрана обводка при клике на название.
-     • Ранее (v5.4.11): аккордеон-панели, фикс «вспышки» кнопок.
 
    1. ПЕРЕМЕННЫЕ — ТЕМЫ ОФОРМЛЕНИЯ (v5.15, Блок 4 · 4.1–4.3)
    ============================================================ */
@@ -2277,6 +2275,8 @@ button,
   cursor: pointer;
   user-select: none;
   transition: var(--transition-fast);
+  width: 100%; /* v5.4.14: гарантируем, что блок займет всю ширину строки и не сожмется */
+  box-sizing: border-box;
 }
 .recipes-show-hidden-toggle:hover {
   border-color: var(--accent-color);
@@ -2400,7 +2400,8 @@ button,
   margin-bottom: 14px;
 }
 
-.recipes-filters input,
+/* v5.4.14: Исключаем чекбоксы из этого селектора, иначе они растягиваются как текстовые поля */
+.recipes-filters input:not([type="checkbox"]),
 .recipes-filters select {
   padding: 8px 14px;
   border-radius: 14px;
@@ -2414,7 +2415,7 @@ button,
   min-width: 0;
 }
 
-.recipes-filters input {
+.recipes-filters input:not([type="checkbox"]) {
   flex: 2 1 160px;
 }
 
@@ -2422,7 +2423,7 @@ button,
   flex: 1 1 120px;
 }
 
-.recipes-filters input:focus,
+.recipes-filters input:not([type="checkbox"]):focus,
 .recipes-filters select:focus {
   border-color: var(--accent-color);
   box-shadow: 0 0 0 3px var(--accent-light);
@@ -4036,7 +4037,7 @@ body {
     flex: 1 1 100%;
   }
 
-  .recipes-filters input,
+  .recipes-filters input:not([type="checkbox"]),
   .recipes-filters select {
     flex: 1 1 100%;
   }
