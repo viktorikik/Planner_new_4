@@ -1,20 +1,16 @@
 /**
  * Renderer — отрисовка всех экранов и модалок приложения.
  * Зависит от: Constants, Utils, EventBus, DishStore, RecipeStore,
- *             RecommendationEngine, notifications, focusTrap.
+ *             RecommendationEngine, notifications, focusTrap, Recipes.
  *
- * v5.25 (Блок 6): новые категории, аккордеон, comments, CATEGORY_CLASS_MAP.
- * v5.26 (Блок 6): экран «Что приготовить?» — фильтр источника рецептов
- *                 (Все · Мои · База); rebuildChoiceRecipesRanking
- *                 пропускает hidden и уважает choiceRecipesSource.
- * v5.27 (Блок 6): аккордеон в карточке рецепта — заголовок стал
- *                 панелью-кнопкой (фон, рамка, hover), chevron — SVG
- *                 в круглой подложке. Текст в span для flex-раскладки.
+ * v5.31 (Блок 7): в карточку рецепта добавлены кнопки «Редактировать/Создать копию» 
+ *                 и «Скрыть/Вернуть в базу» для базовых рецептов.
+ * v5.27: аккордеон в карточке рецепта — заголовок стал панелью-кнопкой.
  */
 import {
   STATUSES, CATEGORIES, MEAL_TYPES, MEAL_TYPE_LABELS, CONSTANTS,
   CUISINE_LABELS, ALLERGEN_LABELS, UNITS,
-  NON_SCALABLE_UNITS, DIFFICULTY_LABELS, SPICINESS_LABELS,
+  DIFFICULTY_LABELS, SPICINESS_LABELS,
   RECIPE_SOURCES
 } from '../utils/Constants.js';
 import { Utils } from '../utils/Utils.js';
@@ -24,6 +20,8 @@ import { RecipeStore } from '../stores/RecipeStore.js';
 import { showMessage } from '../utils/notifications.js';
 import { trapFocus } from '../utils/focusTrap.js';
 import { RecommendationEngine } from '../features/RecommendationEngine.js';
+// v5.31: импортируем функции для работы с формой рецепта из Recipes.js
+import { openRecipeForm, handleDeleteOrHide } from '../features/Recipes.js';
 
 export const Renderer = (function() {
   let currentView = 'week';
@@ -42,8 +40,6 @@ export const Renderer = (function() {
   let choiceFilterMealType = '';
   let choiceFilterCategory = 'all';
   let choiceFilterOnlyFavorites = false;
-  // v5.26: источник рецептов — 'all' | 'my' | 'base'. Применяется
-  // только когда choiceSource === 'recipes'.
   let choiceRecipesSource = RECIPE_SOURCES.ALL;
   let choiceOffset = 0;
   let choiceRankedCache = null;
@@ -63,7 +59,6 @@ export const Renderer = (function() {
   const modalDate = els.modalTitle;
   const modalContent = els.modalContent;
 
-  // Список категорий для селектов внутри Renderer (buildAddForm).
   const CATEGORY_OPTIONS = [
     { val: CATEGORIES.SOUP,      label: '🍲 Суп' },
     { val: CATEGORIES.SALAD,     label: '🥗 Салат' },
@@ -118,10 +113,6 @@ export const Renderer = (function() {
   const ICON_PLANNED = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`;
   const ICON_DONE_SMALL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
   const ICON_PLANNED_SMALL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`;
-
-  // v5.27: SVG-стрелка для аккордеона в карточке рецепта.
-  // В CSS поворачивается через transform: закрыто → −90° (вправо),
-  // открыто → 0° (вниз). Толщина 2.5 — чтобы не терялась в тёмных темах.
   const ICON_CHEVRON_DOWN = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>';
 
   function pluralizeRu(n, one, few, many) {
@@ -596,15 +587,10 @@ export const Renderer = (function() {
     const futureStr = Utils.formatDateLocal(futureDate);
 
     all.forEach(recipe => {
-      // v5.26: скрытые базовые рецепты в рекомендации не попадают.
       if (recipe.hidden) return;
-
-      // v5.26: источник рецептов — Все / Мои / База.
       if (choiceRecipesSource === RECIPE_SOURCES.MY && recipe.builtIn) return;
       if (choiceRecipesSource === RECIPE_SOURCES.BASE && !recipe.builtIn) return;
-
       if (RecipeStore.isRecipeNameDisliked(recipe.name)) return;
-
       if (DishStore.hasPlannedDishForRecipeInRange(recipe.id, todayStr, futureStr)) return;
 
       const cat = recipe.category || Utils.guessCategory(recipe.name);
@@ -641,7 +627,6 @@ export const Renderer = (function() {
       btn.setAttribute('aria-pressed', String(isActive));
     });
 
-    // v5.26: блок «Источник рецептов» виден только при source='recipes'.
     const recipesSourceWrap = document.getElementById(CONSTANTS.SELECTORS.choiceRecipesSourceWrap);
     if (recipesSourceWrap) {
       recipesSourceWrap.hidden = choiceSource !== 'recipes';
@@ -649,7 +634,6 @@ export const Renderer = (function() {
     renderChoiceRecipesSourceChips();
   }
 
-  // v5.26: подсветка активного чипа источника рецептов.
   function renderChoiceRecipesSourceChips() {
     const chips = document.querySelectorAll('#choiceRecipesSourceChips .choice-chip');
     chips.forEach(chip => {
@@ -782,7 +766,6 @@ export const Renderer = (function() {
     choiceFilterMealType = mealTypePreset || '';
     choiceFilterCategory = 'all';
     choiceFilterOnlyFavorites = false;
-    // v5.26: каждый раз начинаем с «Все».
     choiceRecipesSource = RECIPE_SOURCES.ALL;
     choiceOffset = 0;
     choiceRankedCache = null;
@@ -845,7 +828,6 @@ export const Renderer = (function() {
     renderChoiceResults();
   }
 
-  // v5.26: смена источника рецептов (Все · Мои · База).
   function setChoiceRecipesSource(src) {
     const next =
       (src === RECIPE_SOURCES.MY)   ? RECIPE_SOURCES.MY :
@@ -866,7 +848,6 @@ export const Renderer = (function() {
   }
 
   // ============================================================
-
   function buildAddForm(dateStr) {
     const addSection = document.createElement('div');
     addSection.className = 'modal-add-section';
@@ -1827,7 +1808,7 @@ export const Renderer = (function() {
   function setCategoryFilter(f) { categoryFilter = f; renderMenu(); }
 
   // ============================================================
-  // КАРТОЧКА РЕЦЕПТА (v6.5 → v5.27)
+  // КАРТОЧКА РЕЦЕПТА
   // ============================================================
 
   function formatNutriValue(n) {
@@ -1887,10 +1868,6 @@ export const Renderer = (function() {
     return row;
   }
 
-  // v5.27: собирает <summary> для аккордеона.
-  // Текст — в span (flex: 1), chevron — SVG в круглой подложке справа.
-  // Поворот стрелки — в CSS через [open] (закрыто: −90° → вправо,
-  // открыто: 0° → вниз).
   function buildRecipeSummary(text) {
     const summary = document.createElement('summary');
     summary.className = 'recipe-section-title';
@@ -2224,8 +2201,6 @@ export const Renderer = (function() {
       modal.appendChild(allergensBlock);
     }
 
-    // v5.25: ингредиенты — раскрыты. v5.27: заголовок стал
-    // панелью-кнопкой с круглым chevron.
     const ingredientsDetails = document.createElement('details');
     ingredientsDetails.className = 'recipe-section recipe-accordion recipe-ingredients';
     ingredientsDetails.open = true;
@@ -2270,13 +2245,26 @@ export const Renderer = (function() {
       modal.appendChild(commentsBlock);
     }
 
+    // v5.31: Обновленный блок кнопок
     const buttonsDiv = document.createElement('div');
     buttonsDiv.className = 'recipe-card-buttons';
+    buttonsDiv.style.flexWrap = 'wrap'; // Чтобы кнопки не сжимались слишком сильно
 
     const addButton = document.createElement('button');
     addButton.className = 'btn-primary';
     addButton.id = 'addRecipeToCalendar';
-    addButton.textContent = '➕ Добавить в календарь';
+    addButton.textContent = '➕ В календарь';
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn-secondary';
+    editBtn.textContent = recipe.builtIn ? '📋 Создать копию' : '✎ Изменить';
+    editBtn.addEventListener('click', () => {
+      close();
+      setTimeout(() => {
+        // openRecipeForm сам поймет, что рецепт базовый, и предложит клонировать
+        openRecipeForm(recipe.id); 
+      }, 100);
+    });
 
     const closeButton2 = document.createElement('button');
     closeButton2.className = 'btn-secondary';
@@ -2284,6 +2272,22 @@ export const Renderer = (function() {
     closeButton2.textContent = 'Закрыть';
 
     buttonsDiv.appendChild(addButton);
+    buttonsDiv.appendChild(editBtn);
+    
+    // Для базовых рецептов добавляем кнопку скрытия/возврата
+    if (recipe.builtIn) {
+      const hideBtn = document.createElement('button');
+      hideBtn.className = 'btn-secondary';
+      hideBtn.textContent = recipe.hidden ? '👁 Вернуть' : '🚫 Скрыть';
+      hideBtn.addEventListener('click', () => {
+        close();
+        setTimeout(() => {
+          handleDeleteOrHide(recipe);
+        }, 100);
+      });
+      buttonsDiv.appendChild(hideBtn);
+    }
+
     buttonsDiv.appendChild(closeButton2);
     modal.appendChild(buttonsDiv);
 
