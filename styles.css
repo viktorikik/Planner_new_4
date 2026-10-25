@@ -1,6 +1,7 @@
 /* ============================================================
    Меню и рецепты · styles.css
-   v5.5.0 (Блок 7 · UX-полировка, v5.30):
+   v5.5.1 (Блок 7 · UX-полировка, v5.31):
+     • Оптимизированы кнопки в карточке рецепта (добавлены flex-wrap и базовая ширина для 4-х кнопок).
      • Снижена визуальная нагрузка: типографика стала спокойнее.
      • Список рецептов очищен от лишних кнопок и тяжелых плашек категорий.
      • Экспорт/Импорт рецептов стилизованы как второстепенные кнопки внизу.
@@ -2184,15 +2185,17 @@ button,
   overflow-wrap: anywhere;
 }
 
+/* v5.5.1: Подготовка к 4-м кнопкам (Добавить, Копия/Ред, Скрыть, Закрыть) */
 .recipe-view-modal .recipe-card-buttons {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 16px;
 }
 
-.recipe-view-modal .recipe-card-buttons .btn-primary,
-.recipe-view-modal .recipe-card-buttons .btn-secondary {
-  flex: 1;
+.recipe-view-modal .recipe-card-buttons button {
+  flex: 1 1 calc(50% - 4px); /* По 2 в ряд на десктопе */
+  min-width: 120px;
   justify-content: center;
   text-align: center;
   padding: var(--btn-padding);
@@ -4068,11 +4071,11 @@ button,
     padding: 6px 16px;
   }
 
+  /* v5.5.1: На мобильных кнопки в карточке рецепта выстраиваются в колонку */
   .recipe-view-modal .recipe-card-buttons {
     flex-direction: column;
   }
-  .recipe-view-modal .recipe-card-buttons .btn-primary,
-  .recipe-view-modal .recipe-card-buttons .btn-secondary {
+  .recipe-view-modal .recipe-card-buttons button {
     width: 100%;
     font-size: 13px;
     padding: 8px 16px;
