@@ -1,9 +1,10 @@
 /* ============================================================
    Меню и рецепты · styles.css
-   v5.4.12 (Блок 6, v5.28):
-     • Фикс белой заливки чекбоксов и лейблов на iOS при тапе/фокусе.
-     • Фикс наложения бейджа «база» и кнопок в списке рецептов.
-     • Убрана обводка (outline) при клике на название рецепта.
+   v5.4.13 (Блок 6, v5.29):
+     • Глобальный фикс темной темы: убраны все жестко заданные светлые фоны.
+     • Все полупрозрачные плашки переведены на адаптивные переменные (--badge-bg, --accent-light).
+     • iOS Safari: внедрен -webkit-appearance: none для <summary>, чтобы убрать системную белую заливку при раскрытии аккордеонов.
+     • Ранее (v5.4.12): фикс наложения бейджа, убрана обводка при клике на название.
      • Ранее (v5.4.11): аккордеон-панели, фикс «вспышки» кнопок.
 
    1. ПЕРЕМЕННЫЕ — ТЕМЫ ОФОРМЛЕНИЯ (v5.15, Блок 4 · 4.1–4.3)
@@ -301,7 +302,8 @@ button:active:not(:disabled),
   transition: transform 0.05s ease !important;
 }
 
-/* v5.28: убираем системную вспышку при тапе */
+/* v5.28, v5.4.13: iOS Safari принудительно рисует серую/белую системную 
+   вспышку при тапе на интерактивные элементы. Отключаем для кастомных стилей. */
 button,
 .btn,
 .meal-type-checkbox,
@@ -521,7 +523,8 @@ button,
   box-shadow: 0 0 0 3px var(--accent-light);
 }
 
-/* v5.28: отключаем белый фон iOS при тапе и фокусе */
+/* v5.28: отключаем белый фон iOS при тапе и фокусе. 
+   iOS Safari применяет системную заливку к label/input при фокусе. */
 .meal-type-checkbox:focus-within,
 .recipes-show-hidden-toggle:focus-within,
 .choice-favorite-toggle:focus-within {
@@ -2495,20 +2498,14 @@ button,
   display: none;
 }
 
-[data-theme="classic-dark"] .recipe-category-header {
-  background: rgba(255, 255, 255, 0.04);
-}
-[data-theme="classic-dark"] .recipe-category-header:hover {
-  background: rgba(255, 255, 255, 0.08);
-}
-
 .recipe-list {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
-/* v5.28: фикс наложения элементов в строке рецепта */
+/* v5.28: фикс наложения бейджа «база» и кнопок в строке рецепта. 
+   Используем gap и flex-shrink: 0 для элементов управления. */
 .recipe-list-item {
   display: flex;
   justify-content: space-between;
@@ -2541,7 +2538,7 @@ button,
   border-radius: 4px;
 }
 
-/* Убираем обводку при клике на название рецепта (оставляем только для Tab) */
+/* v5.28: убираем обводку при клике мышью/тапом, оставляем только для навигации с клавиатуры (Tab) */
 .recipe-name-clickable:focus:not(:focus-visible) {
   outline: none;
 }
@@ -3034,19 +3031,20 @@ button,
   list-style: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  -webkit-appearance: none; /* v5.4.13: iOS Safari принудительно рисует белую подложку для <summary> */
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
   border-radius: 12px;
-  background: rgba(0, 0, 0, 0.03);
+  background: var(--badge-bg); /* v5.4.13: было rgba(0,0,0,0.03), ломало темную тему */
   color: var(--text-secondary);
   font-size: 13px;
   font-weight: 500;
   transition: background var(--transition-fast);
 }
 .today-hints-summary:hover {
-  background: rgba(0, 0, 0, 0.06);
+  background: var(--day-hover);
 }
 .today-hints-summary::-webkit-details-marker {
   display: none;
@@ -3076,19 +3074,7 @@ button,
   margin-top: 8px;
   padding: 12px 16px;
   border-radius: 12px;
-  background: rgba(0, 0, 0, 0.03);
-}
-
-[data-theme="classic-dark"] .today-hints-summary {
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--text-secondary);
-}
-[data-theme="classic-dark"] .today-hints-summary:hover {
-  background: rgba(255, 255, 255, 0.07);
-}
-[data-theme="classic-dark"] .today-hints-body {
-  background: rgba(255, 255, 255, 0.04);
-  color: #c2c2cc;
+  background: var(--badge-bg); /* v5.4.13: было rgba(0,0,0,0.03), ломало темную тему */
 }
 
 .today-hint-row {
@@ -4372,7 +4358,7 @@ body {
 .add-modal .recipe-form-modal .recipe-form-details {
   margin-bottom: 16px;
   padding: 0;
-  background: rgba(0, 0, 0, 0.03);
+  background: var(--badge-bg); /* v5.4.13: было rgba(0,0,0,0.03), ломало темную тему */
   border: 1px solid var(--cell-border);
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -4387,6 +4373,7 @@ body {
   list-style: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  -webkit-appearance: none; /* v5.4.13: iOS Safari принудительно рисует белую подложку для <summary> */
   font-size: 14px;
   font-weight: 500;
   color: var(--text-primary);
@@ -4420,10 +4407,6 @@ body {
 }
 .add-modal .recipe-form-modal .recipe-form-details-body .form-group:last-child {
   margin-bottom: 0;
-}
-
-[data-theme="classic-dark"] .add-modal .recipe-form-modal .recipe-form-details {
-  background: rgba(255, 255, 255, 0.04);
 }
 
 .add-modal .recipe-form-modal .allergens-group {
@@ -4663,11 +4646,12 @@ body {
   flex: 1 1 auto;
 }
 
+/* v5.4.13: заменили жесткие rgba на переменные, чтобы блок не светился в темной теме */
 .recipe-view-modal .recipe-allergens {
   padding: 12px 16px;
   margin-bottom: 16px;
-  background: rgba(194, 90, 58, 0.06);
-  border: 1px solid rgba(194, 90, 58, 0.2);
+  background: var(--accent-light);
+  border: 1px solid var(--accent-color);
   border-radius: var(--radius-sm);
 }
 
@@ -4694,17 +4678,8 @@ body {
   line-height: 1.4;
   background: var(--card-bg);
   color: var(--text-primary);
-  border: 1px solid rgba(194, 90, 58, 0.3);
+  border: 1px solid var(--accent-color);
   white-space: nowrap;
-}
-
-[data-theme="classic-dark"] .recipe-view-modal .recipe-allergens {
-  background: rgba(216, 120, 90, 0.1);
-  border-color: rgba(216, 120, 90, 0.25);
-}
-[data-theme="classic-dark"] .recipe-view-modal .recipe-allergen-tag {
-  background: rgba(50, 42, 35, 0.7);
-  border-color: rgba(216, 120, 90, 0.35);
 }
 
 .recipe-view-thumbs {
@@ -4939,6 +4914,7 @@ body {
   list-style: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  -webkit-appearance: none; /* v5.4.13: критический фикс iOS. Safari принудительно рисует белую заливку под <summary> */
   border-radius: var(--radius-sm);
   background: var(--cell-bg);
   border: 1px solid var(--cell-border);
@@ -4962,6 +4938,7 @@ body {
   margin: 0 0 8px 0;
   background: var(--accent-light);
   border-color: var(--accent-color);
+  -webkit-appearance: none; /* v5.4.13 */
 }
 
 .recipe-view-modal .recipe-accordion-text {
@@ -4982,6 +4959,7 @@ body {
   color: var(--accent-color);
   transition: transform var(--transition-fast);
   transform: rotate(-90deg);
+  -webkit-appearance: none; /* v5.4.13 */
 }
 .recipe-view-modal .recipe-accordion[open] .recipe-accordion-chevron {
   transform: rotate(0deg);
