@@ -4,6 +4,9 @@
  * Зависит от: Constants, Utils, RecipeStore, DishStore, Renderer,
  *             notifications, focusTrap, ExportImport.
  *
+ * v5.33 (Блок 7 · UX-полировка):
+ *   • Поведение аккордеона: при открытии новой категории предыдущая автоматически закрывается.
+ *
  * v5.30 (Блок 7 · UX-полировка):
  *   • Из списка убраны иконки редактирования и удаления (перенесены в карточку).
  *   • Убран запрещающий знак 🚫. Базовые рецепты скрываются через карточку.
@@ -225,10 +228,29 @@ export function renderRecipesList() {
     countSpan.textContent = `(${items.length})`;
     header.appendChild(countSpan);
 
+    // v5.33: Логика «аккордеона» (открыта только одна категория)
     header.addEventListener('click', function() {
-      const nowCollapsed = section.classList.toggle('collapsed');
-      header.setAttribute('aria-expanded', String(!nowCollapsed));
-      collapsedCategories[cat] = nowCollapsed;
+      const wasCollapsed = section.classList.contains('collapsed');
+
+      // Закрываем ВСЕ категории
+      list.querySelectorAll('.recipe-category-section').forEach(sec => {
+        sec.classList.add('collapsed');
+      });
+      list.querySelectorAll('.recipe-category-header').forEach(hdr => {
+        hdr.setAttribute('aria-expanded', 'false');
+      });
+
+      // Если кликнули на закрытую — открываем её
+      if (wasCollapsed) {
+        section.classList.remove('collapsed');
+        header.setAttribute('aria-expanded', 'true');
+      }
+
+      // Синхронизируем стейт (все закрыты, кроме текущей, если она открыта)
+      Object.keys(collapsedCategories).forEach(k => { collapsedCategories[k] = true; });
+      if (wasCollapsed) {
+        collapsedCategories[cat] = false;
+      }
       saveCollapsedState();
     });
 
@@ -267,9 +289,6 @@ export function renderRecipesList() {
         badge.title = 'Рецепт из базы';
         li.appendChild(badge);
       }
-
-      // v5.30: Кнопки ✎ и 🗑️/🚫 полностью убраны из списка.
-      // Редактирование и удаление происходят в модалке (карточке) рецепта.
 
       ul.appendChild(li);
     });
