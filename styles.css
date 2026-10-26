@@ -1,11 +1,10 @@
 /* ============================================================
    Меню и рецепты · styles.css
-   v5.5.2 (Блок 7 · UX-полировка, v5.32):
-     • ГЛОБАЛЬНЫЙ ФИКС iOS: отключен белый фон при нажатии на <summary>.
-     • Фикс iOS: принудительно переопределен фон аккордеона в карточке рецепта в состоянии :active и :focus.
+   v5.5.3 (Блок 7 · UX-полировка, v5.33):
+     • ЖЕСТКИЙ ФИКС iOS: у заголовков категорий в списке рецептов отключен системный белый фон и outline.
      • Иерархия в списке рецептов: заголовки категорий увеличены, названия рецептов приглушены.
-     • Выбранная (раскрытая) категория теперь подсвечивается обводкой и фоном, как в карточке рецепта.
-     • (Ранее v5.5.1): Оптимизированы кнопки в карточке, снижена визуальная нагрузка, исправлен отступ навигации.
+     • Выбранная (раскрытая) категория подсвечивается обводкой и фоном, как в карточке рецепта.
+     • (Ранее v5.5.2): Фикс iOS для <summary>, отступы, пустые состояния.
 
    1. ПЕРЕМЕННЫЕ — ТЕМЫ ОФОРМЛЕНИЯ (v5.15, Блок 4 · 4.1–4.3)
    ============================================================ */
@@ -247,9 +246,6 @@
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
 }
 
-/* v5.5.2: ГЛОБАЛЬНЫЙ ФИКС iOS для <summary>. 
-   Браузер принудительно красит элемент в белый при нажатии.
-   appearance: none и transparent фон помогают это перебить. */
 summary {
   -webkit-appearance: none;
   appearance: none;
@@ -264,7 +260,6 @@ body {
   align-items: flex-start;
   min-height: 100vh;
   padding: var(--spacing-md);
-  /* Увеличен нижний отступ, чтобы контент не перекрывался нижним меню (навигацией) */
   padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
   transition: background var(--transition-normal), color var(--transition-normal);
 }
@@ -314,8 +309,6 @@ button:active:not(:disabled),
   transition: transform 0.05s ease !important;
 }
 
-/* iOS Safari принудительно рисует серую/белую системную 
-   вспышку при тапе на интерактивные элементы. Отключаем для кастомных стилей. */
 button,
 .btn,
 .meal-type-checkbox,
@@ -546,8 +539,6 @@ button,
   box-shadow: 0 0 0 3px var(--accent-light);
 }
 
-/* v5.28: отключаем белый фон iOS при тапе и фокусе. 
-   iOS Safari применяет системную заливку к label/input при фокусе. */
 .meal-type-checkbox:focus-within,
 .recipes-show-hidden-toggle:focus-within,
 .choice-favorite-toggle:focus-within {
@@ -555,7 +546,6 @@ button,
   outline: none;
 }
 
-/* Мягкое выделение выбранных чекбоксов */
 .meal-type-checkbox:has(input:checked),
 .meal-type-checkbox:has(input:checked):focus-within {
   background: var(--accent-light);
@@ -2237,7 +2227,7 @@ button,
 }
 
 /* ============================================================
-   20. ТАБ «РЕЦЕПТЫ» — ПАНЕЛЬ, ФИЛЬТРЫ, СПИСОК
+   20. ТАБ «РЕЦЕПТЫ» — ПАНЕЛЬ, ФИЛЬТРЫ, СПИСОК (v5.5.3)
    ============================================================ */
 .recipes-tab {
 }
@@ -2476,48 +2466,51 @@ button,
 }
 
 .recipe-category-section {
-  margin-bottom: 8px; /* v5.5.2: Увеличили отступ между категориями для воздуха */
+  margin-bottom: 8px; 
 }
 
-/* v5.5.2: Иерархия. Заголовок категории теперь главный. */
-.recipe-category-header {
+/* v5.5.3: Иерархия + ЖЕСТКИЙ ФИКС iOS */
+.recipe-category-header,
+.recipe-category-header:active,
+.recipe-category-header:focus {
   display: flex;
   align-items: center;
   gap: 8px;
   width: 100%;
   text-align: left;
   font-family: inherit;
-  font-size: 18px; /* Крупнее */
-  font-weight: 700; /* Жирнее */
+  font-size: 18px; 
+  font-weight: 700; 
   color: var(--text-primary);
   padding: 12px 14px;
-  background: transparent;
-  border: 1px solid transparent; /* Резерв под рамку */
+  background: transparent !important; /* Убиваем белый фон iOS */
+  background-color: transparent !important;
+  border: 1px solid transparent; 
   border-radius: var(--radius-sm);
   margin-bottom: 4px;
   cursor: pointer;
   transition: var(--transition-fast);
-  appearance: none;
+  -webkit-appearance: none !important; /* Убиваем системный стиль кнопки */
+  appearance: none !important;
   box-sizing: border-box;
   user-select: none;
-  -webkit-tap-highlight-color: transparent;
-  outline: none;
+  -webkit-tap-highlight-color: transparent !important;
+  outline: none !important; /* Убиваем системную фокусную рамку */
 }
 
 .recipe-category-header:hover {
-  background: var(--card-hover-bg);
+  background: var(--card-hover-bg) !important;
 }
 
-.recipe-category-header:focus-visible {
-  outline: 2px solid var(--accent-color);
-  outline-offset: 2px;
-}
-
-/* v5.5.2: Выделение выбранной (раскрытой) категории — в стиле карточки рецепта */
-.recipe-category-section:not(.collapsed) .recipe-category-header {
+/* v5.5.3: Выделение выбранной (раскрытой) категории + фикс */
+.recipe-category-section:not(.collapsed) .recipe-category-header,
+.recipe-category-section:not(.collapsed) .recipe-category-header:active,
+.recipe-category-section:not(.collapsed) .recipe-category-header:focus {
   background: var(--accent-light) !important;
+  background-color: var(--accent-light) !important;
   border-color: var(--accent-color) !important;
   color: var(--accent-color) !important;
+  outline: none !important;
 }
 
 .recipe-category-section:not(.collapsed) .recipe-category-arrow,
@@ -2564,7 +2557,6 @@ button,
   margin: 0;
 }
 
-/* v5.5.2: Названия рецептов — второстепенный уровень */
 .recipe-list-item {
   display: flex;
   justify-content: space-between;
@@ -2575,7 +2567,7 @@ button,
   border-radius: 0;
   background: transparent;
   transition: var(--transition-fast);
-  color: var(--text-secondary); /* Приглушенный цвет */
+  color: var(--text-secondary); 
 }
 .recipe-list-item:last-child {
   border-bottom: none;
@@ -2594,8 +2586,8 @@ button,
   min-width: 0;
   word-break: break-word;
   font-size: 15px;
-  font-weight: 400; /* Убрали жирность */
-  color: var(--text-secondary); /* Приглушенный */
+  font-weight: 400; 
+  color: var(--text-secondary); 
   transition: var(--transition-fast);
 }
 .recipe-name-clickable:hover {
@@ -3128,7 +3120,6 @@ button,
   display: none;
 }
 
-/* v5.5.2: Принудительный сброс фона для iOS, когда аккордеон раскрыт */
 .today-hints[open] > .today-hints-summary {
   background: var(--badge-bg) !important;
   color: var(--text-primary) !important;
@@ -4987,10 +4978,9 @@ button,
 }
 
 /* ============================================================
-   43. АККОРДЕОН В КАРТОЧКЕ РЕЦЕПТА (v5.5.2 - фикс iOS)
+   43. АККОРДЕОН В КАРТОЧКЕ РЕЦЕПТА (v5.5.3 - фикс iOS)
    ============================================================ */
 
-/* Базовое состояние + принудительный сброс для iOS */
 .recipe-view-modal .recipe-accordion > summary.recipe-section-title,
 .recipe-view-modal .recipe-accordion > summary.recipe-section-title:active,
 .recipe-view-modal .recipe-accordion > summary.recipe-section-title:focus {
@@ -5003,13 +4993,13 @@ button,
   appearance: none;
   -webkit-tap-highlight-color: transparent;
   border-radius: var(--radius-sm);
-  background: var(--cell-bg) !important; /* Принудительно задаем фон */
+  background: var(--cell-bg) !important; 
   border: 1px solid var(--cell-border);
   display: flex;
   align-items: center;
   gap: 8px;
   transition: background var(--transition-fast), border-color var(--transition-fast);
-  outline: none; /* Убираем системный фокус, чтобы не было белой рамки */
+  outline: none; 
 }
 
 .recipe-view-modal .recipe-accordion > summary.recipe-section-title::-webkit-details-marker {
@@ -5021,7 +5011,6 @@ button,
   border-color: var(--accent-color);
 }
 
-/* Открытое состояние + жесткий фикс для iOS :active и :focus */
 .recipe-view-modal .recipe-accordion[open] > summary.recipe-section-title,
 .recipe-view-modal .recipe-accordion[open] > summary.recipe-section-title:active,
 .recipe-view-modal .recipe-accordion[open] > summary.recipe-section-title:focus {
