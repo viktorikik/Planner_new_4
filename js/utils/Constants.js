@@ -1,384 +1,812 @@
-// Статусы
-export const STATUSES = {
-  DONE: 'done',
-  PLANNED: 'planned'
-};
+<!DOCTYPE html>
+<!--
+  Меню и рецепты · index.html
+  v5.30 (Блок 7 · UX-полировка): 
+  - Экспорт/Импорт рецептов перенесены вниз.
+  - Добавлено пустое состояние для вкладки «Покупки».
+  - Кнопки удаления/редактирования убраны из списка рецептов.
+  v5.29: Фиксы iOS для чекбоксов, три таба источника рецептов.
+-->
+<html lang="ru" data-theme="classic-light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+  <title>Меню и рецепты · Календарь</title>
 
-// Категории
-export const CATEGORIES = {
-  SOUP: 'soup',
-  SALAD: 'salad',
-  MAIN: 'main',
-  APPETIZER: 'appetizer', // Закуска (v5.25, Блок 6)
-  BAKERY: 'bakery',
-  DESSERT: 'dessert',     // Десерт (v5.25, Блок 6)
-  OTHER: 'other'
-};
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ff6b35" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1e1e2e" media="(prefers-color-scheme: dark)">
 
-export const CATEGORY_LABELS = {
-  [CATEGORIES.SOUP]:      '🍲 Супы',
-  [CATEGORIES.SALAD]:     '🥗 Салаты',
-  [CATEGORIES.MAIN]:      '🍖 Основные блюда',
-  [CATEGORIES.APPETIZER]: '🥪 Закуски',
-  [CATEGORIES.BAKERY]:    '🥐 Выпечка',
-  [CATEGORIES.DESSERT]:   '🍰 Десерты',
-  [CATEGORIES.OTHER]:     '🍽️ Другое'
-};
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Меню и рецепты">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
-// Источник рецептов (v5.26, Блок 6): «Все» / «Мои» / «База».
-// Используется в табе «Рецепты» и в фильтре экрана «Что приготовить?».
-// Базовые рецепты приходят из recipes.json с builtIn: true,
-// пользовательские — builtIn: false.
-export const RECIPE_SOURCES = {
-  ALL: 'all',
-  MY: 'my',
-  BASE: 'base'
-};
+  <!-- Версия CSS будет обновлена на шаге со стилями -->
+  <link rel="stylesheet" href="styles.css?v=5.4.18">
 
-// Приёмы пищи (v4.0)
-export const MEAL_TYPES = {
-  BREAKFAST: 'breakfast',
-  LUNCH: 'lunch',
-  DINNER: 'dinner',
-  SNACK: 'snack'
-};
+  <script>
+    (function() {
+      try {
+        var theme = localStorage.getItem('mealPlannerTheme');
+        if (theme) {
+          document.documentElement.setAttribute('data-theme', theme);
+        }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
 
-export const MEAL_TYPE_LABELS = {
-  [MEAL_TYPES.BREAKFAST]: 'Завтрак',
-  [MEAL_TYPES.LUNCH]:     'Обед',
-  [MEAL_TYPES.DINNER]:    'Ужин',
-  [MEAL_TYPES.SNACK]:     'Перекус'
-};
+<div class="app" data-active-tab="menu">
+  <!-- ШАПКА -->
+  <header class="app-header">
+    <div class="logo">
+      <h1>🍽️ Меню и рецепты</h1>
+    </div>
+    <div class="more-menu-wrap">
+      <button class="more-btn" id="moreMenuBtn" aria-label="Дополнительные действия" aria-haspopup="true" aria-expanded="false">
+        <span class="more-btn-lines" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </span>
+      </button>
+      <div class="more-menu" id="moreMenu" role="menu" hidden>
+        <button class="more-menu-item" id="onboardingHelpBtn" role="menuitem" type="button">
+          <span class="more-menu-icon">❓</span>
+          <span>Справка</span>
+        </button>
+        <button class="more-menu-item" id="printBtn" role="menuitem" type="button">
+          <span class="more-menu-icon">🖨️</span>
+          <span>Печать меню на неделю</span>
+        </button>
+        <button class="more-menu-item" id="themeToggle" role="menuitem" type="button">
+          <span class="more-menu-icon">🎨</span>
+          <span>Оформление</span>
+        </button>
+      </div>
+    </div>
+  </header>
 
-// Кухни
-export const CUISINES = {
-  RUSSIAN: 'russian',
-  UKRAINIAN: 'ukrainian',
-  CAUCASIAN: 'caucasian',
-  ITALIAN: 'italian',
-  FRENCH: 'french',
-  MEDITERRANEAN: 'mediterranean',
-  GREEK: 'greek',
-  AMERICAN: 'american',
-  MEXICAN: 'mexican',
-  CHINESE: 'chinese',
-  JAPANESE: 'japanese',
-  KOREAN: 'korean',
-  INDIAN: 'indian',
-  ASIAN: 'asian',
-  INTERNATIONAL: 'international'
-};
+  <!-- ============ ТАБ: СЕГОДНЯ ============ -->
+  <div class="tab-view" data-tab-view="today">
+    <div id="todayContent"></div>
+  </div>
 
-export const CUISINE_LABELS = {
-  [CUISINES.RUSSIAN]:       'Русская',
-  [CUISINES.UKRAINIAN]:     'Украинская',
-  [CUISINES.CAUCASIAN]:     'Кавказская',
-  [CUISINES.ITALIAN]:       'Итальянская',
-  [CUISINES.FRENCH]:        'Французская',
-  [CUISINES.MEDITERRANEAN]: 'Средиземноморская',
-  [CUISINES.GREEK]:         'Греческая',
-  [CUISINES.AMERICAN]:      'Американская',
-  [CUISINES.MEXICAN]:       'Мексиканская',
-  [CUISINES.CHINESE]:       'Китайская',
-  [CUISINES.JAPANESE]:      'Японская',
-  [CUISINES.KOREAN]:        'Корейская',
-  [CUISINES.INDIAN]:        'Индийская',
-  [CUISINES.ASIAN]:         'Азиатская',
-  [CUISINES.INTERNATIONAL]: 'Международная'
-};
+  <!-- ============ ТАБ: МЕНЮ ============ -->
+  <div class="tab-view" data-tab-view="menu">
+    <section class="calendar-wrap" id="calendarWrap">
+      <div class="calendar-view-switch">
+        <div class="view-toggle" id="viewToggle" role="group" aria-label="Переключение вида календаря">
+          <button class="active" data-view="week" aria-pressed="true">Неделя</button>
+          <button data-view="month" aria-pressed="false">Месяц</button>
+        </div>
+      </div>
+      <div class="calendar-header">
+        <div class="month-nav-wrapper">
+          <div class="month-nav">
+            <button id="prevMonth" aria-label="Предыдущий месяц">‹</button>
+            <button id="nextMonth" aria-label="Следующий месяц">›</button>
+          </div>
+          <h2 id="monthTitle">Август 2026</h2>
+        </div>
+        <button class="today-btn" id="todayBtn">Сегодня</button>
+      </div>
+      <div class="weekdays" role="row">
+        <span role="columnheader">Пн</span>
+        <span role="columnheader">Вт</span>
+        <span role="columnheader">Ср</span>
+        <span role="columnheader">Чт</span>
+        <span role="columnheader">Пт</span>
+        <span role="columnheader">Сб</span>
+        <span role="columnheader">Вс</span>
+      </div>
+      <div id="calendarContent" role="grid"></div>
+    </section>
 
-// Аллергены
-export const ALLERGENS = {
-  NUTS: 'nuts',
-  EGGS: 'eggs',
-  GLUTEN: 'gluten',
-  FISH: 'fish',
-  MILK: 'milk',
-  PEANUT: 'peanut',
-  ADDITIVES: 'additives',
-  MUSTARD: 'mustard',
-  SESAME: 'sesame',
-  MOLLUSCS: 'molluscs',
-  CRUSTACEANS: 'crustaceans',
-  STRAWBERRY: 'strawberry',
-  SOY: 'soy',
-  CELERY: 'celery',
-  LUPIN: 'lupin'
-};
+    <section class="search-filter-wrap">
+      <input type="text" id="searchInput" placeholder="🔍 Поиск блюда..." aria-label="Поиск по названию блюда">
+      <select id="statusFilter" aria-label="Фильтр по статусу">
+        <option value="all">Все статусы</option>
+        <option value="done">✅ Приготовлено</option>
+        <option value="planned">📅 Планирую</option>
+      </select>
+      <select id="categoryFilter" aria-label="Фильтр по категории">
+        <option value="all">Все категории</option>
+        <option value="soup">Супы</option>
+        <option value="salad">Салаты</option>
+        <option value="main">Основные</option>
+        <option value="appetizer">Закуски</option>
+        <option value="bakery">Выпечка</option>
+        <option value="dessert">Десерты</option>
+        <option value="other">Другое</option>
+      </select>
+    </section>
 
-export const ALLERGEN_LABELS = {
-  [ALLERGENS.NUTS]:        'Орехи',
-  [ALLERGENS.EGGS]:        'Яйцо',
-  [ALLERGENS.GLUTEN]:      'Злаки, содержащие глютен',
-  [ALLERGENS.FISH]:        'Рыба',
-  [ALLERGENS.MILK]:        'Белок коровьего молока',
-  [ALLERGENS.PEANUT]:      'Арахис',
-  [ALLERGENS.ADDITIVES]:   'Пищевые добавки',
-  [ALLERGENS.MUSTARD]:     'Горчица',
-  [ALLERGENS.SESAME]:      'Кунжут',
-  [ALLERGENS.MOLLUSCS]:    'Моллюски',
-  [ALLERGENS.CRUSTACEANS]: 'Ракообразные',
-  [ALLERGENS.STRAWBERRY]:  'Клубника',
-  [ALLERGENS.SOY]:         'Соя',
-  [ALLERGENS.CELERY]:      'Сельдерей',
-  [ALLERGENS.LUPIN]:       'Люпин и продукты его переработки'
-};
+    <section class="menu-list" id="menuList">
+      <h3>📋 Меню на <span id="menuPeriod">месяц</span></h3>
+      <div id="menuContent"></div>
+    </section>
 
-// Единицы измерения
-export const UNITS = {
-  G: 'g',
-  KG: 'kg',
-  ML: 'ml',
-  L: 'l',
-  PCS: 'pcs',
-  TBSP: 'tbsp',
-  TSP: 'tsp',
-  PINCH: 'pinch',
-  CLOVE: 'clove',
-  BUNCH: 'bunch'
-};
+    <section class="backup-section">
+      <div class="backup-row">
+        <button class="btn btn-export" id="exportBtn">Экспорт</button>
+        <button class="btn btn-import" id="importBtn">Импорт</button>
+      </div>
+      <div class="backup-hint">
+        📌 Не забывайте делать резервную копию, выберите для этого формат <strong>JSON</strong>.
+        Если сохраняете «для себя» — лучше выбрать формат <strong>CSV</strong> или <strong>TXT</strong>.
+      </div>
+      <input type="file" id="importFileInput" class="import-hidden" accept=".json" aria-label="Загрузить файл резервной копии">
+    </section>
+  </div>
 
-export const UNIT_LABELS = {
-  [UNITS.G]:     'г',
-  [UNITS.KG]:    'кг',
-  [UNITS.ML]:    'мл',
-  [UNITS.L]:     'л',
-  [UNITS.PCS]:   'шт',
-  [UNITS.TBSP]:  'ст.л.',
-  [UNITS.TSP]:   'ч.л.',
-  [UNITS.PINCH]: 'щепотка',
-  [UNITS.CLOVE]: 'зубчик',
-  [UNITS.BUNCH]: 'пучок'
-};
+  <!-- ============ ТАБ: РЕЦЕПТЫ ============ -->
+  <div class="tab-view" data-tab-view="recipes">
+    <div class="recipes-tab">
+      <div class="recipes-tab-header">
+        <h2 id="recipesTitle">📖 Рецепты</h2>
+      </div>
 
-export const NON_SCALABLE_UNITS = [
-  UNITS.PCS, UNITS.TBSP, UNITS.TSP, UNITS.PINCH, UNITS.CLOVE, UNITS.BUNCH
-];
+      <button id="recipesBackBtn" class="recipes-back-btn" type="button" hidden>← Назад</button>
 
-export const DIFFICULTY_LABELS = {
-  1: 'Очень просто',
-  2: 'Просто',
-  3: 'Средне',
-  4: 'Сложно',
-  5: 'Очень сложно'
-};
+      <!-- v5.26: табы источника рецептов -->
+      <div class="recipes-source-tabs" id="recipeSourceTabs" role="tablist" aria-label="Источник рецептов">
+        <button type="button" class="recipe-source-tab active" data-source="all" role="tab" aria-selected="true">Все</button>
+        <button type="button" class="recipe-source-tab" data-source="my" role="tab" aria-selected="false">Мои</button>
+        <button type="button" class="recipe-source-tab" data-source="base" role="tab" aria-selected="false">База</button>
+      </div>
 
-export const SPICINESS_LABELS = {
-  1: 'Не остро',
-  2: 'Слегка остро',
-  3: 'Средне остро',
-  4: 'Остро',
-  5: 'Очень остро'
-};
+      <!-- v5.30: Экспорт и импорт убраны отсюда -->
+      <div class="recipes-toolbar">
+        <button class="btn-done" id="addRecipeBtn">Добавить</button>
+      </div>
 
-// Список продуктов для распознавания ингредиентов (без изменений)
-export const PRODUCT_WORDS = [
-  'лук', 'морковь', 'картофель', 'капуста', 'свекла', 'редис', 'репа',
-  'огурец', 'помидор', 'перец', 'баклажан', 'кабачок', 'тыква',
-  'чеснок', 'зелень', 'петрушка', 'укроп', 'базилик', 'кинза',
-  'салат', 'шпинат', 'щавель', 'ревень', 'сельдерей',
-  'рис', 'гречка', 'овсянка', 'перловка', 'пшено', 'кускус', 'булгур',
-  'макароны', 'паста', 'лапша', 'вермишель', 'спагетти',
-  'говядина', 'свинина', 'баранина', 'телятина', 'курица', 'индейка',
-  'утка', 'гусь', 'кролик', 'фарш', 'печень', 'сердце', 'почки',
-  'тунец', 'горбуша', 'лосось', 'форель', 'сёмга', 'кета', 'кижуч',
-  'треска', 'пикша', 'окунь', 'судак', 'щука', 'сом', 'налим',
-  'осётр', 'пангасиус', 'тилапия', 'дорада', 'сибас', 'ставрида',
-  'скумбрия', 'макрель', 'сельдь', 'шпроты', 'килька',
-  'креветки', 'мидии', 'кальмары', 'краб',
-  'молоко', 'сливки', 'сметана', 'йогурт', 'кефир', 'ряженка',
-  'творог', 'сыр', 'масло', 'маргарин', 'майонез', 'кетчуп',
-  'яйцо',
-  'соль', 'перец', 'сахар', 'мука', 'крахмал',
-  'корица', 'ваниль', 'какао', 'шоколад',
-  'орегано', 'тимьян', 'розмарин', 'кориандр', 'тмин', 'кумин',
-  'паприка', 'куркума', 'имбирь', 'шафран', 'гвоздика', 'кардамон',
-  'яблоко', 'груша', 'айва', 'хурма', 'гранат',
-  'лимон', 'лайм', 'грейпфрут', 'мандарин', 'апельсин',
-  'клубника', 'малина', 'черника', 'ежевика', 'смородина', 'крыжовник',
-  'вишня', 'черешня', 'слива', 'абрикос', 'персик', 'нектарин',
-  'банан', 'киви', 'манго', 'ананас', 'гранат',
-  'арбуз', 'дыня',
-  'финик', 'инжир', 'курага', 'чернослив', 'изюм',
-  'орех', 'миндаль', 'фисташка', 'кешью', 'грецкий орех', 'фундук',
-  'гриб', 'шампиньон', 'белый гриб', 'подберёзовик', 'лисичка',
-  'вода', 'бульон', 'вино', 'коньяк', 'ром', 'пиво',
-  'чай', 'кофе', 'какао', 'компот', 'кисель', 'морс', 'квас',
-  'лимонад', 'сок', 'нектар',
-  'оливковое масло', 'подсолнечное масло', 'сливочное масло',
-  'варенье', 'джем', 'конфитюр', 'мёд', 'сироп', 'пастила', 'мармелад',
-  'дрожжи', 'разрыхлитель', 'сода', 'уксус', 'лимонная кислота',
-  'желатин', 'пудра', 'цукаты', 'карамель', 'сгущёнка', 'ванильный сахар'
-];
+      <div class="recipes-filters">
+        <input type="text" id="recipesSearchInput" placeholder="🔍 Поиск рецепта..." aria-label="Поиск по названию рецепта">
+        <select id="recipesCategoryFilter" aria-label="Фильтр по категории рецептов">
+          <option value="all">Все категории</option>
+          <option value="soup">Супы</option>
+          <option value="salad">Салаты</option>
+          <option value="main">Основные</option>
+          <option value="appetizer">Закуски</option>
+          <option value="bakery">Выпечка</option>
+          <option value="dessert">Десерты</option>
+          <option value="other">Другое</option>
+        </select>
+        <!-- v5.26: показываем только на табе «База» -->
+        <label class="recipes-show-hidden-toggle" id="recipesShowHiddenToggleLabel" hidden>
+          <input type="checkbox" id="recipesShowHiddenToggle">
+          <span>Показать скрытые</span>
+        </label>
+      </div>
 
-// Темы
-export const THEMES = {
-  CLASSIC_LIGHT: 'classic-light',
-  CLASSIC_DARK:  'classic-dark',
-  BRAND_LIGHT:   'brand-light',
-  BRAND_DARK:    'brand-dark'
-};
+      <input type="file" id="importRecipesFileInput" class="import-hidden" accept=".json" aria-label="Загрузить файл с рецептами">
 
-export const DEFAULT_THEME = THEMES.CLASSIC_LIGHT;
+      <div id="recipesList"></div>
 
-export const THEME_LEGACY_MAP = {
-  'light': THEMES.CLASSIC_LIGHT,
-  'dark':  THEMES.CLASSIC_DARK
-};
+      <!-- v5.30: Кнопки экспорта/импорта перенесены вниз -->
+      <div class="recipes-bottom-actions">
+        <button class="btn-secondary" id="exportRecipesBtn">Экспорт рецептов</button>
+        <button class="btn-secondary" id="importRecipesBtn">Импорт рецептов</button>
+      </div>
+    </div>
+  </div>
 
-export const CONSTANTS = {
-  STORAGE_KEYS: {
-    RECIPES: 'smartMenuRecipes_v2',
-    RECIPES_LEGACY: 'smartMenuRecipes_v1',
-    DISHES: 'smartMenuDishes_v5',
-    THEME: 'mealPlannerTheme',
-    ONBOARDING_SHOWN: 'smartMenuOnboardingShown_v1',
-    RECIPES_COLLAPSED: 'smartMenuRecipesCollapsed_v1',
-    // v5.26: таб «Все · Мои · База» и чекбокс «Показать скрытые».
-    // Запоминаем выбор, чтобы после перезагрузки вернуться туда же.
-    RECIPES_SOURCE_FILTER: 'smartMenuRecipesSourceFilter_v1',
-    RECIPES_SHOW_HIDDEN: 'smartMenuRecipesShowHidden_v1'
-  },
-  EVENTS: {
-    DISHES_CHANGED: 'dishes:changed',
-    RECIPES_CHANGED: 'recipes:changed'
-  },
-  CHOICE: {
-    EXCLUDE_DAYS: 5
-  },
-  SELECTORS: {
-    monthTitle: 'monthTitle',
-    calendarContent: 'calendarContent',
-    menuContent: 'menuContent',
-    menuPeriod: 'menuPeriod',
-    modalOverlay: 'modalOverlay',
-    modalTitle: 'modalTitle',
-    modalContent: 'modalContent',
-    themeToggle: 'themeToggle',
-    searchInput: 'searchInput',
-    statusFilter: 'statusFilter',
-    categoryFilter: 'categoryFilter',
-    viewToggle: 'viewToggle',
-    modalClose: 'modalClose',
-    addModalOverlay: 'addModalOverlay',
-    addModalClose: 'addModalClose',
-    addModalCancel: 'addModalCancel',
-    newDishName: 'newDishName',
-    newDishNote: 'newDishNote',
-    newDishDate: 'newDishDate',
-    newDishStatus: 'newDishStatus',
-    newDishCategory: 'newDishCategory',
-    newDishMealTypesGroup: 'newDishMealTypesGroup',
-    newDishRecipe: 'newDishRecipe',
-    addModalSave: 'addModalSave',
-    editDishOverlay: 'editDishOverlay',
-    editDishClose: 'editDishClose',
-    editDishId: 'editDishId',
-    editDishName: 'editDishName',
-    editDishNote: 'editDishNote',
-    editDishStatus: 'editDishStatus',
-    editDishCategory: 'editDishCategory',
-    editDishMealTypesGroup: 'editDishMealTypesGroup',
-    editDishRecipe: 'editDishRecipe',
-    editDishCancel: 'editDishCancel',
-    editDishSave: 'editDishSave',
-    repeatMenuOverlay: 'repeatMenuOverlay',
-    repeatMenuClose: 'repeatMenuClose',
-    repeatMenuDate: 'repeatMenuDate',
-    repeatMenuSourceDate: 'repeatMenuSourceDate',
-    repeatMenuCancel: 'repeatMenuCancel',
-    repeatMenuSave: 'repeatMenuSave',
-    exportModalOverlay: 'exportModalOverlay',
-    exportModalClose: 'exportModalClose',
-    choiceOverlay: 'choiceOverlay',
-    choiceClose: 'choiceClose',
-    choiceSourceGroup: 'choiceSourceGroup',
-    welcomeOverlay: 'welcomeOverlay',
-    welcomeStartBtn: 'welcomeStartBtn',
-    todayContent: 'todayContent',
-    recipesTitle: 'recipesTitle',
-    recipesBackBtn: 'recipesBackBtn',
-    recipesList: 'recipesList',
-    // v5.26: табы источника рецептов + чекбокс «Показать скрытые»
-    recipeSourceTabs: '.recipe-source-tab',
-    recipesShowHiddenToggle: 'recipesShowHiddenToggle',
-    recipesShowHiddenToggleLabel: 'recipesShowHiddenToggleLabel',
-    addRecipeBtn: 'addRecipeBtn',
-    exportRecipesBtn: 'exportRecipesBtn',
-    importRecipesBtn: 'importRecipesBtn',
-    importRecipesFileInput: 'importRecipesFileInput',
-    recipesSearchInput: 'recipesSearchInput',
-    recipesCategoryFilter: 'recipesCategoryFilter',
-    recipeExportOverlay: 'recipeExportOverlay',
-    recipeExportClose: 'recipeExportClose',
-    recipeExportOptions: '.recipe-export-option',
-    recipeFormOverlay: 'recipeFormOverlay',
-    recipeFormClose: 'recipeFormClose',
-    recipeFormTitle: 'recipeFormTitle',
-    recipeFormId: 'recipeFormId',
-    recipeFormCancel: 'recipeFormCancel',
-    recipeFormSave: 'recipeFormSave',
-    recipeName: 'recipeName',
-    recipeCategory: 'recipeCategory',
-    recipeCuisine: 'recipeCuisine',
-    recipeServings: 'recipeServings',
-    recipeCookTime: 'recipeCookTime',
-    recipeActiveTime: 'recipeActiveTime',
-    recipeDifficulty: 'recipeDifficulty',
-    recipeSpiciness: 'recipeSpiciness',
-    recipeIngredientsList: 'recipeIngredientsList',
-    recipeAddIngredientBtn: 'recipeAddIngredientBtn',
-    recipeParseBtn: 'recipeParseBtn',
-    recipeMealTypesGroup: 'recipeMealTypesGroup',
-    recipeAllergensGroup: 'recipeAllergensGroup',
-    recipeNutritionKcal: 'recipeNutritionKcal',
-    recipeNutritionProtein: 'recipeNutritionProtein',
-    recipeNutritionFat: 'recipeNutritionFat',
-    recipeNutritionCarbs: 'recipeNutritionCarbs',
-    recipeInstructions: 'recipeInstructions',
-    recipeComments: 'recipeComments',
-    recipeParserOverlay: 'recipeParserOverlay',
-    recipeParserClose: 'recipeParserClose',
-    recipeParserTextarea: 'recipeParserTextarea',
-    recipeParserCancel: 'recipeParserCancel',
-    recipeParserApply: 'recipeParserApply',
-    shoppingDateFrom: 'shoppingDateFrom',
-    shoppingDateTo: 'shoppingDateTo',
-    generateShoppingListBtn: 'generateShoppingListBtn',
-    savedListsContainer: 'savedListsContainer',
-    savedListsList: 'savedListsList',
-    shoppingListDisplay: 'shoppingListDisplay',
-    shoppingListResult: 'shoppingListResult',
-    saveCurrentListBtn: 'saveCurrentListBtn',
-    deleteCurrentListBtn: 'deleteCurrentListBtn',
-    backToSavedListsBtn: 'backToSavedListsBtn',
-    exportShoppingListTxtBtn: 'exportShoppingListTxtBtn',
-    shoppingListView: 'shoppingListView',
-    shoppingListEditBtn: 'shoppingListEditBtn',
-    importFileInput: 'importFileInput',
-    importBtn: 'importBtn',
-    exportBtn: 'exportBtn',
-    prevMonth: 'prevMonth',
-    nextMonth: 'nextMonth',
-    todayBtn: 'todayBtn',
-    calendarWrap: 'calendarWrap',
-    viewToggleButtons: '#viewToggle button',
-    exportOptions: '.export-option',
-    bottomNav: 'bottomNav',
-    bottomNavButtons: '.bottom-nav-btn',
-    themeOverlay: 'themeOverlay',
-    themeClose: 'themeClose',
-    themeGrid: 'themeGrid',
-    onboardingHelpBtn: 'onboardingHelpBtn',
-    onboardingOverlay: 'onboardingOverlay',
-    onboardingSlides: 'onboardingSlides',
-    onboardingDots: 'onboardingDots',
-    onboardingPrev: 'onboardingPrev',
-    onboardingNext: 'onboardingNext',
-    onboardingSkip: 'onboardingSkip',
-    onboardingClose: 'onboardingClose',
-    // v5.26: источник рецептов в «Что приготовить?»
-    choiceRecipesSourceWrap: 'choiceRecipesSourceWrap',
-    choiceRecipesSourceChips: 'choiceRecipesSourceChips'
-  }
-};
+  <!-- ============ ТАБ: ПОКУПКИ ============ -->
+  <div class="tab-view" data-tab-view="shopping">
+    <div class="shopping-tab">
+      <h2 class="shopping-tab-title">🛒 Список покупок</h2>
+
+      <div class="shopping-dates-row">
+        <label for="shoppingDateFrom">От:</label>
+        <input type="date" id="shoppingDateFrom">
+        <label for="shoppingDateTo">До:</label>
+        <input type="date" id="shoppingDateTo">
+      </div>
+      <button class="btn-primary shopping-generate-btn" id="generateShoppingListBtn">Собрать список</button>
+
+      <!-- v5.30: Пустое состояние, если список ещё не собран -->
+      <div id="shoppingEmptyState" class="shopping-empty-state">
+        <div class="shopping-empty-icon">🛒</div>
+        <p class="shopping-empty-text">Выберите период и нажмите «Собрать список», чтобы увидеть, что нужно купить.</p>
+      </div>
+
+      <div id="savedListsContainer" class="shopping-saved-block" style="display: none;">
+        <h4>💾 Сохранённые списки</h4>
+        <div id="savedListsList"></div>
+      </div>
+
+      <div id="shoppingListDisplay" style="display:none;">
+        <button id="backToSavedListsBtn" class="btn-secondary shopping-back-btn">← Назад к спискам</button>
+        <div id="shoppingListView" class="shopping-list-view"></div>
+        <textarea id="shoppingListResult" placeholder="Сгенерированный список появится здесь."></textarea>
+        <div class="shopping-actions-row">
+          <button id="shoppingListEditBtn" class="btn-secondary">✎ Редактировать вручную</button>
+          <button id="saveCurrentListBtn" class="btn-done">Сохранить</button>
+          <button id="deleteCurrentListBtn" class="btn-secondary">Удалить</button>
+          <button id="exportShoppingListTxtBtn" class="btn-secondary">.txt</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== МОДАЛЬНЫЕ ОКНА ===== -->
+
+<!-- Модалка дня -->
+<div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">26 августа 2026</h3>
+      <button class="modal-close" id="modalClose" aria-label="Закрыть">✕</button>
+    </div>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<!-- Модалка добавления блюда -->
+<div class="modal-overlay add-modal" id="addModalOverlay" role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="addModalTitle">➕ Новое блюдо</h3>
+      <button class="modal-close" id="addModalClose" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="form-group">
+      <label for="newDishName">Название блюда</label>
+      <input type="text" id="newDishName" placeholder="Например, Плов">
+    </div>
+    <div class="form-group">
+      <label for="newDishNote">Заметка (рецепт, продукты…)</label>
+      <input type="text" id="newDishNote" placeholder="Необязательно">
+    </div>
+    <div class="form-group">
+      <label for="newDishDate">Дата</label>
+      <input type="date" id="newDishDate">
+    </div>
+    <div class="form-group">
+      <label for="newDishStatus">Статус</label>
+      <select id="newDishStatus">
+        <option value="done">✅ Уже приготовлено</option>
+        <option value="planned">📅 Планирую</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="newDishCategory">Категория</label>
+      <select id="newDishCategory">
+        <option value="soup">🍲 Суп</option>
+        <option value="salad">🥗 Салат</option>
+        <option value="main">🍖 Основное</option>
+        <option value="appetizer">🥪 Закуска</option>
+        <option value="bakery">🥐 Выпечка</option>
+        <option value="dessert">🍰 Десерт</option>
+        <option value="other">🍽️ Другое</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Приём пищи</label>
+      <div class="meal-types-group" id="newDishMealTypesGroup">
+        <label class="meal-type-checkbox"><input type="checkbox" data-meal-type="breakfast"><span>Завтрак</span></label>
+        <label class="meal-type-checkbox"><input type="checkbox" data-meal-type="lunch"><span>Обед</span></label>
+        <label class="meal-type-checkbox"><input type="checkbox" data-meal-type="dinner"><span>Ужин</span></label>
+        <label class="meal-type-checkbox"><input type="checkbox" data-meal-type="snack"><span>Перекус</span></label>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="newDishRecipe">Рецепт</label>
+      <select id="newDishRecipe">
+        <option value="">Без рецепта</option>
+      </select>
+    </div>
+    <div class="form-actions">
+      <button class="btn-secondary" id="addModalCancel">Отмена</button>
+      <button class="btn-primary" id="addModalSave">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Модалка редактирования блюда -->
+<div class="modal-overlay add-modal" id="editDishOverlay" role="dialog" aria-modal="true" aria-labelledby="editDishModalTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="editDishModalTitle">✎ Редактировать блюдо</h3>
+      <button class="modal-close" id="editDishClose" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="form-group">
+      <label for="editDishName">Название блюда</label>
+      <input type="text" id="editDishName" placeholder="Например, Плов">
+    </div>
+    <div class="form-group">
+      <label for="editDishStatus">Статус</label>
+      <select id="editDishStatus">
+        <option value="planned">📅 Планирую</option>
+        <option value="done">✅ Уже приготовлено</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="editDishCategory">Категория</label>
+      <select id="editDishCategory">
+        <option value="soup">🍲 Суп</option>
+        <option value="salad">🥗 Салат</option>
+        <option value="main">🍖 Основное</option>
+        <option value="appetizer">🥪 Закуска</option>
+        <option value="bakery">🥐 Выпечка</option>
+        <option value="dessert">🍰 Десерт</option>
+        <option value="other">🍽️ Другое</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Приём пищи</label>
+      <div class="meal-types-group" id="editDishMealTypesGroup">
+        <label class="meal-type-checkbox"><input type="checkbox" data-meal-type="breakfast"><span>Завтрак</span></label>
+        <label class="meal-type-checkbox"><input type="checkbox" data-meal-type="lunch"><span>Обед</span></label>
+        <label class="meal-type-checkbox"><input type="checkbox" data-meal-type="dinner"><span>Ужин</span></label>
+        <label class="meal-type-checkbox"><input type="checkbox" data-meal-type="snack"><span>Перекус</span></label>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="editDishRecipe">Рецепт</label>
+      <select id="editDishRecipe"><option value="">Без рецепта</option></select>
+    </div>
+    <div class="form-group">
+      <label for="editDishNote">Заметка (рецепт, продукты…)</label>
+      <input type="text" id="editDishNote" placeholder="Необязательно">
+    </div>
+    <div class="form-actions">
+      <button class="btn-secondary" id="editDishCancel">Отмена</button>
+      <button class="btn-primary" id="editDishSave">Сохранить</button>
+    </div>
+    <input type="hidden" id="editDishId" value="">
+  </div>
+</div>
+
+<!-- Модалка «Повторить меню» -->
+<div class="modal-overlay add-modal" id="repeatMenuOverlay" role="dialog" aria-modal="true" aria-labelledby="repeatMenuTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="repeatMenuTitle">🔄 Повторить меню</h3>
+      <button class="modal-close" id="repeatMenuClose" aria-label="Закрыть">✕</button>
+    </div>
+    <p class="modal-desc" id="repeatMenuSubtitle">Выберите день, на который скопировать блюда.</p>
+    <div class="form-group">
+      <label for="repeatMenuDate">Дата, на которую копировать</label>
+      <input type="date" id="repeatMenuDate">
+    </div>
+    <div class="form-actions">
+      <button class="btn-secondary" id="repeatMenuCancel">Отмена</button>
+      <button class="btn-primary" id="repeatMenuSave">Скопировать</button>
+    </div>
+    <input type="hidden" id="repeatMenuSourceDate" value="">
+  </div>
+</div>
+
+<!-- Модалка экспорта данных -->
+<div class="modal-overlay export-modal" id="exportModalOverlay" role="dialog" aria-modal="true" aria-labelledby="exportModalTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="exportModalTitle">📤 Экспорт данных</h3>
+      <button class="modal-close" id="exportModalClose" aria-label="Закрыть">✕</button>
+    </div>
+    <p class="modal-desc">Выберите формат для экспорта:</p>
+    <button class="export-option" data-format="json">
+      <span class="export-label">JSON (резервная копия)</span>
+      <span class="export-desc">Полный экспорт всех данных для восстановления</span>
+    </button>
+    <button class="export-option" data-format="csv">
+      <span class="export-label">CSV (для Excel)</span>
+      <span class="export-desc">Таблица с колонками: Название, Статус, Дата, Категория, Заметка, Любимое</span>
+    </button>
+    <button class="export-option" data-format="txt">
+      <span class="export-label">TXT (текстовый файл)</span>
+      <span class="export-desc">Структурированный список по дням и категориям</span>
+    </button>
+  </div>
+</div>
+
+<!-- Модалка выбора формата экспорта рецептов -->
+<div class="modal-overlay export-modal" id="recipeExportOverlay" role="dialog" aria-modal="true" aria-labelledby="recipeExportModalTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="recipeExportModalTitle">📤 Экспорт рецептов</h3>
+      <button class="modal-close" id="recipeExportClose" aria-label="Закрыть">✕</button>
+    </div>
+    <p class="modal-desc">Выберите формат для экспорта рецептов:</p>
+    <button class="recipe-export-option" data-format="json">
+      <span class="export-label">JSON (резервная копия)</span>
+      <span class="export-desc">Полный дамп рецептов для повторного импорта</span>
+    </button>
+    <button class="recipe-export-option" data-format="txt">
+      <span class="export-label">TXT (для чтения и печати)</span>
+      <span class="export-desc">Структурированный текст по категориям с ингредиентами и инструкцией</span>
+    </button>
+  </div>
+</div>
+
+<!-- Модалка «Что приготовить?» -->
+<div class="choice-overlay" id="choiceOverlay" role="dialog" aria-modal="true" aria-labelledby="choiceTitle">
+  <div class="choice-modal">
+    <h2 id="choiceTitle">🤔 Что приготовить?</h2>
+
+    <div class="choice-source-group" id="choiceSourceGroup" role="group" aria-label="Источник блюд">
+      <button type="button" class="choice-source-btn active" data-source="menu" aria-pressed="true">
+        🍽️ Из моего меню
+      </button>
+      <button type="button" class="choice-source-btn" data-source="recipes" aria-pressed="false">
+        📖 Из рецептов
+      </button>
+    </div>
+
+    <div class="choice-filter-group">
+      <div class="choice-filter-label">Приём пищи</div>
+      <div class="choice-chips" id="choiceMealTypesChips" role="group" aria-label="Фильтр по приёму пищи">
+        <button type="button" class="choice-chip active" data-meal-type="">Все</button>
+        <button type="button" class="choice-chip" data-meal-type="breakfast">Завтрак</button>
+        <button type="button" class="choice-chip" data-meal-type="lunch">Обед</button>
+        <button type="button" class="choice-chip" data-meal-type="dinner">Ужин</button>
+        <button type="button" class="choice-chip" data-meal-type="snack">Перекус</button>
+      </div>
+    </div>
+
+    <div class="choice-filter-group">
+      <div class="choice-filter-label">Категория</div>
+      <select id="choiceCategorySelect" class="choice-category-select" aria-label="Фильтр по категории">
+        <option value="all">Все категории</option>
+        <option value="soup">🍲 Супы</option>
+        <option value="salad">🥗 Салаты</option>
+        <option value="main">🍖 Основное</option>
+        <option value="appetizer">🥪 Закуски</option>
+        <option value="bakery">🥐 Выпечка</option>
+        <option value="dessert">🍰 Десерты</option>
+        <option value="other">🍽️ Другое</option>
+      </select>
+    </div>
+
+    <div class="choice-filter-group" id="choiceRecipesSourceWrap" hidden>
+      <div class="choice-filter-label">Источник рецептов</div>
+      <div class="choice-chips" id="choiceRecipesSourceChips" role="group" aria-label="Источник рецептов">
+        <button type="button" class="choice-chip active" data-recipes-source="all">Все</button>
+        <button type="button" class="choice-chip" data-recipes-source="my">Мои</button>
+        <button type="button" class="choice-chip" data-recipes-source="base">База</button>
+      </div>
+    </div>
+
+    <label class="choice-favorite-toggle">
+      <input type="checkbox" id="choiceOnlyFavorites">
+      <span>👍 Только любимые</span>
+    </label>
+
+    <div class="choice-results" id="choiceResults"></div>
+
+    <div class="choice-actions">
+      <button type="button" class="choice-action-btn choice-action-reroll" id="choiceRerollBtn">🎲 Другое</button>
+      <button type="button" class="choice-action-btn choice-action-recipes" id="choiceOpenRecipesBtn">📖 Мои рецепты</button>
+    </div>
+
+    <button class="choice-close" id="choiceClose" type="button">Закрыть</button>
+  </div>
+</div>
+
+<!-- Приветственная модалка -->
+<div class="welcome-overlay" id="welcomeOverlay" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+  <div class="welcome-modal">
+    <span class="welcome-icon">🍽️</span>
+    <h2 id="welcomeTitle">Меню и рецепты</h2>
+    <div class="welcome-text">
+      <p><strong>Привет!</strong> Это ваш личный помощник для планирования питания. Храните рецепты, составляйте меню на неделю и создавайте списки покупок – всё в одном месте.</p>
+      <p style="margin-top: 8px;"><strong>Что вы можете делать:</strong></p>
+      <ul style="list-style: none; padding-left: 0; margin: 6px 0;">
+        <li>📅 Планировать блюда на месяц или неделю</li>
+        <li>📖 Хранить рецепты с ингредиентами и инструкцией</li>
+        <li>🛒 Генерировать список покупок из выбранных рецептов</li>
+        <li>👍 Отмечать любимые блюда и получать рекомендации</li>
+        <li>💾 Экспортировать данные в JSON, CSV или TXT</li>
+      </ul>
+      <p style="margin-top: 8px;">Всё работает в вашем браузере, данные хранятся локально. <strong>Начните прямо сейчас!</strong></p>
+    </div>
+    <button class="welcome-btn" id="welcomeStartBtn">🚀 Начать!</button>
+  </div>
+</div>
+
+<!-- Обучающий тур -->
+<div class="onboarding-overlay" id="onboardingOverlay" role="dialog" aria-modal="true" aria-label="Обучение по использованию приложения">
+  <div class="onboarding-modal">
+    <button class="onboarding-close" id="onboardingClose" aria-label="Закрыть обучение">✕</button>
+
+    <div class="onboarding-slides" id="onboardingSlides">
+
+      <section class="onboarding-slide active">
+        <span class="onboarding-icon" aria-hidden="true">👋</span>
+        <h2 class="onboarding-title">Добро пожаловать!</h2>
+        <p class="onboarding-text">Меню и рецепты — личный помощник для планирования питания. Храните рецепты, составляйте меню и создавайте списки покупок — всё в одном месте.</p>
+        <p class="onboarding-text">Далее — краткий обзор основных возможностей. Это займёт меньше минуты.</p>
+      </section>
+
+      <section class="onboarding-slide">
+        <span class="onboarding-icon" aria-hidden="true">➕</span>
+        <h2 class="onboarding-title">Добавить блюдо</h2>
+        <p class="onboarding-text">Нажмите на любой день в календаре и добавьте блюдо. Заполните название, выберите дату и статус — блюдо появится в календаре на выбранный день.</p>
+        <p class="onboarding-text">Клик по названию блюда открывает редактирование, клик по статус-плашке — переключает статус.</p>
+      </section>
+
+      <section class="onboarding-slide">
+        <span class="onboarding-icon" aria-hidden="true">📖</span>
+        <h2 class="onboarding-title">Добавить рецепт</h2>
+        <p class="onboarding-text">Откройте вкладку <strong>«📖 Рецепты»</strong> и нажмите <strong>«➕ Добавить»</strong>. Сохраните ингредиенты и инструкцию — потом сможете привязать рецепт к блюду и быстро находить его.</p>
+        <p class="onboarding-text">Рецепты можно искать, фильтровать по категориям, экспортировать в JSON или TXT.</p>
+      </section>
+
+      <section class="onboarding-slide">
+        <span class="onboarding-icon" aria-hidden="true">👍</span>
+        <h2 class="onboarding-title">Оценка блюд</h2>
+        <p class="onboarding-text">Отметьте блюдо <strong>👍</strong> или <strong>👎</strong> в модалке дня. Блюда с 👍 попадут в «Любимые», а с 👎 не будут предлагаться в рекомендациях.</p>
+        <p class="onboarding-text">Оценки взаимоисключающие: если поставить 👎, 👍 снимается автоматически.</p>
+      </section>
+
+      <section class="onboarding-slide">
+        <span class="onboarding-icon" aria-hidden="true">🔁</span>
+        <h2 class="onboarding-title">Повторить меню</h2>
+        <p class="onboarding-text">В модалке дня есть кнопка <strong>«🔄 Повторить меню»</strong>. Она копирует все блюда со статусом «Планирую» на выбранную вами дату.</p>
+      </section>
+
+      <section class="onboarding-slide">
+        <span class="onboarding-icon" aria-hidden="true">🛒</span>
+        <h2 class="onboarding-title">Список покупок</h2>
+        <p class="onboarding-text">Откройте вкладку <strong>«🛒 Покупки»</strong>, выберите период и нажмите «Собрать список». Ингредиенты из рецептов сгруппируются по отделам магазина.</p>
+        <p class="onboarding-text">Список можно отредактировать вручную, сохранить и экспортировать в TXT.</p>
+      </section>
+
+    </div>
+
+    <div class="onboarding-dots" id="onboardingDots" aria-hidden="true"></div>
+
+    <div class="onboarding-nav">
+      <button class="onboarding-btn onboarding-btn-ghost" id="onboardingSkip" type="button">Пропустить</button>
+      <div class="onboarding-nav-right">
+        <button class="onboarding-btn onboarding-btn-secondary" id="onboardingPrev" type="button">Назад</button>
+        <button class="onboarding-btn onboarding-btn-primary" id="onboardingNext" type="button">Далее</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- МОДАЛКА ДОБАВЛЕНИЯ / РЕДАКТИРОВАНИЯ РЕЦЕПТА -->
+<div class="modal-overlay add-modal recipe-form-overlay" id="recipeFormOverlay" role="dialog" aria-modal="true" aria-labelledby="recipeFormTitle">
+  <div class="modal recipe-form-modal">
+    <div class="modal-header">
+      <h3 id="recipeFormTitle">📝 Рецепт</h3>
+      <button class="modal-close" id="recipeFormClose" aria-label="Закрыть">✕</button>
+    </div>
+
+    <div class="form-group">
+      <label for="recipeName">Название</label>
+      <input type="text" id="recipeName" placeholder="Например, Свинина в соевом соусе">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="recipeCategory">Категория</label>
+        <select id="recipeCategory">
+          <option value="soup">🍲 Суп</option>
+          <option value="salad">🥗 Салат</option>
+          <option value="main">🍖 Основное</option>
+          <option value="appetizer">🥪 Закуска</option>
+          <option value="bakery">🥐 Выпечка</option>
+          <option value="dessert">🍰 Десерт</option>
+          <option value="other">🍽️ Другое</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="recipeCuisine">Кухня</label>
+        <select id="recipeCuisine">
+          <option value="">— не указана —</option>
+          <option value="russian">Русская</option>
+          <option value="ukrainian">Украинская</option>
+          <option value="caucasian">Кавказская</option>
+          <option value="italian">Итальянская</option>
+          <option value="french">Французская</option>
+          <option value="mediterranean">Средиземноморская</option>
+          <option value="greek">Греческая</option>
+          <option value="american">Американская</option>
+          <option value="mexican">Мексиканская</option>
+          <option value="chinese">Китайская</option>
+          <option value="japanese">Японская</option>
+          <option value="korean">Корейская</option>
+          <option value="indian">Индийская</option>
+          <option value="asian">Азиатская</option>
+          <option value="international">Международная</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="recipeServings">Порций</label>
+      <input type="number" id="recipeServings" min="1" step="1" value="1">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="recipeCookTime">Время, мин</label>
+        <input type="number" id="recipeCookTime" min="0" step="1" placeholder="—">
+      </div>
+      <div class="form-group">
+        <label for="recipeActiveTime">Активное, мин</label>
+        <input type="number" id="recipeActiveTime" min="0" step="1" placeholder="—">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="recipeDifficulty">Сложность</label>
+        <select id="recipeDifficulty">
+          <option value="">— не указана —</option>
+          <option value="1">Очень просто</option>
+          <option value="2">Просто</option>
+          <option value="3">Средне</option>
+          <option value="4">Сложно</option>
+          <option value="5">Очень сложно</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="recipeSpiciness">Острота</label>
+        <select id="recipeSpiciness">
+          <option value="">— не указана —</option>
+          <option value="1">Не остро</option>
+          <option value="2">Слегка остро</option>
+          <option value="3">Средне остро</option>
+          <option value="4">Остро</option>
+          <option value="5">Очень остро</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Ингредиенты</label>
+      <div class="ingredients-list" id="recipeIngredientsList"></div>
+      <div class="ingredients-actions">
+        <button type="button" class="btn-secondary btn-sm" id="recipeAddIngredientBtn">+ Добавить ингредиент</button>
+        <button type="button" class="btn-secondary btn-sm" id="recipeParseBtn">Парсить из текста</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Приёмы пищи</label>
+      <div class="meal-types-group" id="recipeMealTypesGroup">
+        <label class="meal-type-checkbox"><input type="checkbox" data-meal-type="breakfast"><span>Завтрак</span></label>
+        <label class="meal-type-checkbox"><input type="checkbox" data-meal-type="lunch"><span>Обед</span></label>
+        <label class="meal-type-checkbox"><input type="checkbox" data-meal-type="dinner"><span>Ужин</span></label>
+        <label class="meal-type-checkbox"><input type="checkbox" data-meal-type="snack"><span>Перекус</span></label>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="recipeInstructions">Инструкция (необязательно)</label>
+      <textarea id="recipeInstructions" rows="4" placeholder="Пошаговое приготовление..."></textarea>
+    </div>
+
+    <details class="recipe-form-details">
+      <summary class="recipe-form-details-summary">
+        <span class="recipe-form-details-icon" aria-hidden="true">💡</span>
+        <span class="recipe-form-details-label">Дополнительно</span>
+        <span class="recipe-form-details-chevron" aria-hidden="true">▾</span>
+      </summary>
+
+      <div class="recipe-form-details-body">
+
+        <div class="form-group">
+          <label>Аллергены</label>
+          <div class="allergens-group" id="recipeAllergensGroup">
+            <label class="meal-type-checkbox"><input type="checkbox" data-allergen="nuts"><span>Орехи</span></label>
+            <label class="meal-type-checkbox"><input type="checkbox" data-allergen="eggs"><span>Яйцо</span></label>
+            <label class="meal-type-checkbox"><input type="checkbox" data-allergen="gluten"><span>Глютен</span></label>
+            <label class="meal-type-checkbox"><input type="checkbox" data-allergen="fish"><span>Рыба</span></label>
+            <label class="meal-type-checkbox"><input type="checkbox" data-allergen="milk"><span>Молоко</span></label>
+            <label class="meal-type-checkbox"><input type="checkbox" data-allergen="peanut"><span>Арахис</span></label>
+            <label class="meal-type-checkbox"><input type="checkbox" data-allergen="additives"><span>Добавки</span></label>
+            <label class="meal-type-checkbox"><input type="checkbox" data-allergen="mustard"><span>Горчица</span></label>
+            <label class="meal-type-checkbox"><input type="checkbox" data-allergen="sesame"><span>Кунжут</span></label>
+            <label class="meal-type-checkbox"><input type="checkbox" data-allergen="molluscs"><span>Моллюски</span></label>
+            <label class="meal-type-checkbox"><input type="checkbox" data-allergen="crustaceans"><span>Ракообразные</span></label>
+            <label class="meal-type-checkbox"><input type="checkbox" data-allergen="strawberry"><span>Клубника</span></label>
+            <label class="meal-type-checkbox"><input type="checkbox" data-allergen="soy"><span>Соя</span></label>
+            <label class="meal-type-checkbox"><input type="checkbox" data-allergen="celery"><span>Сельдерей</span></label>
+            <label class="meal-type-checkbox"><input type="checkbox" data-allergen="lupin"><span>Люпин</span></label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>КБЖУ на 1 порцию</label>
+          <div class="nutrition-row">
+            <input type="number" id="recipeNutritionKcal" placeholder="ккал" min="0" step="any" inputmode="decimal">
+            <input type="number" id="recipeNutritionProtein" placeholder="белки" min="0" step="any" inputmode="decimal">
+            <input type="number" id="recipeNutritionFat" placeholder="жиры" min="0" step="any" inputmode="decimal">
+            <input type="number" id="recipeNutritionCarbs" placeholder="углеводы" min="0" step="any" inputmode="decimal">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="recipeComments">Заметка или источник</label>
+          <textarea id="recipeComments" rows="2" placeholder="Ссылка на оригинал, пометка…"></textarea>
+        </div>
+
+      </div>
+    </details>
+
+    <div class="form-actions">
+      <button class="btn-secondary" id="recipeFormCancel">Отмена</button>
+      <button class="btn-primary" id="recipeFormSave">Сохранить</button>
+    </div>
+    <input type="hidden" id="recipeFormId" value="">
+  </div>
+</div>
+
+<!-- МОДАЛКА ПАРСЕРА ИНГРЕДИЕНТОВ -->
+<div class="modal-overlay add-modal" id="recipeParserOverlay" role="dialog" aria-modal="true" aria-labelledby="recipeParserTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="recipeParserTitle">🔍 Разобрать текст</h3>
+      <button class="modal-close" id="recipeParserClose" aria-label="Закрыть">✕</button>
+    </div>
+    <p class="modal-desc">Вставь список ингредиентов — по одной позиции на строку. Понимает форматы «Свинина 1,2 кг», «Лук — 1 шт», «Соль по вкусу».</p>
+    <div class="form-group">
+      <textarea id="recipeParserTextarea" rows="8" placeholder="Свинина 1,2 кг&#10;Лук 1 шт&#10;Соль по вкусу"></textarea>
+    </div>
+    <div class="form-actions">
+      <button class="btn-secondary" id="recipeParserCancel">Отмена</button>
+      <button class="btn-primary" id="recipeParserApply">Разобрать</button>
+    </div>
+  </div>
+</div>
+
+<!-- МОДАЛКА «ОФОРМЛЕНИЕ» -->
+<div class="modal-overlay add-modal theme-modal" id="themeOverlay" role="dialog" aria-modal="true" aria-labelledby="themeTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="themeTitle">🎨 Оформление</h3>
+      <button class="modal-close" id="themeClose" aria-label="Закрыть">✕</button>
+    </div>
+    <p class="modal-desc">Выберите оформление приложения. Тема сохраняется и применяется сразу.</p>
+    <div class="theme-grid" id="themeGrid"></div>
+  </div>
+</div>
+
+<div id="liveRegion" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+<div id="printArea" aria-hidden="true"></div>
+
+<!-- Нижняя навигация -->
+<nav class="bottom-nav" id="bottomNav" aria-label="Основная навигация">
+  <button class="bottom-nav-btn" data-tab="today" type="button">
+    <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+      <line x1="16" y1="2" x2="16" y2="6"></line>
+      <line x1="8" y1="2" x2="8" y2="6"></line>
+      <line x1="3" y1="10" x2="21" y2="10"></line>
+    </svg>
+    <span class="bottom-nav-label">Сегодня</span>
+  </button>
+  <button class="bottom-nav-btn" data-tab="menu" type="button">
+    <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path>
+      <path d="M7 2v20"></path>
+      <path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"></path>
+    </svg>
+    <span class="bottom-nav-label">Меню</span>
+  </button>
+  <button class="bottom-nav-btn" data-tab="recipes" type="button">
+    <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+    </svg>
+    <span class="bottom-nav-label">Рецепты</span>
+  </button>
+  <button class="bottom-nav-btn" data-tab="shopping" type="button">
+    <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="9" cy="21" r="1"></circle>
+      <circle cx="20" cy="21" r="1"></circle>
+      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+    </svg>
+    <span class="bottom-nav-label">Покупки</span>
+  </button>
+</nav>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
