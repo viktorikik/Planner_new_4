@@ -9,10 +9,6 @@
  *
  * v5.33 (Блок 7 · UX-полировка):
  *   • Поведение аккордеона: при открытии новой категории предыдущая автоматически закрывается.
- *
- * v5.30 (Блок 7 · UX-полировка):
- *   • Из списка убраны иконки редактирования и удаления (перенесены в карточку).
- *   • Убран запрещающий знак 🚫. Базовые рецепты скрываются через карточку.
  */
 import { CATEGORIES, CATEGORY_LABELS, RECIPE_SOURCES, CONSTANTS, UNIT_LABELS } from '../utils/Constants.js';
 import { Utils } from '../utils/Utils.js';
@@ -326,7 +322,7 @@ export function handleDeleteOrHide(recipe) {
   if (!answer) return;
   DishStore.clearRecipeRefs(recipe.id);
   RecipeStore.remove(recipe.id);
-  renderRecipesList(); // v5.30: Принудительно обновляем список после удаления
+  renderRecipesList();
 }
 
 // ============================================================
