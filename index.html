@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <!--
   Меню и рецепты · index.html
+  v5.34 (Блок 6 · База): 
+  - Добавлена категория «Гарниры» (side_dish) во все фильтры и селекты.
+  - Обновлена версия CSS до 5.5.3.
   v5.30 (Блок 7 · UX-полировка): 
   - Экспорт/Импорт рецептов перенесены вниз.
   - Добавлено пустое состояние для вкладки «Покупки».
-  - Кнопки удаления/редактирования убраны из списка рецептов.
-  v5.29: Фиксы iOS для чекбоксов, три таба источника рецептов.
 -->
 <html lang="ru" data-theme="classic-light">
 <head>
@@ -22,8 +23,7 @@
   <meta name="apple-mobile-web-app-title" content="Меню и рецепты">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
-  <!-- Версия CSS будет обновлена на шаге со стилями -->
-  <link rel="stylesheet" href="styles.css?v=5.4.18">
+  <link rel="stylesheet" href="styles.css?v=5.5.3">
 
   <script>
     (function() {
@@ -115,6 +115,7 @@
         <option value="soup">Супы</option>
         <option value="salad">Салаты</option>
         <option value="main">Основные</option>
+        <option value="side_dish">Гарниры</option>
         <option value="appetizer">Закуски</option>
         <option value="bakery">Выпечка</option>
         <option value="dessert">Десерты</option>
@@ -149,14 +150,12 @@
 
       <button id="recipesBackBtn" class="recipes-back-btn" type="button" hidden>← Назад</button>
 
-      <!-- v5.26: табы источника рецептов -->
       <div class="recipes-source-tabs" id="recipeSourceTabs" role="tablist" aria-label="Источник рецептов">
         <button type="button" class="recipe-source-tab active" data-source="all" role="tab" aria-selected="true">Все</button>
         <button type="button" class="recipe-source-tab" data-source="my" role="tab" aria-selected="false">Мои</button>
         <button type="button" class="recipe-source-tab" data-source="base" role="tab" aria-selected="false">База</button>
       </div>
 
-      <!-- v5.30: Экспорт и импорт убраны отсюда -->
       <div class="recipes-toolbar">
         <button class="btn-done" id="addRecipeBtn">Добавить</button>
       </div>
@@ -168,12 +167,12 @@
           <option value="soup">Супы</option>
           <option value="salad">Салаты</option>
           <option value="main">Основные</option>
+          <option value="side_dish">Гарниры</option>
           <option value="appetizer">Закуски</option>
           <option value="bakery">Выпечка</option>
           <option value="dessert">Десерты</option>
           <option value="other">Другое</option>
         </select>
-        <!-- v5.26: показываем только на табе «База» -->
         <label class="recipes-show-hidden-toggle" id="recipesShowHiddenToggleLabel" hidden>
           <input type="checkbox" id="recipesShowHiddenToggle">
           <span>Показать скрытые</span>
@@ -184,7 +183,6 @@
 
       <div id="recipesList"></div>
 
-      <!-- v5.30: Кнопки экспорта/импорта перенесены вниз -->
       <div class="recipes-bottom-actions">
         <button class="btn-secondary" id="exportRecipesBtn">Экспорт рецептов</button>
         <button class="btn-secondary" id="importRecipesBtn">Импорт рецептов</button>
@@ -205,7 +203,6 @@
       </div>
       <button class="btn-primary shopping-generate-btn" id="generateShoppingListBtn">Собрать список</button>
 
-      <!-- v5.30: Пустое состояние, если список ещё не собран -->
       <div id="shoppingEmptyState" class="shopping-empty-state">
         <div class="shopping-empty-icon">🛒</div>
         <p class="shopping-empty-text">Выберите период и нажмите «Собрать список», чтобы увидеть, что нужно купить.</p>
@@ -233,7 +230,6 @@
 
 <!-- ===== МОДАЛЬНЫЕ ОКНА ===== -->
 
-<!-- Модалка дня -->
 <div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
   <div class="modal">
     <div class="modal-header">
@@ -244,7 +240,6 @@
   </div>
 </div>
 
-<!-- Модалка добавления блюда -->
 <div class="modal-overlay add-modal" id="addModalOverlay" role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
   <div class="modal">
     <div class="modal-header">
@@ -276,6 +271,7 @@
         <option value="soup">🍲 Суп</option>
         <option value="salad">🥗 Салат</option>
         <option value="main">🍖 Основное</option>
+        <option value="side_dish">🥔 Гарнир</option>
         <option value="appetizer">🥪 Закуска</option>
         <option value="bakery">🥐 Выпечка</option>
         <option value="dessert">🍰 Десерт</option>
@@ -304,7 +300,6 @@
   </div>
 </div>
 
-<!-- Модалка редактирования блюда -->
 <div class="modal-overlay add-modal" id="editDishOverlay" role="dialog" aria-modal="true" aria-labelledby="editDishModalTitle">
   <div class="modal">
     <div class="modal-header">
@@ -328,6 +323,7 @@
         <option value="soup">🍲 Суп</option>
         <option value="salad">🥗 Салат</option>
         <option value="main">🍖 Основное</option>
+        <option value="side_dish">🥔 Гарнир</option>
         <option value="appetizer">🥪 Закуска</option>
         <option value="bakery">🥐 Выпечка</option>
         <option value="dessert">🍰 Десерт</option>
@@ -359,7 +355,6 @@
   </div>
 </div>
 
-<!-- Модалка «Повторить меню» -->
 <div class="modal-overlay add-modal" id="repeatMenuOverlay" role="dialog" aria-modal="true" aria-labelledby="repeatMenuTitle">
   <div class="modal">
     <div class="modal-header">
@@ -379,7 +374,6 @@
   </div>
 </div>
 
-<!-- Модалка экспорта данных -->
 <div class="modal-overlay export-modal" id="exportModalOverlay" role="dialog" aria-modal="true" aria-labelledby="exportModalTitle">
   <div class="modal">
     <div class="modal-header">
@@ -402,7 +396,6 @@
   </div>
 </div>
 
-<!-- Модалка выбора формата экспорта рецептов -->
 <div class="modal-overlay export-modal" id="recipeExportOverlay" role="dialog" aria-modal="true" aria-labelledby="recipeExportModalTitle">
   <div class="modal">
     <div class="modal-header">
@@ -421,7 +414,6 @@
   </div>
 </div>
 
-<!-- Модалка «Что приготовить?» -->
 <div class="choice-overlay" id="choiceOverlay" role="dialog" aria-modal="true" aria-labelledby="choiceTitle">
   <div class="choice-modal">
     <h2 id="choiceTitle">🤔 Что приготовить?</h2>
@@ -453,6 +445,7 @@
         <option value="soup">🍲 Супы</option>
         <option value="salad">🥗 Салаты</option>
         <option value="main">🍖 Основное</option>
+        <option value="side_dish">🥔 Гарниры</option>
         <option value="appetizer">🥪 Закуски</option>
         <option value="bakery">🥐 Выпечка</option>
         <option value="dessert">🍰 Десерты</option>
@@ -485,7 +478,6 @@
   </div>
 </div>
 
-<!-- Приветственная модалка -->
 <div class="welcome-overlay" id="welcomeOverlay" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
   <div class="welcome-modal">
     <span class="welcome-icon">🍽️</span>
@@ -506,7 +498,6 @@
   </div>
 </div>
 
-<!-- Обучающий тур -->
 <div class="onboarding-overlay" id="onboardingOverlay" role="dialog" aria-modal="true" aria-label="Обучение по использованию приложения">
   <div class="onboarding-modal">
     <button class="onboarding-close" id="onboardingClose" aria-label="Закрыть обучение">✕</button>
@@ -568,7 +559,6 @@
   </div>
 </div>
 
-<!-- МОДАЛКА ДОБАВЛЕНИЯ / РЕДАКТИРОВАНИЯ РЕЦЕПТА -->
 <div class="modal-overlay add-modal recipe-form-overlay" id="recipeFormOverlay" role="dialog" aria-modal="true" aria-labelledby="recipeFormTitle">
   <div class="modal recipe-form-modal">
     <div class="modal-header">
@@ -588,6 +578,7 @@
           <option value="soup">🍲 Суп</option>
           <option value="salad">🥗 Салат</option>
           <option value="main">🍖 Основное</option>
+          <option value="side_dish">🥔 Гарнир</option>
           <option value="appetizer">🥪 Закуска</option>
           <option value="bakery">🥐 Выпечка</option>
           <option value="dessert">🍰 Десерт</option>
@@ -738,7 +729,6 @@
   </div>
 </div>
 
-<!-- МОДАЛКА ПАРСЕРА ИНГРЕДИЕНТОВ -->
 <div class="modal-overlay add-modal" id="recipeParserOverlay" role="dialog" aria-modal="true" aria-labelledby="recipeParserTitle">
   <div class="modal">
     <div class="modal-header">
@@ -756,7 +746,6 @@
   </div>
 </div>
 
-<!-- МОДАЛКА «ОФОРМЛЕНИЕ» -->
 <div class="modal-overlay add-modal theme-modal" id="themeOverlay" role="dialog" aria-modal="true" aria-labelledby="themeTitle">
   <div class="modal">
     <div class="modal-header">
@@ -771,7 +760,6 @@
 <div id="liveRegion" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 <div id="printArea" aria-hidden="true"></div>
 
-<!-- Нижняя навигация -->
 <nav class="bottom-nav" id="bottomNav" aria-label="Основная навигация">
   <button class="bottom-nav-btn" data-tab="today" type="button">
     <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
