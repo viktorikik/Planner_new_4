@@ -4,6 +4,9 @@
  * Зависит от: Constants, Utils, RecipeStore, DishStore, Renderer,
  *             notifications, focusTrap, ExportImport.
  *
+ * v5.34 (Блок 6 · База):
+ *   • Добавлена категория «Гарниры» (SIDE_DISH) в CATEGORY_ORDER.
+ *
  * v5.33 (Блок 7 · UX-полировка):
  *   • Поведение аккордеона: при открытии новой категории предыдущая автоматически закрывается.
  *
@@ -27,6 +30,7 @@ const CATEGORY_ORDER = [
   CATEGORIES.SOUP,
   CATEGORIES.SALAD,
   CATEGORIES.MAIN,
+  CATEGORIES.SIDE_DISH, // v5.34
   CATEGORIES.APPETIZER,
   CATEGORIES.BAKERY,
   CATEGORIES.DESSERT,
