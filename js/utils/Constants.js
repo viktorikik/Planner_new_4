@@ -173,7 +173,7 @@ export const SPICINESS_LABELS = {
   5: 'Очень остро'
 };
 
-// Список продуктов для распознавания ингредиентов
+// Список продуктов для распознавания ингредиентов (без изменений)
 export const PRODUCT_WORDS = [
   'лук', 'морковь', 'картофель', 'капуста', 'свекла', 'редис', 'репа',
   'огурец', 'помидор', 'перец', 'баклажан', 'кабачок', 'тыква',
@@ -236,6 +236,8 @@ export const CONSTANTS = {
     THEME: 'mealPlannerTheme',
     ONBOARDING_SHOWN: 'smartMenuOnboardingShown_v1',
     RECIPES_COLLAPSED: 'smartMenuRecipesCollapsed_v1',
+    // v5.26: таб «Все · Мои · База» и чекбокс «Показать скрытые».
+    // Запоминаем выбор, чтобы после перезагрузки вернуться туда же.
     RECIPES_SOURCE_FILTER: 'smartMenuRecipesSourceFilter_v1',
     RECIPES_SHOW_HIDDEN: 'smartMenuRecipesShowHidden_v1'
   },
@@ -299,6 +301,7 @@ export const CONSTANTS = {
     recipesTitle: 'recipesTitle',
     recipesBackBtn: 'recipesBackBtn',
     recipesList: 'recipesList',
+    // v5.26: табы источника рецептов + чекбокс «Показать скрытые»
     recipeSourceTabs: '.recipe-source-tab',
     recipesShowHiddenToggle: 'recipesShowHiddenToggle',
     recipesShowHiddenToggleLabel: 'recipesShowHiddenToggleLabel',
@@ -376,6 +379,7 @@ export const CONSTANTS = {
     onboardingNext: 'onboardingNext',
     onboardingSkip: 'onboardingSkip',
     onboardingClose: 'onboardingClose',
+    // v5.26: источник рецептов в «Что приготовить?»
     choiceRecipesSourceWrap: 'choiceRecipesSourceWrap',
     choiceRecipesSourceChips: 'choiceRecipesSourceChips'
   }
