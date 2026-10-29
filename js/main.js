@@ -3,11 +3,10 @@
  * Инициализирует сторы, роутинг по табам, темы, обработчики модалок,
  * экран «Что приготовить?», drag-and-drop, PWA.
  *
- * v5.26 (Блок 6):
- *   • Экран «Что приготовить?» — фильтр источника рецептов
- *     (Все · Мои · База), обработчики чипов.
- *   • Видимостью блока «Источник рецептов» управляет Renderer
- *     (renderChoiceSourceButtons): показываем только когда источник «Из рецептов».
+ * v5.35:
+ *   • При запуске вызывается RecipeStore.syncWithServer() для
+ *     подгрузки рецептов из recipes.json с сервера.
+ *   • При успешной синхронизации обновляется список рецептов (если открыт).
  */
 import { STATUSES, CONSTANTS, THEMES, DEFAULT_THEME, THEME_LEGACY_MAP } from './utils/Constants.js';
 import { Utils } from './utils/Utils.js';
@@ -24,7 +23,7 @@ import {
   setChoiceMealType,
   setChoiceCategory,
   setChoiceOnlyFavorites,
-  setChoiceRecipesSource, // v5.26
+  setChoiceRecipesSource,
   rerollChoiceDish
 } from './ui/Renderer.js';
 import { exportData, importData } from './features/ExportImport.js';
@@ -48,6 +47,16 @@ import { printWeeklyMenu } from './features/Print.js';
 (function init() {
   RecipeStore.init();
   DishStore.init();
+
+  // v5.35: Фоновая синхронизация базы рецептов с сервером
+  RecipeStore.syncWithServer().then((success) => {
+    if (success) {
+      // Если пользователь уже на вкладке "Рецепты", перерисовываем список
+      if (window.location.hash === '#recipes') {
+        renderRecipesList();
+      }
+    }
+  });
 
   // ---------- Hash routing: все четыре таба ----------
   const TABS = ['today', 'menu', 'recipes', 'shopping'];
@@ -134,11 +143,6 @@ import { printWeeklyMenu } from './features/Print.js';
   });
 
   // ---------- Тема (v5.15, Блок 4 · подэтапы 4.1–4.3) ----------
-  // Хранение — CONSTANTS.STORAGE_KEYS.THEME ('mealPlannerTheme').
-  // Значения — из THEMES: 'classic-light' | 'classic-dark' |
-  // 'brand-light' | 'brand-dark'. Старые 'light'/'dark' мигрируют
-  // один раз при чтении. Применение — атрибут data-theme на <html>.
-
   function getStoredTheme() {
     let raw;
     try {
@@ -174,10 +178,6 @@ import { printWeeklyMenu } from './features/Print.js';
   applyTheme(currentTheme);
 
   // ---- Модалка «Оформление» (v5.15, 4.3) ----
-  // Плитка показывает мини-превью: фон темы + «кнопка» в её акцентном
-  // цвете с текстом в accentText. Цвета захардкожены здесь — они
-  // зеркалят CSS-переменные из styles.css, чтобы превью читалось
-  // даже когда применена другая тема.
   const THEME_PREVIEW = {
     [THEMES.CLASSIC_LIGHT]: { bg: '#faf7f2', accent: '#c25a3a', accentText: '#ffffff', label: 'Классическая светлая' },
     [THEMES.CLASSIC_DARK]:  { bg: '#17130f', accent: '#d8785a', accentText: '#1a1310', label: 'Классическая тёмная' },
@@ -579,9 +579,6 @@ import { printWeeklyMenu } from './features/Print.js';
     });
   });
 
-  // v5.26: чипы источника рецептов (Все · Мои · База).
-  // Блок виден только когда основной источник — «Из рецептов»;
-  // показом управляет Renderer в renderChoiceSourceButtons().
   const choiceRecipesSourceChips = document.querySelectorAll('#choiceRecipesSourceChips .choice-chip');
   choiceRecipesSourceChips.forEach(chip => {
     chip.addEventListener('click', function() {
