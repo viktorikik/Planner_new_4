@@ -4,11 +4,12 @@
  * Автоматическая миграция из v1 при загрузке.
  * Зависит от: Constants, Utils, EventBus, notifications.
  *
- * v5.26 (Блок 6):
- *   • Поле hidden — для базовых рецептов, скрытых пользователем.
- *   • Поле comments — заметка/источник (уже в схеме, теперь сохраняется).
- *   • cloneFromBase(id) — копия базового рецепта в «Мои», без правки базы.
- *   • toggleHidden(id) — скрыть/вернуть базовый рецепт.
+ * v5.35:
+ *   • Добавлен метод syncWithServer() — подтягивает рецепты из recipes.json
+ *     в корне сайта при запуске и объединяет их с локальными.
+ *   • Добавлена нормализация русских ключей (категории, приёмы пищи,
+ *     аллергены, сложность), чтобы можно было писать рецепты в JSON
+ *     на русском языке без ручной конвертации.
  */
 import { CONSTANTS } from '../utils/Constants.js';
 import { Utils } from '../utils/Utils.js';
@@ -21,6 +22,89 @@ export const RecipeStore = (function() {
   let recipes = [];
 
   function generateId() { return Date.now() + Math.random() * 10000; }
+
+  // ============================================================
+  // НОРМАЛИЗАЦИЯ РУССКИХ КЛЮЧЕЙ (v5.35)
+  // Чтобы при правке recipes.json вручную можно было писать
+  // "Горячее блюдо" и "Обед", а приложение понимало их как
+  // "main" и "lunch".
+  // ============================================================
+  const RU_CATEGORY_MAP = {
+    'суп': 'soup', 'супы': 'soup',
+    'салат': 'salad', 'салаты': 'salad',
+    'горячее блюдо': 'main', 'основное': 'main', 'основное блюдо': 'main', 'горячее': 'main',
+    'гарнир': 'side_dish', 'гарниры': 'side_dish',
+    'закуска': 'appetizer', 'закуски': 'appetizer',
+    'выпечка': 'bakery',
+    'десерт': 'dessert', 'десерты': 'dessert',
+    'напиток': 'other', 'другое': 'other'
+  };
+
+  const RU_MEAL_MAP = {
+    'завтрак': 'breakfast',
+    'обед': 'lunch',
+    'ужин': 'dinner',
+    'перекус': 'snack',
+    'десерт': 'snack'
+  };
+
+  const RU_ALLERGEN_MAP = {
+    'молоко': 'milk', 'глютен': 'gluten', 'яйца': 'eggs', 'яйцо': 'eggs',
+    'орехи': 'nuts', 'арахис': 'peanut', 'рыба': 'fish', 'соя': 'soy',
+    'моллюски': 'molluscs', 'ракообразные': 'crustaceans', 'горчица': 'mustard',
+    'кунжут': 'sesame', 'клубника': 'strawberry', 'сельдерей': 'celery', 'люпин': 'lupin'
+  };
+
+  const RU_DIFFICULTY_MAP = {
+    'легко': 2, 'просто': 2, 'средне': 3, 'сложно': 4, 'очень сложно': 5
+  };
+
+  const RU_SPICINESS_MAP = {
+    'не острое': 1, 'слегка остро': 2, 'средне остро': 3, 'остро': 4, 'очень остро': 5
+  };
+
+  function normalizeRussianKeys(raw) {
+    if (!raw || typeof raw !== 'object') return raw;
+    const r = { ...raw };
+
+    // Категория
+    if (typeof r.category === 'string') {
+      const lower = r.category.toLowerCase().trim();
+      if (RU_CATEGORY_MAP[lower]) r.category = RU_CATEGORY_MAP[lower];
+    }
+
+    // Приёмы пищи
+    if (Array.isArray(r.mealTypes)) {
+      r.mealTypes = r.mealTypes.map(m => {
+        if (typeof m !== 'string') return m;
+        const lower = m.toLowerCase().trim();
+        return RU_MEAL_MAP[lower] || m;
+      });
+    }
+
+    // Аллергены
+    if (Array.isArray(r.allergens)) {
+      r.allergens = r.allergens.map(a => {
+        if (typeof a !== 'string') return a;
+        const lower = a.toLowerCase().trim();
+        return RU_ALLERGEN_MAP[lower] || a;
+      });
+    }
+
+    // Сложность (если строка)
+    if (typeof r.difficulty === 'string') {
+      const lower = r.difficulty.toLowerCase().trim();
+      if (RU_DIFFICULTY_MAP[lower]) r.difficulty = RU_DIFFICULTY_MAP[lower];
+    }
+
+    // Острота (если строка)
+    if (typeof r.spiciness === 'string') {
+      const lower = r.spiciness.toLowerCase().trim();
+      if (RU_SPICINESS_MAP[lower]) r.spiciness = RU_SPICINESS_MAP[lower];
+    }
+
+    return r;
+  }
 
   // ============================================================
   // НОРМАЛИЗАЦИЯ (схема v2)
@@ -59,7 +143,10 @@ export const RecipeStore = (function() {
   }
 
   function normalizeRecipe(r) {
-    const safe = r || {};
+    // Сначала прогоняем через нормализатор русских ключей
+    const normalized = normalizeRussianKeys(r || {});
+    
+    const safe = normalized;
     return {
       id: safe.id != null ? safe.id : generateId(),
       name: safe.name || '',
@@ -78,10 +165,7 @@ export const RecipeStore = (function() {
       liked: !!safe.liked,
       disliked: !!safe.disliked,
       builtIn: !!safe.builtIn,
-      // v5.26: скрытый базовый рецепт. Пользовательские рецепты
-      // не скрываются, но флаг безвредно висит и у них (false).
       hidden: !!safe.hidden,
-      // v5.26: заметка/источник. Пустая строка = блок не показывается.
       comments: safe.comments != null ? String(safe.comments) : '',
       createdAt: safe.createdAt || new Date().toISOString()
     };
@@ -164,6 +248,52 @@ export const RecipeStore = (function() {
   }
 
   // ============================================================
+  // СИНХРОНИЗАЦИЯ С СЕРВЕРОМ (v5.35)
+  // ============================================================
+  async function syncWithServer() {
+    try {
+      // Кэш-бастер нужен, чтобы браузер и PWA всегда качали свежий JSON
+      const response = await fetch(`recipes.json?v=${Date.now()}`);
+      if (!response.ok) throw new Error('Файл recipes.json не найден');
+      
+      const serverRecipes = await response.json();
+      const localRecipes = getAll();
+
+      // 1. Запоминаем, какие базовые рецепты пользователь скрыл
+      const hiddenBaseIds = new Set();
+      localRecipes.forEach(r => {
+        if (r.builtIn && r.hidden) {
+          hiddenBaseIds.add(r.id);
+        }
+      });
+
+      // 2. Подготавливаем серверные рецепты
+      const normalizedServerRecipes = serverRecipes.map(r => {
+        const normalized = normalizeRecipe(r);
+        return {
+          ...normalized,
+          builtIn: true,
+          hidden: hiddenBaseIds.has(normalized.id) // Восстанавливаем статус скрытия
+        };
+      });
+
+      // 3. Оставляем только рецепты, созданные пользователем (не builtIn)
+      const userRecipes = localRecipes.filter(r => !r.builtIn);
+
+      // 4. Сохраняем объединенный массив (сначала пользовательские, потом база)
+      replaceAll([...userRecipes, ...normalizedServerRecipes]);
+      
+      console.log(`✅ База рецептов синхронизирована. Загружено: ${serverRecipes.length}`);
+      return true;
+    } catch (error) {
+      console.warn('⚠️ Не удалось загрузить базовые рецепты с сервера:', error);
+      // Если файл не найден или нет интернета, приложение продолжит работать
+      // с тем, что уже лежит в localStorage.
+      return false;
+    }
+  }
+
+  // ============================================================
   // ПУБЛИЧНЫЙ API
   // ============================================================
 
@@ -192,8 +322,6 @@ export const RecipeStore = (function() {
   }
 
   function add(name, ingredients, instructions, category, extra = {}) {
-    // v5.26: пользовательский рецепт по умолчанию не базовый.
-    // extra.builtIn === true приходит только из импорта базы.
     const recipe = normalizeRecipe({
       id: generateId(),
       name,
@@ -236,9 +364,6 @@ export const RecipeStore = (function() {
     return true;
   }
 
-  // v5.26: скрыть/вернуть базовый рецепт. Применяется только к базовым,
-  // но функция не проверяет builtIn — вызывающая сторона (Recipes.js)
-  // уже различает сценарии. Возвращает новое значение hidden или false.
   function toggleHidden(id) {
     const recipe = getById(id);
     if (!recipe) return false;
@@ -247,9 +372,6 @@ export const RecipeStore = (function() {
     return recipe.hidden;
   }
 
-  // v5.26: копия базового рецепта в «Мои». База не меняется.
-  // Имя — «<оригинал> (копия)». Лайки/дизлайки сбрасываются,
-  // категория и всё содержимое наследуются.
   function cloneFromBase(id) {
     const base = getById(id);
     if (!base || !base.builtIn) return null;
@@ -311,6 +433,7 @@ export const RecipeStore = (function() {
 
   return {
     init,
+    syncWithServer, // v5.35
     getAll,
     getById,
     add,
@@ -318,8 +441,8 @@ export const RecipeStore = (function() {
     remove,
     toggleThumbUp,
     toggleThumbDown,
-    toggleHidden,     // v5.26
-    cloneFromBase,    // v5.26
+    toggleHidden,
+    cloneFromBase,
     isRecipeNameDisliked,
     replaceAll,
     migrateLegacyRecipe,
