@@ -1,19 +1,15 @@
 // ============================================================
 // Service Worker для «Меню и рецепты»
 // Стратегия: network-first с fallback на кеш.
-// При первой загрузке SW кеширует всё, что запрошено.
-// Если сети нет — отдаёт из кеша.
-// При обновлении приложения всегда тянет свежие файлы из сети.
+// v5.5.6 (Фикс: больше не отдаёт HTML вместо CSS при сбое сети)
 // ============================================================
 
-const CACHE_NAME = 'menu-recipes-v5.5.5';
+const CACHE_NAME = 'menu-recipes-v5.5.6';
 
-// Установка: сразу активируемся, не ждём закрытия всех вкладок
 self.addEventListener('install', function(event) {
   self.skipWaiting();
 });
 
-// Активация: удаляем старые кеши и берём контроль над страницами
 self.addEventListener('activate', function(event) {
   event.waitUntil(
     caches.keys().then(function(keys) {
@@ -27,15 +23,25 @@ self.addEventListener('activate', function(event) {
   );
 });
 
-// Перехват запросов: сначала сеть, при ошибке — кеш.
-// Успешные ответы кешируем на будущее.
 self.addEventListener('fetch', function(event) {
   if (event.request.method !== 'GET') return;
 
+  // 1. Для навигации (открытие самого сайта) — если нет сети, отдаём index.html
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .catch(function() {
+          return caches.match('./index.html');
+        })
+    );
+    return;
+  }
+
+  // 2. Для всех остальных ресурсов (CSS, JS, картинки) — строго сеть или кэш.
+  // НИКАКИХ fallback на index.html, иначе браузер сломает верстку!
   event.respondWith(
     fetch(event.request)
       .then(function(response) {
-        // Кешируем только успешные ответы своего origin
         if (response.ok && response.type === 'basic') {
           const clone = response.clone();
           caches.open(CACHE_NAME).then(function(cache) {
@@ -45,9 +51,7 @@ self.addEventListener('fetch', function(event) {
         return response;
       })
       .catch(function() {
-        return caches.match(event.request).then(function(cached) {
-          return cached || caches.match('./index.html');
-        });
+        return caches.match(event.request);
       })
   );
 });
