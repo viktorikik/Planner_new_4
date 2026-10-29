@@ -3,10 +3,10 @@
  * Инициализирует сторы, роутинг по табам, темы, обработчики модалок,
  * экран «Что приготовить?», drag-and-drop, PWA.
  *
- * v5.35:
- *   • При запуске вызывается RecipeStore.syncWithServer() для
- *     подгрузки рецептов из recipes.json с сервера.
- *   • При успешной синхронизации обновляется список рецептов (если открыт).
+ * v5.36:
+ *   • Фикс привязки блюда к рецепту: recipeId сохраняется как строка,
+ *     без Number(). Иначе Number("recipe_…") давал NaN и связь терялась.
+ *   • При запуске вызывается RecipeStore.syncWithServer().
  */
 import { STATUSES, CONSTANTS, THEMES, DEFAULT_THEME, THEME_LEGACY_MAP } from './utils/Constants.js';
 import { Utils } from './utils/Utils.js';
@@ -51,14 +51,13 @@ import { printWeeklyMenu } from './features/Print.js';
   // v5.35: Фоновая синхронизация базы рецептов с сервером
   RecipeStore.syncWithServer().then((success) => {
     if (success) {
-      // Если пользователь уже на вкладке "Рецепты", перерисовываем список
       if (window.location.hash === '#recipes') {
         renderRecipesList();
       }
     }
   });
 
-  // ---------- Hash routing: все четыре таба ----------
+  // ---------- Hash routing ----------
   const TABS = ['today', 'menu', 'recipes', 'shopping'];
   const DEFAULT_TAB = 'menu';
 
@@ -105,7 +104,6 @@ import { printWeeklyMenu } from './features/Print.js';
   document.querySelectorAll(CONSTANTS.SELECTORS.bottomNavButtons).forEach(btn => {
     btn.addEventListener('click', function() {
       const tab = this.dataset.tab;
-
       if (window.location.hash === `#${tab}`) {
         if (tab === 'today') Renderer.resetTodayViewDate();
         return;
@@ -142,7 +140,7 @@ import { printWeeklyMenu } from './features/Print.js';
     Onboarding.open();
   });
 
-  // ---------- Тема (v5.15, Блок 4 · подэтапы 4.1–4.3) ----------
+  // ---------- Тема ----------
   function getStoredTheme() {
     let raw;
     try {
@@ -177,7 +175,6 @@ import { printWeeklyMenu } from './features/Print.js';
   let currentTheme = getStoredTheme() || getPreferredTheme() || DEFAULT_THEME;
   applyTheme(currentTheme);
 
-  // ---- Модалка «Оформление» (v5.15, 4.3) ----
   const THEME_PREVIEW = {
     [THEMES.CLASSIC_LIGHT]: { bg: '#faf7f2', accent: '#c25a3a', accentText: '#ffffff', label: 'Классическая светлая' },
     [THEMES.CLASSIC_DARK]:  { bg: '#17130f', accent: '#d8785a', accentText: '#1a1310', label: 'Классическая тёмная' },
@@ -331,7 +328,7 @@ import { printWeeklyMenu } from './features/Print.js';
     Renderer.setCategoryFilter(this.value);
   });
 
-  // ---------- Drag-and-drop для десктопа ----------
+  // ---------- Drag-and-drop ----------
   let draggedDishId = null, draggedFromDate = null;
   document.addEventListener('dragstart', function(e) {
     const target = e.target.closest('.meal-chip');
@@ -458,7 +455,6 @@ import { printWeeklyMenu } from './features/Print.js';
 
   function syncModalHistory() {
     const hasModal = hasActiveModal();
-
     if (hasModal && !historyEntryPushed) {
       history.pushState({ modal: true }, '');
       historyEntryPushed = true;
@@ -531,17 +527,14 @@ import { printWeeklyMenu } from './features/Print.js';
 
   document.addEventListener('keydown', function(e) {
     if (e.key !== 'Escape') return;
-
     const activeModal = document.querySelector(
       '.modal-overlay.active, .choice-overlay.active, .welcome-overlay.active, .onboarding-overlay.active'
     );
     if (!activeModal) return;
-
     if (activeModal.id === CONSTANTS.SELECTORS.onboardingOverlay) {
       Onboarding.close(true);
       return;
     }
-
     const found = modals.find(m => m.overlay === activeModal);
     if (found) found.close();
   });
@@ -612,7 +605,6 @@ import { printWeeklyMenu } from './features/Print.js';
   if (choiceOpenRecipesBtn) {
     choiceOpenRecipesBtn.addEventListener('click', function() {
       openRecipesTab(true);
-
       if (historyEntryPushed) {
         pendingTabAfterModalClose = 'recipes';
         closeChoiceModal();
@@ -623,7 +615,7 @@ import { printWeeklyMenu } from './features/Print.js';
     });
   }
 
-  // ---------- Печать меню на неделю ----------
+  // ---------- Печать ----------
   document.getElementById('printBtn').addEventListener('click', printWeeklyMenu);
 
   // ---------- Глобальная модалка добавления блюда ----------
@@ -650,7 +642,8 @@ import { printWeeklyMenu } from './features/Print.js';
       mealTypes = Array.from(checkedBoxes).map(cb => cb.dataset.mealType);
     }
     const recipeValue = recipeSelect ? recipeSelect.value : '';
-    const recipeId = recipeValue ? Number(recipeValue) : null;
+    // v5.36: НЕ приводим к Number — id может быть строкой "recipe_…"
+    const recipeId = recipeValue ? recipeValue : null;
     DishStore.addDish(name, statusSelect.value, date, categorySelect.value, false, note, recipeId, mealTypes);
     Renderer.closeAddModal();
     nameInput.value = '';
@@ -697,7 +690,7 @@ import { printWeeklyMenu } from './features/Print.js';
     }
   });
 
-  // ---------- Обработчики табов «Рецепты» и «Покупки» ----------
+  // ---------- Обработчики табов ----------
   initRecipesHandlers();
   initShoppingListHandlers();
 
@@ -729,7 +722,6 @@ import { printWeeklyMenu } from './features/Print.js';
     if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
       const target = e.target;
       if (target.closest('.meal-chip')) return;
-
       const curDate = Renderer.getCurrentDate();
       const view = Renderer.getCurrentView();
       const newDate = new Date(curDate);
@@ -765,17 +757,14 @@ import { printWeeklyMenu } from './features/Print.js';
     }, { passive: true });
   }
 
-  // ---------- Service Worker (PWA) ----------
+  // ---------- Service Worker ----------
   if ('serviceWorker' in navigator) {
     const hadController = !!navigator.serviceWorker.controller;
-
     window.addEventListener('load', function() {
       navigator.serviceWorker
         .register('./sw.js', { updateViaCache: 'none' })
         .then(function(reg) { return reg.update(); })
-        .catch(function() {
-          // Тихо игнорируем — офлайн-режим не критичен.
-        });
+        .catch(function() {});
     });
 
     let refreshing = false;
