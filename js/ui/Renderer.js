@@ -3,9 +3,10 @@
  * Зависит от: Constants, Utils, EventBus, DishStore, RecipeStore,
  *             RecommendationEngine, notifications, focusTrap, Recipes.
  *
- * v5.31 (Блок 7): в карточку рецепта добавлены кнопки «Редактировать/Создать копию» 
- *                 и «Скрыть/Вернуть в базу» для базовых рецептов.
- * v5.27: аккордеон в карточке рецепта — заголовок стал панелью-кнопкой.
+ * v5.36:
+ *   • Убрано приведение recipeId к Number() при сохранении блюда
+ *     и при выборе рецепта в селектах. ID базовых рецептов — строки,
+ *     Number("recipe_...") давал NaN и ломал привязку.
  */
 import {
   STATUSES, CATEGORIES, MEAL_TYPES, MEAL_TYPE_LABELS, CONSTANTS,
@@ -20,7 +21,6 @@ import { RecipeStore } from '../stores/RecipeStore.js';
 import { showMessage } from '../utils/notifications.js';
 import { trapFocus } from '../utils/focusTrap.js';
 import { RecommendationEngine } from '../features/RecommendationEngine.js';
-// v5.31: импортируем функции для работы с формой рецепта из Recipes.js
 import { openRecipeForm, handleDeleteOrHide } from '../features/Recipes.js';
 
 export const Renderer = (function() {
@@ -137,7 +137,7 @@ export const Renderer = (function() {
   }
 
   // ============================================================
-  // ВСПОМОГАТЕЛЬНОЕ: ТЕКСТ С АВТОЛИНКОВКОЙ URL (v5.25, Блок 6)
+  // ВСПОМОГАТЕЛЬНОЕ: ТЕКСТ С АВТОЛИНКОВКОЙ URL
   // ============================================================
   function appendTextWithLinks(container, text) {
     if (text == null) return;
@@ -1045,7 +1045,7 @@ export const Renderer = (function() {
     recipeSelect.addEventListener('change', function() {
       const recipeId = this.value;
       if (recipeId) {
-        const recipe = RecipeStore.getById(Number(recipeId));
+        const recipe = RecipeStore.getById(recipeId);
         if (recipe) nameInput.value = recipe.name;
       }
     });
@@ -1056,7 +1056,8 @@ export const Renderer = (function() {
       const status = statusSelect.value;
       const category = categorySelect.value;
       const note = document.getElementById('modalNewDishNote').value.trim();
-      const recipeId = recipeSelect.value ? Number(recipeSelect.value) : null;
+      // v5.36: БЕЗ Number() — id может быть строкой
+      const recipeId = recipeSelect.value ? recipeSelect.value : null;
       const checkedBoxes = mealTypesGroup.querySelectorAll('input[type=checkbox]:checked');
       const mealTypes = Array.from(checkedBoxes).map(cb => cb.dataset.mealType);
       DishStore.addDish(name, status, dateStr, category, false, note, recipeId, mealTypes);
@@ -1621,7 +1622,8 @@ export const Renderer = (function() {
     const status = document.getElementById(CONSTANTS.SELECTORS.editDishStatus).value;
     const category = document.getElementById(CONSTANTS.SELECTORS.editDishCategory).value;
     const recipeValue = document.getElementById(CONSTANTS.SELECTORS.editDishRecipe).value;
-    const recipeId = recipeValue ? Number(recipeValue) : null;
+    // v5.36: БЕЗ Number() — id может быть строкой
+    const recipeId = recipeValue ? recipeValue : null;
 
     const editMealTypesGroup = document.getElementById(CONSTANTS.SELECTORS.editDishMealTypesGroup);
     let mealTypes = [];
@@ -2245,10 +2247,9 @@ export const Renderer = (function() {
       modal.appendChild(commentsBlock);
     }
 
-    // v5.31: Обновленный блок кнопок
     const buttonsDiv = document.createElement('div');
     buttonsDiv.className = 'recipe-card-buttons';
-    buttonsDiv.style.flexWrap = 'wrap'; // Чтобы кнопки не сжимались слишком сильно
+    buttonsDiv.style.flexWrap = 'wrap';
 
     const addButton = document.createElement('button');
     addButton.className = 'btn-primary';
@@ -2261,7 +2262,6 @@ export const Renderer = (function() {
     editBtn.addEventListener('click', () => {
       close();
       setTimeout(() => {
-        // openRecipeForm сам поймет, что рецепт базовый, и предложит клонировать
         openRecipeForm(recipe.id); 
       }, 100);
     });
@@ -2274,7 +2274,6 @@ export const Renderer = (function() {
     buttonsDiv.appendChild(addButton);
     buttonsDiv.appendChild(editBtn);
     
-    // Для базовых рецептов добавляем кнопку скрытия/возврата
     if (recipe.builtIn) {
       const hideBtn = document.createElement('button');
       hideBtn.className = 'btn-secondary';
@@ -2346,7 +2345,8 @@ export const Renderer = (function() {
       });
       document.getElementById(CONSTANTS.SELECTORS.editDishRecipe).addEventListener('change', function() {
         if (!this.value) return;
-        const recipe = RecipeStore.getById(Number(this.value));
+        // v5.36: БЕЗ Number()
+        const recipe = RecipeStore.getById(this.value);
         if (recipe) {
           document.getElementById(CONSTANTS.SELECTORS.editDishName).value = recipe.name;
         }
@@ -2357,7 +2357,8 @@ export const Renderer = (function() {
     if (addRecipeSelect) {
       addRecipeSelect.addEventListener('change', function() {
         if (!this.value) return;
-        const recipe = RecipeStore.getById(Number(this.value));
+        // v5.36: БЕЗ Number()
+        const recipe = RecipeStore.getById(this.value);
         if (recipe) {
           document.getElementById(CONSTANTS.SELECTORS.newDishName).value = recipe.name;
         }
