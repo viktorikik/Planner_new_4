@@ -4,12 +4,12 @@
  * Автоматическая миграция из v1 при загрузке.
  * Зависит от: Constants, Utils, EventBus, notifications.
  *
- * v5.35:
- *   • Добавлен метод syncWithServer() — подтягивает рецепты из recipes.json
- *     в корне сайта при запуске и объединяет их с локальными.
- *   • Добавлена нормализация русских ключей (категории, приёмы пищи,
- *     аллергены, сложность), чтобы можно было писать рецепты в JSON
- *     на русском языке без ручной конвертации.
+ * v5.36:
+ *   • getById и другие методы ищут по String(id), чтобы работать
+ *     и со строковыми ID из recipes.json ("recipe_..."), и с числовыми.
+ *   • Метод syncWithServer() подтягивает рецепты из recipes.json
+ *     в корне сайта и объединяет с локальными.
+ *   • Нормализация русских ключей (категории, mealTypes, аллергены).
  */
 import { CONSTANTS } from '../utils/Constants.js';
 import { Utils } from '../utils/Utils.js';
@@ -25,9 +25,6 @@ export const RecipeStore = (function() {
 
   // ============================================================
   // НОРМАЛИЗАЦИЯ РУССКИХ КЛЮЧЕЙ (v5.35)
-  // Чтобы при правке recipes.json вручную можно было писать
-  // "Горячее блюдо" и "Обед", а приложение понимало их как
-  // "main" и "lunch".
   // ============================================================
   const RU_CATEGORY_MAP = {
     'суп': 'soup', 'супы': 'soup',
@@ -67,13 +64,11 @@ export const RecipeStore = (function() {
     if (!raw || typeof raw !== 'object') return raw;
     const r = { ...raw };
 
-    // Категория
     if (typeof r.category === 'string') {
       const lower = r.category.toLowerCase().trim();
       if (RU_CATEGORY_MAP[lower]) r.category = RU_CATEGORY_MAP[lower];
     }
 
-    // Приёмы пищи
     if (Array.isArray(r.mealTypes)) {
       r.mealTypes = r.mealTypes.map(m => {
         if (typeof m !== 'string') return m;
@@ -82,7 +77,6 @@ export const RecipeStore = (function() {
       });
     }
 
-    // Аллергены
     if (Array.isArray(r.allergens)) {
       r.allergens = r.allergens.map(a => {
         if (typeof a !== 'string') return a;
@@ -91,13 +85,11 @@ export const RecipeStore = (function() {
       });
     }
 
-    // Сложность (если строка)
     if (typeof r.difficulty === 'string') {
       const lower = r.difficulty.toLowerCase().trim();
       if (RU_DIFFICULTY_MAP[lower]) r.difficulty = RU_DIFFICULTY_MAP[lower];
     }
 
-    // Острота (если строка)
     if (typeof r.spiciness === 'string') {
       const lower = r.spiciness.toLowerCase().trim();
       if (RU_SPICINESS_MAP[lower]) r.spiciness = RU_SPICINESS_MAP[lower];
@@ -143,12 +135,10 @@ export const RecipeStore = (function() {
   }
 
   function normalizeRecipe(r) {
-    // Сначала прогоняем через нормализатор русских ключей
     const normalized = normalizeRussianKeys(r || {});
-    
     const safe = normalized;
     return {
-      id: safe.id != null ? safe.id : generateId(),
+      id: safe.id != null ? String(safe.id) : String(generateId()),
       name: safe.name || '',
       ingredients: normalizeIngredients(safe.ingredients),
       instructions: safe.instructions || '',
@@ -252,43 +242,35 @@ export const RecipeStore = (function() {
   // ============================================================
   async function syncWithServer() {
     try {
-      // Кэш-бастер нужен, чтобы браузер и PWA всегда качали свежий JSON
       const response = await fetch(`recipes.json?v=${Date.now()}`);
       if (!response.ok) throw new Error('Файл recipes.json не найден');
-      
+
       const serverRecipes = await response.json();
       const localRecipes = getAll();
 
-      // 1. Запоминаем, какие базовые рецепты пользователь скрыл
       const hiddenBaseIds = new Set();
       localRecipes.forEach(r => {
         if (r.builtIn && r.hidden) {
-          hiddenBaseIds.add(r.id);
+          hiddenBaseIds.add(String(r.id));
         }
       });
 
-      // 2. Подготавливаем серверные рецепты
       const normalizedServerRecipes = serverRecipes.map(r => {
         const normalized = normalizeRecipe(r);
         return {
           ...normalized,
           builtIn: true,
-          hidden: hiddenBaseIds.has(normalized.id) // Восстанавливаем статус скрытия
+          hidden: hiddenBaseIds.has(String(normalized.id))
         };
       });
 
-      // 3. Оставляем только рецепты, созданные пользователем (не builtIn)
       const userRecipes = localRecipes.filter(r => !r.builtIn);
-
-      // 4. Сохраняем объединенный массив (сначала пользовательские, потом база)
       replaceAll([...userRecipes, ...normalizedServerRecipes]);
-      
+
       console.log(`✅ База рецептов синхронизирована. Загружено: ${serverRecipes.length}`);
       return true;
     } catch (error) {
       console.warn('⚠️ Не удалось загрузить базовые рецепты с сервера:', error);
-      // Если файл не найден или нет интернета, приложение продолжит работать
-      // с тем, что уже лежит в localStorage.
       return false;
     }
   }
@@ -298,10 +280,14 @@ export const RecipeStore = (function() {
   // ============================================================
 
   function getAll() { return recipes.slice(); }
-  function getById(id) { return recipes.find(r => r.id === id); }
 
-  // Собирает эталонный словарь ингредиентов из всех рецептов.
-  // Возвращает Map: нормализованное_имя -> оригинальное_имя.
+  // v5.36: сравниваем через String — id может быть и числом, и строкой.
+  function getById(id) {
+    if (id == null) return null;
+    const idStr = String(id);
+    return recipes.find(r => String(r.id) === idStr);
+  }
+
   function getUniqueIngredientNames() {
     const map = new Map();
     recipes.forEach(recipe => {
@@ -357,7 +343,8 @@ export const RecipeStore = (function() {
   }
 
   function remove(id) {
-    const index = recipes.findIndex(r => r.id === id);
+    const idStr = String(id);
+    const index = recipes.findIndex(r => String(r.id) === idStr);
     if (index === -1) return false;
     recipes.splice(index, 1);
     save();
@@ -433,7 +420,7 @@ export const RecipeStore = (function() {
 
   return {
     init,
-    syncWithServer, // v5.35
+    syncWithServer,
     getAll,
     getById,
     add,
