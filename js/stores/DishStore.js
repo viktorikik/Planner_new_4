@@ -243,9 +243,6 @@ export const DishStore = (function() {
     return result;
   }
 
-  // Последняя дата DONE-блюда, связанного с этим рецептом (по recipeId).
-  // Нужно движку рекомендаций, чтобы ранжировать рецепты так же,
-  // как блюда — по давности приготовления. Возвращает 'YYYY-MM-DD' или null.
   function getLastDoneDateForRecipe(recipeId) {
     if (!recipeId) return null;
     let max = null;
@@ -257,11 +254,6 @@ export const DishStore = (function() {
     return max;
   }
 
-  // Есть ли у этого рецепта запланированное блюдо (status = PLANNED)
-  // на отрезке [fromDateStr, toDateStr] включительно. Даты — строки
-  // в формате 'YYYY-MM-DD', сравнение лексикографическое (корректно
-  // для ISO-дат). Нужно экрану «Что приготовить?», чтобы не предлагать
-  // рецепт, который уже стоит в ближайшем меню.
   function hasPlannedDishForRecipeInRange(recipeId, fromDateStr, toDateStr) {
     if (!recipeId || !fromDateStr || !toDateStr) return false;
     return dishes.some(d =>
