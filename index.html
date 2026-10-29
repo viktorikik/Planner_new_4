@@ -3,7 +3,8 @@
   Меню и рецепты · index.html
   v5.34 (Блок 6 · База): 
   - Добавлена категория «Гарниры» (side_dish) во все фильтры и селекты.
-  - Обновлена версия CSS до 5.5.3.
+  - Обновлена версия CSS до 5.5.4.
+  - Шапка календаря перестроена в одну строку.
 -->
 <html lang="ru" data-theme="classic-light">
 <head>
@@ -20,7 +21,7 @@
   <meta name="apple-mobile-web-app-title" content="Меню и рецепты">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
-  <link rel="stylesheet" href="styles.css?v=5.5.3">
+  <link rel="stylesheet" href="styles.css?v=5.5.4">
 
   <script>
     (function() {
@@ -72,22 +73,21 @@
   <!-- ============ ТАБ: МЕНЮ ============ -->
   <div class="tab-view" data-tab-view="menu">
     <section class="calendar-wrap" id="calendarWrap">
-      <div class="calendar-view-switch">
+      <div class="calendar-header">
         <div class="view-toggle" id="viewToggle" role="group" aria-label="Переключение вида календаря">
           <button class="active" data-view="week" aria-pressed="true">Неделя</button>
           <button data-view="month" aria-pressed="false">Месяц</button>
         </div>
-      </div>
-      <div class="calendar-header">
+        
         <div class="month-nav-wrapper">
-          <div class="month-nav">
-            <button id="prevMonth" aria-label="Предыдущий месяц">‹</button>
-            <button id="nextMonth" aria-label="Следующий месяц">›</button>
-          </div>
+          <button id="prevMonth" class="month-nav-btn" aria-label="Предыдущий месяц">‹</button>
           <h2 id="monthTitle">Август 2026</h2>
+          <button id="nextMonth" class="month-nav-btn" aria-label="Следующий месяц">›</button>
         </div>
+
         <button class="today-btn" id="todayBtn">Сегодня</button>
       </div>
+
       <div class="weekdays" role="row">
         <span role="columnheader">Пн</span>
         <span role="columnheader">Вт</span>
