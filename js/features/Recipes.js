@@ -4,11 +4,9 @@
  * Зависит от: Constants, Utils, RecipeStore, DishStore, Renderer,
  *             notifications, focusTrap, ExportImport.
  *
- * v5.34 (Блок 6 · База):
- *   • Добавлена категория «Гарниры» (SIDE_DISH) в CATEGORY_ORDER.
- *
- * v5.33 (Блок 7 · UX-полировка):
- *   • Поведение аккордеона: при открытии новой категории предыдущая автоматически закрывается.
+ * v5.36:
+ *   • Убрано приведение id к Number() при сохранении формы.
+ *     ID рецептов — строки, Number("recipe_...") давал NaN.
  */
 import { CATEGORIES, CATEGORY_LABELS, RECIPE_SOURCES, CONSTANTS, UNIT_LABELS } from '../utils/Constants.js';
 import { Utils } from '../utils/Utils.js';
@@ -19,30 +17,24 @@ import { showMessage } from '../utils/notifications.js';
 import { trapFocus } from '../utils/focusTrap.js';
 import { exportRecipesAsJson, exportRecipesAsTxt, importRecipesOnly } from './ExportImport.js';
 
-// Порядок категорий в табе «Рецепты». Повторяет визуальный порядок
-// в index.html и ExportImport.categoryOrder. При добавлении новой
-// категории — правится здесь и в Constants.
 const CATEGORY_ORDER = [
   CATEGORIES.SOUP,
   CATEGORIES.SALAD,
   CATEGORIES.MAIN,
-  CATEGORIES.SIDE_DISH, // v5.34
+  CATEGORIES.SIDE_DISH,
   CATEGORIES.APPETIZER,
   CATEGORIES.BAKERY,
   CATEGORIES.DESSERT,
   CATEGORIES.OTHER
 ];
 
-// ---------- Состояние фильтров таба «Рецепты» ----------
 let recipesSearchQuery = '';
 let recipesCategoryFilter = 'all';
-let recipesSourceFilter = loadSourceFilter(); // 'all' | 'my' | 'base'
+let recipesSourceFilter = loadSourceFilter();
 let showHiddenBase = loadShowHidden();
 
-// ---------- Контекст открытия таба ----------
 let openedFromChoice = false;
 
-// ---------- Состояние свёрнутых категорий ----------
 let collapsedCategories = loadCollapsedState();
 
 function loadCollapsedState() {
@@ -62,7 +54,6 @@ function saveCollapsedState() {
   } catch (e) {}
 }
 
-// v5.26: чтение/запись выбранного таба источника.
 function loadSourceFilter() {
   try {
     const v = localStorage.getItem(CONSTANTS.STORAGE_KEYS.RECIPES_SOURCE_FILTER);
@@ -82,7 +73,6 @@ function saveShowHidden() {
   try { localStorage.setItem(CONSTANTS.STORAGE_KEYS.RECIPES_SHOW_HIDDEN, showHiddenBase ? '1' : '0'); } catch (e) {}
 }
 
-// ---------- Заголовок таба со счётчиком ----------
 function updateRecipesTitle(scopedTotal, found, isFiltered) {
   const title = document.getElementById(CONSTANTS.SELECTORS.recipesTitle);
   if (!title) return;
@@ -98,7 +88,6 @@ function updateBackBtnVisibility() {
   if (backBtn) backBtn.hidden = !openedFromChoice;
 }
 
-// Подсветка активного таба источника + видимость чекбокса «Показать скрытые».
 function renderSourceTabs() {
   document.querySelectorAll(CONSTANTS.SELECTORS.recipeSourceTabs).forEach(btn => {
     const isActive = btn.dataset.source === recipesSourceFilter;
@@ -125,9 +114,6 @@ export function resetOpenedFromChoice() {
   updateBackBtnVisibility();
 }
 
-// ============================================================
-// ОТРИСОВКА СПИСКА РЕЦЕПТОВ
-// ============================================================
 export function renderRecipesList() {
   const list = document.getElementById(CONSTANTS.SELECTORS.recipesList);
   if (!list) return;
@@ -136,7 +122,6 @@ export function renderRecipesList() {
 
   renderSourceTabs();
 
-  // 1. Отбираем по источнику (Все / Мои / База) и скрытым.
   let scoped = allRecipes;
   if (recipesSourceFilter === RECIPE_SOURCES.MY) {
     scoped = scoped.filter(r => !r.builtIn);
@@ -146,7 +131,6 @@ export function renderRecipesList() {
     scoped = scoped.filter(r => !r.hidden);
   }
 
-  // 2. Поиск и фильтр по категории.
   const query = recipesSearchQuery.trim().toLowerCase();
   const isFiltered = query !== '' || recipesCategoryFilter !== 'all';
 
@@ -189,7 +173,6 @@ export function renderRecipesList() {
     grouped[cat].push(recipe);
   });
 
-  // Устойчивая сортировка: indexOf === -1 → категория неизвестна → отправляем в конец.
   const sortedCategories = Object.keys(grouped).sort((a, b) => {
     const ia = CATEGORY_ORDER.indexOf(a);
     const ib = CATEGORY_ORDER.indexOf(b);
@@ -228,11 +211,9 @@ export function renderRecipesList() {
     countSpan.textContent = `(${items.length})`;
     header.appendChild(countSpan);
 
-    // v5.33: Логика «аккордеона» (открыта только одна категория)
     header.addEventListener('click', function() {
       const wasCollapsed = section.classList.contains('collapsed');
 
-      // Закрываем ВСЕ категории
       list.querySelectorAll('.recipe-category-section').forEach(sec => {
         sec.classList.add('collapsed');
       });
@@ -240,13 +221,11 @@ export function renderRecipesList() {
         hdr.setAttribute('aria-expanded', 'false');
       });
 
-      // Если кликнули на закрытую — открываем её
       if (wasCollapsed) {
         section.classList.remove('collapsed');
         header.setAttribute('aria-expanded', 'true');
       }
 
-      // Синхронизируем стейт (все закрыты, кроме текущей, если она открыта)
       Object.keys(collapsedCategories).forEach(k => { collapsedCategories[k] = true; });
       if (wasCollapsed) {
         collapsedCategories[cat] = false;
@@ -281,7 +260,6 @@ export function renderRecipesList() {
       });
       li.appendChild(nameSpan);
 
-      // Метка «из базы» — оставляем только аккуратный бейдж.
       if (recipe.builtIn) {
         const badge = document.createElement('span');
         badge.className = 'recipe-list-badge';
@@ -298,8 +276,6 @@ export function renderRecipesList() {
   });
 }
 
-// v5.30: Функция handleDeleteOrHide больше не вызывается из списка, 
-// но оставлена для использования в Renderer.js (в карточке рецепта).
 export function handleDeleteOrHide(recipe) {
   if (recipe.builtIn) {
     const wasHidden = !!recipe.hidden;
@@ -324,10 +300,6 @@ export function handleDeleteOrHide(recipe) {
   RecipeStore.remove(recipe.id);
   renderRecipesList();
 }
-
-// ============================================================
-// ФОРМА РЕЦЕПТА — ЛОГИКА (v6.3, схема v2)
-// ============================================================
 
 function updateIngredientDatalist() {
   let datalist = document.getElementById('ingredientNamesList');
@@ -441,7 +413,6 @@ function parseNumField(value) {
   return (isFinite(n) && n >= 0) ? n : null;
 }
 
-// ---------- Открытие / закрытие формы ----------
 export function openRecipeForm(recipeId = null) {
   const overlay = document.getElementById(CONSTANTS.SELECTORS.recipeFormOverlay);
   if (!overlay) return;
@@ -450,7 +421,6 @@ export function openRecipeForm(recipeId = null) {
   let recipe = isEdit ? RecipeStore.getById(recipeId) : null;
   if (isEdit && !recipe) { showMessage('Рецепт не найден', 'error'); return; }
 
-  // v5.26: базовый рецепт напрямую не редактируется — предлагаем создать копию.
   if (isEdit && recipe.builtIn) {
     const answer = confirm(
       `«${recipe.name}» — рецепт из базы.\n\n` +
@@ -630,7 +600,8 @@ function saveRecipeForm() {
   };
 
   if (id) {
-    RecipeStore.update(Number(id), name, ingredients, instructions, category, extra);
+    // v5.36: БЕЗ Number(id) — id может быть строкой
+    RecipeStore.update(id, name, ingredients, instructions, category, extra);
   } else {
     RecipeStore.add(name, ingredients, instructions, category, extra);
   }
@@ -639,9 +610,6 @@ function saveRecipeForm() {
   renderRecipesList();
 }
 
-// ============================================================
-// МОДАЛКА ПАРСЕРА ИНГРЕДИЕНТОВ
-// ============================================================
 function openRecipeParser() {
   const overlay = document.getElementById(CONSTANTS.SELECTORS.recipeParserOverlay);
   if (!overlay) return;
@@ -721,9 +689,6 @@ function closeRecipeExportModal() {
   }
 }
 
-// ============================================================
-// ИНИЦИАЛИЗАЦИЯ ОБРАБОТЧИКОВ ТАБА «РЕЦЕПТЫ»
-// ============================================================
 export function initRecipesHandlers() {
   const backBtn = document.getElementById(CONSTANTS.SELECTORS.recipesBackBtn);
   if (backBtn) {
