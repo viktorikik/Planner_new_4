@@ -1,10 +1,10 @@
 /**
  * main.js — точка входа приложения.
  *
- * v6.3.1:
- *   • executeGeneration: поддержка нового формата { items: [] } от MenuGenerator.
- *   • Сохранение mealRole в DishStore.
- *   • replaceDishHandler: передача mealRole для корректной замены.
+ * v6.3.2:
+ *   • Отображение оценки (score) от MenuOptimizer в сообщении после сборки.
+ *   • Адаптация executeGeneration под новый формат { items: [] }.
+ *   • replaceDishHandler передает mealRole для корректной замены.
  *
  * v6.1.0:
  *   • Защита от отсутствия #generateMenuBtn: проверка на null.
@@ -506,7 +506,9 @@ const DEFAULT_THEME = THEMES.LIGHT;
          mealTypes: d.mealTypes
       })));
 
-      showMessage(`✨ Меню на ${days} дней успешно собрано!`);
+      const scoreText = result.score ? ` (Оценка: ${Math.round(result.score)}/100)` : '';
+      showMessage(`✨ Меню на ${days} дней собрано!${scoreText}`);
+      
       closeGenerateModal();
       Renderer.renderCalendar(Renderer.getCurrentView(), Renderer.getCurrentDate());
     } else {
@@ -890,7 +892,6 @@ const DEFAULT_THEME = THEMES.LIGHT;
     const recipeValue = recipeSelect ? recipeSelect.value : '';
     const recipeId = recipeValue ? recipeValue : null;
     
-    // При ручном добавлении пытаемся достать mealRole из рецепта
     let mealRole = null;
     if (recipeId) {
       const recipe = RecipeStore.getById(recipeId);
