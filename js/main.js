@@ -1,6 +1,14 @@
 /**
  * main.js — точка входа приложения.
  *
+ * v6.0.0:
+ *   • Переход на две темы: light и dark (без classic-*/brand-*).
+ *     Миграция старых значений localStorage → light/dark.
+ *     THEMES, DEFAULT_THEME, THEME_LEGACY_MAP больше не импортируются
+ *     из Constants.js — определены локально.
+ *   • THEME_PREVIEW и buildThemeTiles переписаны под 2 темы.
+ *     Акцент — единый лайм #D5E84A в обеих темах.
+ *
  * v5.43:
  *   • DEFAULT_TAB = 'today' — приложение открывается на вкладке «Сегодня».
  *   • На «Сегодня» добавлена кнопка «Собрать меню на неделю».
@@ -14,7 +22,7 @@
  *     Кнопка создаётся динамически в Renderer.renderToday, на момент
  *     инициализации main.js её ещё нет в DOM.
  */
-import { STATUSES, CONSTANTS, THEMES, DEFAULT_THEME, THEME_LEGACY_MAP } from './utils/Constants.js';
+import { STATUSES, CONSTANTS } from './utils/Constants.js';
 import { Utils } from './utils/Utils.js';
 import { EventBus } from './utils/EventBus.js';
 import { showMessage } from './utils/notifications.js';
@@ -47,6 +55,13 @@ import {
 import { Onboarding } from './features/Onboarding.js';
 import { printWeeklyMenu } from './features/Print.js';
 import { MenuGenerator } from './features/MenuGenerator.js';
+
+// ============================================================
+// v6.0.0: локальные константы тем (две темы вместо четырёх).
+// Значения — строки, которые попадают в data-theme на <html>.
+// ============================================================
+const THEMES = { LIGHT: 'light', DARK: 'dark' };
+const DEFAULT_THEME = THEMES.LIGHT;
 
 // ============================================================
 // ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ
@@ -148,7 +163,7 @@ import { MenuGenerator } from './features/MenuGenerator.js';
     Onboarding.open();
   });
 
-  // ---------- Тема ----------
+  // ---------- Тема (v6.0.0: light/dark) ----------
   function getStoredTheme() {
     let raw;
     try {
@@ -158,36 +173,43 @@ import { MenuGenerator } from './features/MenuGenerator.js';
     }
     if (!raw) return null;
 
-    if (THEME_LEGACY_MAP[raw]) {
-      const migrated = THEME_LEGACY_MAP[raw];
+    // Одноразовая миграция старых значений в light/dark.
+    const LEGACY_MAP = {
+      'classic-light': THEMES.LIGHT,
+      'brand-light':   THEMES.LIGHT,
+      'classic-dark':  THEMES.DARK,
+      'brand-dark':    THEMES.DARK
+    };
+
+    if (LEGACY_MAP[raw]) {
+      const migrated = LEGACY_MAP[raw];
       try {
         localStorage.setItem(CONSTANTS.STORAGE_KEYS.THEME, migrated);
       } catch (e) { /* молча */ }
       return migrated;
     }
 
-    const known = Object.keys(THEMES).map(k => THEMES[k]);
-    return known.includes(raw) ? raw : null;
+    if (raw === THEMES.LIGHT || raw === THEMES.DARK) return raw;
+    return null;
   }
 
   function getPreferredTheme() {
     return window.matchMedia('(prefers-color-scheme: dark)').matches
-      ? THEMES.CLASSIC_DARK
-      : THEMES.CLASSIC_LIGHT;
+      ? THEMES.DARK
+      : THEMES.LIGHT;
   }
 
   function applyTheme(theme) {
-    document.documentElement.setAttribute('data-theme', theme);
+    const valid = (theme === THEMES.LIGHT || theme === THEMES.DARK) ? theme : DEFAULT_THEME;
+    document.documentElement.setAttribute('data-theme', valid);
   }
 
   let currentTheme = getStoredTheme() || getPreferredTheme() || DEFAULT_THEME;
   applyTheme(currentTheme);
 
   const THEME_PREVIEW = {
-    [THEMES.CLASSIC_LIGHT]: { bg: '#faf7f2', accent: '#c25a3a', accentText: '#ffffff', label: 'Классическая светлая' },
-    [THEMES.CLASSIC_DARK]:  { bg: '#17130f', accent: '#d8785a', accentText: '#1a1310', label: 'Классическая тёмная' },
-    [THEMES.BRAND_LIGHT]:   { bg: '#F4EBDD', accent: '#292724', accentText: '#DCEB32', label: 'Авторская светлая' },
-    [THEMES.BRAND_DARK]:    { bg: '#1A1816', accent: '#DCEB32', accentText: '#292724', label: 'Авторская тёмная' }
+    [THEMES.LIGHT]: { bg: '#F6F4ED', accent: '#D5E84A', accentText: '#25251F', label: 'Светлая' },
+    [THEMES.DARK]:  { bg: '#201F1C', accent: '#D5E84A', accentText: '#25251F', label: 'Тёмная' }
   };
 
   const themeOverlay = document.getElementById(CONSTANTS.SELECTORS.themeOverlay);
@@ -380,7 +402,7 @@ import { MenuGenerator } from './features/MenuGenerator.js';
   const generateMenuOverlay = document.getElementById('generateMenuOverlay');
   const generateFridgeMode = document.getElementById('generateFridgeMode');
   const fridgeIngredientsWrap = document.getElementById('fridgeIngredientsWrap');
-  
+
   if (generateFridgeMode) {
     generateFridgeMode.addEventListener('change', function() {
       fridgeIngredientsWrap.hidden = !this.checked;
@@ -419,7 +441,7 @@ import { MenuGenerator } from './features/MenuGenerator.js';
 
   document.getElementById('generateMenuClose').addEventListener('click', closeGenerateModal);
   document.getElementById('generateMenuCancel').addEventListener('click', closeGenerateModal);
-  
+
   document.getElementById('generateMenuSave').addEventListener('click', function() {
     const days = parseInt(document.getElementById('generateDaysCount').value, 10);
     const maxTime = parseInt(document.getElementById('generateMaxTime').value, 10);
@@ -502,7 +524,7 @@ import { MenuGenerator } from './features/MenuGenerator.js';
 
     const dateStr = dish.date;
     const mealType = (dish.mealTypes && dish.mealTypes.length > 0) ? dish.mealTypes[0] : 'dinner';
-    
+
     // Собираем контекст текущего меню на неделю
     const currentMenu = {};
     DishStore.getAll().forEach(d => {
@@ -512,10 +534,10 @@ import { MenuGenerator } from './features/MenuGenerator.js';
     });
 
     const newDish = MenuGenerator.getReplacement(
-      dish.recipeId || dish.id, 
-      dateStr, 
-      mealType, 
-      currentMenu, 
+      dish.recipeId || dish.id,
+      dateStr,
+      mealType,
+      currentMenu,
       { maxWeekdayTime: 40 }
     );
 
@@ -526,7 +548,7 @@ import { MenuGenerator } from './features/MenuGenerator.js';
         category: newDish.category || Utils.guessCategory(newDish.name)
       });
       showMessage(`🎲 Заменено на "${newDish.name}"`);
-      
+
       const modalOverlay = document.getElementById(CONSTANTS.SELECTORS.modalOverlay);
       if (modalOverlay && modalOverlay.classList.contains('active')) {
         Renderer.openModal(dateStr);
