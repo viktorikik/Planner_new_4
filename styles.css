@@ -1,11 +1,10 @@
 /* ============================================================
    Меню и рецепты · styles.css
-   v6.0.0 (дизайн-система Modern Lifestyle):
-     • Две темы: light и dark (вместо classic-/brand-).
-     • Шрифт Manrope (self-hosted, variable).
-     • Палитра: молочный + графит + лайм #D5E84A.
-     • Убрана внешняя рамка у .app — фон на body.
-     • Единый акцент в обеих темах — лайм.
+   v6.1.0 (этап 2 дизайн-системы Modern Lifestyle):
+     • Радиусы 20 / 16 / 14.
+     • Кнопки 50–54px, поля 50px, нижняя навигация 72px.
+     • Токены --radius-sm/md/lg обновлены.
+     • Базовые --input-padding и --btn-padding увеличены.
    ============================================================ */
 
 /* ============================================================
@@ -98,13 +97,13 @@
   --spacing-md: 16px;
   --spacing-lg: 24px;
   --spacing-xl: 32px;
-  --radius-sm: 12px;
-  --radius-md: 24px;
-  --radius-lg: 40px;
+  --radius-sm: 14px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
   --transition-fast: 0.15s;
   --transition-normal: 0.25s;
-  --input-padding: 8px 14px;
-  --btn-padding: 8px 20px;
+  --input-padding: 15px 16px;
+  --btn-padding: 17px 24px;
 
   color-scheme: light;
 }
@@ -540,14 +539,14 @@ button,
   background: var(--bg-app);
   border: 1.5px solid var(--text-muted);
   border-radius: var(--radius-md);
-  padding: var(--spacing-sm) var(--spacing-lg);
+  padding: 14px 24px;
   font-size: 15px;
   font-weight: 600;
   color: var(--text-primary);
   cursor: pointer;
   transition: var(--transition-fast);
   line-height: 1.2;
-  min-height: 40px;
+  min-height: 50px;
   white-space: nowrap;
   flex-shrink: 0;
   appearance: none;
@@ -580,7 +579,7 @@ button,
 }
 
 .day-cell {
-  border-radius: 18px;
+  border-radius: var(--radius-md);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -675,7 +674,7 @@ button,
   gap: 10px;
   align-items: center;
   background: var(--week-row-bg);
-  border-radius: 14px;
+  border-radius: var(--radius-sm);
   padding: var(--spacing-sm) var(--spacing-md);
   border: 1px solid var(--cell-border);
   cursor: pointer;
@@ -774,7 +773,8 @@ button,
 }
 .search-filter-wrap input,
 .search-filter-wrap select {
-  padding: 8px 14px;
+  padding: 14px 16px;
+  min-height: 50px;
   border-radius: var(--radius-md);
   border: 1px solid var(--cell-border);
   background: var(--search-bg);
@@ -1205,7 +1205,8 @@ button,
 }
 .suggest-controls input,
 .suggest-controls select {
-  padding: 6px 12px;
+  padding: 14px 14px;
+  min-height: 50px;
   border-radius: var(--radius-md);
   border: 1px solid var(--cell-border);
   background: var(--input-bg);
@@ -1334,7 +1335,8 @@ button,
 .add-modal .form-group select,
 .add-modal .form-group textarea {
   width: 100%;
-  padding: 10px 14px;
+  padding: 15px 16px;
+  min-height: 50px;
   border-radius: var(--radius-lg);
   border: 1px solid var(--cell-border);
   background: var(--input-bg);
@@ -1359,6 +1361,7 @@ button,
 .add-modal .form-actions button {
   flex: 1;
   padding: var(--spacing-md);
+  min-height: 54px;
   border: none;
   border-radius: var(--radius-lg);
   font-size: 16px;
@@ -1387,7 +1390,8 @@ button,
 
 #repeatMenuDate {
   width: 100%;
-  padding: 10px 14px;
+  padding: 14px 16px;
+  min-height: 50px;
   border-radius: var(--radius-lg);
   border: 1px solid var(--cell-border);
   background: var(--input-bg);
@@ -1489,7 +1493,7 @@ button,
 
 .choice-modal {
   background: var(--modal-bg);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   padding: var(--spacing-xl) var(--spacing-lg);
   max-width: 500px;
   width: 100%;
@@ -1605,7 +1609,8 @@ button,
 
 .choice-category-select {
   width: 100%;
-  padding: 10px 14px;
+  padding: 14px 16px;
+  min-height: 50px;
   border-radius: var(--radius-md);
   border: 1.5px solid var(--cell-border);
   background: var(--input-bg);
@@ -1736,7 +1741,8 @@ button,
 }
 .choice-action-btn {
   flex: 1;
-  padding: 12px 16px;
+  padding: 16px 20px;
+  min-height: 54px;
   border-radius: var(--radius-lg);
   border: none;
   font-size: 14px;
@@ -1823,7 +1829,7 @@ button,
 }
 .welcome-modal {
   background: var(--modal-bg);
-  border-radius: 24px;
+  border-radius: var(--radius-lg);
   padding: var(--spacing-lg) var(--spacing-md);
   max-width: 440px;
   width: 100%;
@@ -1887,7 +1893,8 @@ button,
 .welcome-modal .welcome-btn {
   background: var(--accent-color);
   border: none;
-  padding: 10px 32px;
+  padding: 16px 32px;
+  min-height: 54px;
   border-radius: var(--radius-lg);
   color: var(--accent-text);
   font-size: 16px;
@@ -2147,7 +2154,7 @@ button,
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  border-radius: 14px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--cell-border);
   background: var(--search-bg);
   font-size: 13px;
@@ -2213,9 +2220,9 @@ button,
 .recipes-toolbar > button {
   flex: 1 1 0;
   min-width: 0;
-  height: 42px;
+  height: 54px;
   padding: 0 16px;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   font-size: 14px;
   font-weight: 600;
   font-family: inherit;
@@ -2310,8 +2317,9 @@ button,
 
 .recipes-filters input:not([type="checkbox"]),
 .recipes-filters select {
-  padding: 8px 14px;
-  border-radius: 14px;
+  padding: 14px 16px;
+  min-height: 50px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--cell-border);
   background: var(--search-bg);
   font-size: 13px;
@@ -2525,7 +2533,8 @@ button,
 }
 .shopping-dates-row input[type="date"] {
   flex: 1 1 130px;
-  padding: 8px 12px;
+  padding: 14px 14px;
+  min-height: 50px;
   border-radius: var(--radius-md);
   border: 1px solid var(--cell-border);
   background: var(--input-bg);
@@ -2543,7 +2552,8 @@ button,
 
 .shopping-generate-btn {
   width: 100%;
-  padding: 10px 20px;
+  padding: 16px 24px;
+  min-height: 54px;
   border-radius: var(--radius-lg);
   font-size: 15px;
   font-weight: 600;
@@ -2762,8 +2772,9 @@ button,
 .shopping-actions-row button {
   flex: 1 1 0;
   min-width: 110px;
-  padding: 9px 14px;
-  border-radius: 14px;
+  padding: 14px 16px;
+  min-height: 54px;
+  border-radius: var(--radius-sm);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -2830,7 +2841,7 @@ button,
 .dish-swipe-wrap {
   position: relative;
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   margin-bottom: 6px;
 }
 
@@ -2864,7 +2875,7 @@ button,
   letter-spacing: 0.3px;
   cursor: pointer;
   padding: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.12s ease;
@@ -2890,7 +2901,7 @@ button,
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: #2a2a30;
   color: #fff;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.28);
@@ -2951,7 +2962,7 @@ button,
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: var(--badge-bg); 
   color: var(--text-secondary);
   font-size: 13px;
@@ -2994,7 +3005,7 @@ button,
 .today-hints-body {
   margin-top: 8px;
   padding: 12px 16px;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: var(--badge-bg); 
 }
 
@@ -3065,7 +3076,7 @@ button,
 
 .onboarding-modal {
   background: var(--modal-bg);
-  border-radius: 24px;
+  border-radius: var(--radius-lg);
   padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-sm);
   max-width: 480px;
   width: 100%;
@@ -3191,7 +3202,8 @@ button,
 }
 
 .onboarding-btn {
-  padding: 9px 18px;
+  padding: 13px 18px;
+  min-height: 50px;
   border-radius: var(--radius-lg);
   font-size: 14px;
   font-weight: 600;
@@ -3387,7 +3399,8 @@ button,
   justify-content: space-around;
   background: var(--bg-app);
   border-top: 1px solid var(--bg-app-border);
-  padding: 6px 0 calc(6px + env(safe-area-inset-bottom, 0px));
+  padding: 4px 0 calc(4px + env(safe-area-inset-bottom, 0px));
+  min-height: 72px;
   z-index: 900;
   box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
 }
@@ -3397,18 +3410,18 @@ button,
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   background: none;
   border: none;
-  padding: 6px 4px;
+  padding: 10px 4px;
+  min-height: 64px;
   cursor: pointer;
   color: var(--text-muted);
   font-family: inherit;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   border-radius: var(--radius-sm);
   transition: var(--transition-fast);
-  min-height: 48px;
   appearance: none;
 }
 
@@ -3421,8 +3434,8 @@ button,
 }
 
 .bottom-nav-icon {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   display: block;
   margin: 0 auto 4px;
   transition: transform 0.2s ease;
@@ -3435,6 +3448,7 @@ button,
 .bottom-nav-label {
   line-height: 1.2;
   white-space: nowrap;
+  font-size: 12px;
 }
 
 [data-theme="dark"] .bottom-nav {
@@ -3582,7 +3596,8 @@ button,
 }
 .today-action-btn {
   width: 100%;
-  padding: 12px 16px;
+  padding: 17px 20px;
+  min-height: 54px;
   border-radius: var(--radius-lg);
   font-size: 15px;
   font-weight: 600;
@@ -3769,7 +3784,7 @@ button,
 
   .choice-modal {
     padding: 20px 14px;
-    border-radius: 20px;
+    border-radius: var(--radius-lg);
     max-height: 92vh;
   }
   .choice-modal h2 {
@@ -3797,7 +3812,8 @@ button,
   }
   .choice-action-btn {
     font-size: 13px;
-    padding: 10px 12px;
+    padding: 14px 12px;
+    min-height: 50px;
   }
 
   .bottom-actions button {
@@ -3826,7 +3842,8 @@ button,
   }
   .welcome-modal .welcome-btn {
     font-size: 15px;
-    padding: 8px 24px;
+    padding: 14px 24px;
+    min-height: 50px;
     min-width: 140px;
   }
 
@@ -3851,12 +3868,12 @@ button,
   
   #monthTitle { font-size: 18px; }
   .month-nav-btn { min-height: 32px; min-width: 32px; font-size: 18px; }
-  .today-btn { padding: 6px 14px; min-height: 36px; font-size: 13px; }
+  .today-btn { padding: 12px 16px; min-height: 46px; font-size: 13px; }
 
   .day-cell {
     min-height: 44px;
     padding: 4px var(--spacing-xs);
-    border-radius: 14px;
+    border-radius: var(--radius-sm);
   }
   .day-number {
     font-size: 13px;
@@ -3866,7 +3883,7 @@ button,
     grid-template-columns: 30px 50px 1fr;
     gap: var(--spacing-xs);
     padding: var(--spacing-xs) var(--spacing-sm);
-    border-radius: 10px;
+    border-radius: var(--radius-sm);
   }
   .week-row .date-col {
     font-size: 13px;
@@ -3883,7 +3900,8 @@ button,
     min-width: 120px;
     max-width: 180px;
     font-size: 13px;
-    padding: var(--spacing-xs) var(--spacing-sm);
+    padding: 14px var(--spacing-sm);
+    min-height: 46px;
   }
 
   .modal {
@@ -3922,7 +3940,8 @@ button,
   }
   .modal-add-new .field-btn {
     font-size: 12px;
-    padding: 6px 16px;
+    padding: 12px 16px;
+    min-height: 46px;
   }
 
   .recipe-view-modal .recipe-card-buttons {
@@ -3931,7 +3950,8 @@ button,
   .recipe-view-modal .recipe-card-buttons button {
     width: 100%;
     font-size: 13px;
-    padding: 8px 16px;
+    padding: 14px 16px;
+    min-height: 50px;
   }
 
   .recipe-view-titlerow h3 {
@@ -3949,6 +3969,7 @@ button,
     flex: 1 1 calc(50% - 4px);
     font-size: 13px;
     padding: 0 10px;
+    height: 50px;
   }
   .recipes-toolbar > .btn-done {
     flex: 1 1 100%;
@@ -3962,12 +3983,13 @@ button,
   .shopping-actions-row button {
     flex: 1 1 calc(50% - 4px);
     font-size: 12px;
-    padding: 8px 10px;
+    padding: 12px 10px;
+    min-height: 50px;
   }
 
   .onboarding-modal {
     padding: var(--spacing-md) var(--spacing-md) var(--spacing-xs);
-    border-radius: 20px;
+    border-radius: var(--radius-lg);
     max-height: 92vh;
   }
   .onboarding-icon {
@@ -3982,7 +4004,8 @@ button,
     line-height: 1.5;
   }
   .onboarding-btn {
-    padding: 8px 14px;
+    padding: 11px 14px;
+    min-height: 46px;
     font-size: 13px;
   }
   .onboarding-nav {
@@ -4034,7 +4057,8 @@ button,
   }
   .today-action-btn {
     font-size: 14px;
-    padding: 11px 14px;
+    padding: 15px 14px;
+    min-height: 50px;
   }
 }
 
@@ -4153,7 +4177,8 @@ button,
 .add-modal .recipe-form-modal .ingredient-row input,
 .add-modal .recipe-form-modal .ingredient-row select {
   width: 100%;
-  padding: 8px 10px;
+  padding: 13px 12px;
+  min-height: 50px;
   font-size: 14px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--cell-border);
@@ -4302,7 +4327,8 @@ button,
 
 .add-modal .recipe-form-modal .nutrition-row input {
   width: 100%;
-  padding: 8px 10px;
+  padding: 13px 12px;
+  min-height: 50px;
   font-size: 14px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--cell-border);
@@ -4333,7 +4359,8 @@ button,
   }
   .add-modal .recipe-form-modal .ingredient-row input,
   .add-modal .recipe-form-modal .ingredient-row select {
-    padding: 6px 8px;
+    padding: 12px 8px;
+    min-height: 46px;
     font-size: 13px;
   }
   .add-modal .recipe-form-modal .ingredient-row .ingredient-remove {
@@ -4710,8 +4737,6 @@ button,
   border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
-
-
 .theme-option-chip {
   display: inline-flex;
   align-items: center;
@@ -4905,7 +4930,8 @@ body:has(.onboarding-overlay.active) {
   color: var(--text-primary);
   border: 1.5px solid var(--text-muted);
   border-radius: var(--radius-md);
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: 14px 20px;
+  min-height: 54px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -4915,7 +4941,6 @@ body:has(.onboarding-overlay.active) {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-height: 40px;
   white-space: nowrap;
   flex-shrink: 0;
   appearance: none;
