@@ -1,26 +1,21 @@
 /**
  * main.js — точка входа приложения.
  *
+ * v6.1.0:
+ *   • Клики по стрелкам ‹ › на экране «Сегодня». Раньше работал
+ *     только свайп. Делегирование на document — кнопки
+ *     пересоздаются при каждом renderToday.
+ *   • Защита от отсутствия #generateMenuBtn: проверка на null.
+ *     Кнопка удалена с вкладки «Меню», но JS не должен падать.
+ *
  * v6.0.0:
- *   • Переход на две темы: light и dark (без classic-/brand-).
- *     Миграция старых значений localStorage → light/dark.
- *     THEMES, DEFAULT_THEME, THEME_LEGACY_MAP больше не импортируются
- *     из Constants.js — определены локально.
- *   • THEME_PREVIEW и buildThemeTiles переписаны под 2 темы.
- *     Акцент — единый лайм #D5E84A в обеих темах.
+ *   • Переход на две темы: light и dark.
+ *   • THEMES, DEFAULT_THEME, THEME_LEGACY_MAP — локальные.
+ *   • THEME_PREVIEW и buildThemeTiles под 2 темы.
  *
- * v5.43:
- *   • DEFAULT_TAB = 'today' — приложение открывается на вкладке «Сегодня».
- *   • На «Сегодня» добавлена кнопка «Собрать меню на неделю».
- *
- * v5.44.1:
- *   • Escape теперь закрывает и динамические модалки (карточка рецепта).
- *   • closeTopActiveModal при равных z-index берёт последнюю в DOM.
- *
- * v5.45:
- *   • Обработчик generateMenuBtnToday — через делегирование на document.
- *     Кнопка создаётся динамически в Renderer.renderToday, на момент
- *     инициализации main.js её ещё нет в DOM.
+ * v5.43–v5.45: DEFAULT_TAB = 'today', кнопка «Собрать» на «Сегодня»,
+ * Escape закрывает динамические модалки, generateMenuBtnToday — через
+ * делегирование.
  */
 import { STATUSES, CONSTANTS } from './utils/Constants.js';
 import { Utils } from './utils/Utils.js';
@@ -56,10 +51,6 @@ import { Onboarding } from './features/Onboarding.js';
 import { printWeeklyMenu } from './features/Print.js';
 import { MenuGenerator } from './features/MenuGenerator.js';
 
-// ============================================================
-// v6.0.0: локальные константы тем (две темы вместо четырёх).
-// Значения — строки, которые попадают в data-theme на <html>.
-// ============================================================
 const THEMES = { LIGHT: 'light', DARK: 'dark' };
 const DEFAULT_THEME = THEMES.LIGHT;
 
@@ -70,7 +61,6 @@ const DEFAULT_THEME = THEMES.LIGHT;
   RecipeStore.init();
   DishStore.init();
 
-  // v5.35: Фоновая синхронизация базы рецептов с сервером
   RecipeStore.syncWithServer().then((success) => {
     if (success) {
       if (window.location.hash === '#recipes') {
@@ -81,7 +71,6 @@ const DEFAULT_THEME = THEMES.LIGHT;
 
   // ---------- Hash routing ----------
   const TABS = ['today', 'menu', 'recipes', 'shopping'];
-  // v5.43: приложение открывается на «Сегодня»
   const DEFAULT_TAB = 'today';
 
   function getTabFromHash() {
@@ -135,6 +124,46 @@ const DEFAULT_THEME = THEMES.LIGHT;
     });
   });
 
+  // ---------- v6.1.0: Стрелки ‹ › на экране «Сегодня» ----------
+  // Кнопки создаются динамически в Renderer.renderToday, поэтому
+  // вешаем делегирование на document. Направление определяем
+  // по data-direction (если есть), по тексту кнопки или по позиции
+  // в .today-nav-wrap (первая = назад, последняя = вперёд).
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.today-nav-btn');
+    if (!btn) return;
+
+    // Не реагируем, если клик был на свайп-карточке
+    if (e.target.closest('.dish-swipe-wrap')) return;
+
+    let direction = null;
+
+    const dataDir = btn.dataset.dir || btn.dataset.direction;
+    if (dataDir === 'prev' || dataDir === 'back') direction = -1;
+    else if (dataDir === 'next' || dataDir === 'forward') direction = 1;
+
+    if (direction === null) {
+      const txt = (btn.textContent || '').trim();
+      if (txt === '‹' || txt === '<' || txt === '←') direction = -1;
+      else if (txt === '›' || txt === '>' || txt === '→') direction = 1;
+    }
+
+    if (direction === null) {
+      const wrap = btn.closest('.today-nav-wrap') || btn.closest('.today-header');
+      if (wrap) {
+        const buttons = Array.from(wrap.querySelectorAll('.today-nav-btn'));
+        const idx = buttons.indexOf(btn);
+        if (idx === 0) direction = -1;
+        else if (idx === buttons.length - 1) direction = 1;
+      }
+    }
+
+    if (direction !== null) {
+      e.preventDefault();
+      Renderer.shiftTodayViewDate(direction);
+    }
+  });
+
   // ---------- Приветственное окно ----------
   function showWelcome() {
     const overlay = document.getElementById(CONSTANTS.SELECTORS.welcomeOverlay);
@@ -173,7 +202,6 @@ const DEFAULT_THEME = THEMES.LIGHT;
     }
     if (!raw) return null;
 
-    // Одноразовая миграция старых значений в light/dark.
     const LEGACY_MAP = {
       'classic-light': THEMES.LIGHT,
       'brand-light':   THEMES.LIGHT,
@@ -427,12 +455,14 @@ const DEFAULT_THEME = THEMES.LIGHT;
     }
   }
 
-  // Кнопка в шапке календаря — статическая, можно вешать напрямую
-  document.getElementById('generateMenuBtn').addEventListener('click', openGenerateModal);
+  // v6.1.0: кнопку могли удалить из HTML (с вкладки «Меню»).
+  // Проверяем на null, чтобы main.js не падал.
+  const generateMenuBtn = document.getElementById('generateMenuBtn');
+  if (generateMenuBtn) {
+    generateMenuBtn.addEventListener('click', openGenerateModal);
+  }
 
-  // v5.45: кнопка на «Сегодня» создаётся динамически в Renderer.renderToday.
-  // Вешаем через делегирование — на момент init её может ещё не быть в DOM,
-  // а после перерисовок она пересоздаётся. Делегирование решает оба случая.
+  // Кнопка на «Сегодня» создаётся динамически — делегирование.
   document.addEventListener('click', function(e) {
     if (e.target.closest('#generateMenuBtnToday')) {
       openGenerateModal();
@@ -459,7 +489,6 @@ const DEFAULT_THEME = THEMES.LIGHT;
       return;
     }
 
-    // Блокируем кнопку на время сборки
     const saveBtn = this;
     const originalText = saveBtn.textContent;
     saveBtn.textContent = 'Собираем...';
@@ -490,7 +519,6 @@ const DEFAULT_THEME = THEMES.LIGHT;
           });
         });
 
-        // Группируем по датам и удаляем старые (чтобы не дублировалось)
         const uniqueDates = [...new Set(dishesToSave.map(d => d.date))];
         uniqueDates.forEach(date => {
             const existing = DishStore.getForDate(date);
@@ -525,7 +553,6 @@ const DEFAULT_THEME = THEMES.LIGHT;
     const dateStr = dish.date;
     const mealType = (dish.mealTypes && dish.mealTypes.length > 0) ? dish.mealTypes[0] : 'dinner';
 
-    // Собираем контекст текущего меню на неделю
     const currentMenu = {};
     DishStore.getAll().forEach(d => {
       if (!currentMenu[d.date]) currentMenu[d.date] = {};
@@ -687,7 +714,6 @@ const DEFAULT_THEME = THEMES.LIGHT;
     );
     if (overlays.length === 0) return;
 
-    // v5.44.1: при равных z-index берём последнюю в DOM (визуально сверху).
     let top = overlays[0];
     let topZ = parseInt(getComputedStyle(top).zIndex, 10) || 0;
     for (let i = 1; i < overlays.length; i++) {
@@ -733,7 +759,6 @@ const DEFAULT_THEME = THEMES.LIGHT;
       found.close();
       return;
     }
-    // v5.44.1: fallback для динамических модалок (карточка рецепта).
     closeTopActiveModal();
   });
 
