@@ -502,9 +502,10 @@ button,
   white-space: nowrap;
 }
 .view-toggle button.active {
-  background: var(--accent-light);
-  color: var(--accent-color);
-  box-shadow: 0 0 0 1px var(--accent-color);
+  background: var(--accent-color) !important; /* Сплошной лайм */
+  color: var(--accent-text) !important;       /* Тёмный текст */
+  box-shadow: none !important;
+  font-weight: 700;
 }
 .view-toggle button:hover:not(.active) {
   background: var(--day-hover);
@@ -2213,9 +2214,10 @@ button,
   background: var(--day-hover);
 }
 .recipe-source-tab.active {
-  background: var(--accent-light);
-  color: var(--accent-color);
-  box-shadow: 0 0 0 1px var(--accent-color);
+  background: var(--accent-color) !important; /* Сплошной лайм */
+  color: var(--accent-text) !important;       /* Тёмный текст */
+  box-shadow: none !important;
+  font-weight: 700;
 }
 .recipe-source-tab:focus-visible {
   outline: 2px solid var(--accent-color);
