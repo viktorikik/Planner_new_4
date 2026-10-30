@@ -2,11 +2,6 @@
  * Renderer — отрисовка всех экранов и модалок приложения.
  * Зависит от: Constants, Utils, EventBus, DishStore, RecipeStore,
  *             RecommendationEngine, notifications, focusTrap, Recipes.
- *
- * v5.36:
- *   • Убрано приведение recipeId к Number() при сохранении блюда
- *     и при выборе рецепта в селектах. ID базовых рецептов — строки,
- *     Number("recipe_...") давал NaN и ломал привязку.
  */
 import {
   STATUSES, CATEGORIES, MEAL_TYPES, MEAL_TYPE_LABELS, CONSTANTS,
@@ -63,6 +58,7 @@ export const Renderer = (function() {
     { val: CATEGORIES.SOUP,      label: '🍲 Суп' },
     { val: CATEGORIES.SALAD,     label: '🥗 Салат' },
     { val: CATEGORIES.MAIN,      label: '🍖 Основное' },
+    { val: CATEGORIES.SIDE_DISH, label: '🥔 Гарнир' },
     { val: CATEGORIES.APPETIZER, label: '🥪 Закуска' },
     { val: CATEGORIES.BAKERY,    label: '🥐 Выпечка' },
     { val: CATEGORIES.DESSERT,   label: '🍰 Десерт' },
@@ -80,6 +76,7 @@ export const Renderer = (function() {
     [CATEGORIES.SOUP]:      '🍲',
     [CATEGORIES.SALAD]:     '🥗',
     [CATEGORIES.MAIN]:      '🍖',
+    [CATEGORIES.SIDE_DISH]: '🥔',
     [CATEGORIES.APPETIZER]: '🥪',
     [CATEGORIES.BAKERY]:    '🥐',
     [CATEGORIES.DESSERT]:   '🍰',
@@ -89,6 +86,7 @@ export const Renderer = (function() {
     [CATEGORIES.SOUP]:      'Суп',
     [CATEGORIES.SALAD]:     'Салат',
     [CATEGORIES.MAIN]:      'Основное',
+    [CATEGORIES.SIDE_DISH]: 'Гарнир',
     [CATEGORIES.APPETIZER]: 'Закуска',
     [CATEGORIES.BAKERY]:    'Выпечка',
     [CATEGORIES.DESSERT]:   'Десерт',
@@ -99,6 +97,7 @@ export const Renderer = (function() {
     [CATEGORIES.SOUP]:      'category-soup',
     [CATEGORIES.SALAD]:     'category-salad',
     [CATEGORIES.MAIN]:      'category-main',
+    [CATEGORIES.SIDE_DISH]: 'category-side_dish',
     [CATEGORIES.APPETIZER]: 'category-appetizer',
     [CATEGORIES.BAKERY]:    'category-bakery',
     [CATEGORIES.DESSERT]:   'category-dessert'
@@ -136,9 +135,6 @@ export const Renderer = (function() {
     return `${absDiff} ${pluralizeRu(absDiff, 'день', 'дня', 'дней')} назад`;
   }
 
-  // ============================================================
-  // ВСПОМОГАТЕЛЬНОЕ: ТЕКСТ С АВТОЛИНКОВКОЙ URL
-  // ============================================================
   function appendTextWithLinks(container, text) {
     if (text == null) return;
     const str = String(text);
@@ -175,9 +171,6 @@ export const Renderer = (function() {
     if (tail) container.appendChild(document.createTextNode(tail));
   }
 
-  // ============================================================
-  // ПЛАШКА «ВЕРНУТЬ УДАЛЁННОЕ БЛЮДО»
-  // ============================================================
   function closeUndoSnackbar() {
     if (!activeUndoSnackbar) return;
     const el = activeUndoSnackbar;
@@ -223,9 +216,6 @@ export const Renderer = (function() {
     }, UNDO_TIMEOUT_MS);
   }
 
-  // ============================================================
-  // ГРУППИРОВКА БЛЮД ПО ПРИЁМУ ПИЩИ И СТАТУСУ
-  // ============================================================
   function groupDishesByMealType(dishes) {
     const ORDER = { breakfast: 0, lunch: 1, dinner: 2, snack: 3 };
     const NO_TYPE_KEY = '__none__';
@@ -360,6 +350,20 @@ export const Renderer = (function() {
 
     const actions = document.createElement('div');
     actions.className = 'dish-actions';
+
+    const replaceBtn = document.createElement('button');
+    replaceBtn.type = 'button';
+    replaceBtn.className = 'replace-dish-btn';
+    replaceBtn.textContent = '🎲';
+    replaceBtn.title = 'Заменить блюдо';
+    replaceBtn.setAttribute('aria-label', 'Заменить блюдо');
+    replaceBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (Renderer.replaceDishHandler) {
+        Renderer.replaceDishHandler(dish.id);
+      }
+    });
+    actions.appendChild(replaceBtn);
 
     const upBtn = document.createElement('button');
     upBtn.type = 'button';
@@ -524,10 +528,6 @@ export const Renderer = (function() {
 
     return wrap;
   }
-
-  // ============================================================
-  // ЭКРАН «ЧТО ПРИГОТОВИТЬ?»
-  // ============================================================
 
   function rebuildChoiceRanking() {
     const allItems = DishStore.getAllUniqueWithLastDone();
@@ -847,7 +847,6 @@ export const Renderer = (function() {
     renderChoiceResults();
   }
 
-  // ============================================================
   function buildAddForm(dateStr) {
     const addSection = document.createElement('div');
     addSection.className = 'modal-add-section';
@@ -1056,7 +1055,6 @@ export const Renderer = (function() {
       const status = statusSelect.value;
       const category = categorySelect.value;
       const note = document.getElementById('modalNewDishNote').value.trim();
-      // v5.36: БЕЗ Number() — id может быть строкой
       const recipeId = recipeSelect.value ? recipeSelect.value : null;
       const checkedBoxes = mealTypesGroup.querySelectorAll('input[type=checkbox]:checked');
       const mealTypes = Array.from(checkedBoxes).map(cb => cb.dataset.mealType);
@@ -1622,7 +1620,6 @@ export const Renderer = (function() {
     const status = document.getElementById(CONSTANTS.SELECTORS.editDishStatus).value;
     const category = document.getElementById(CONSTANTS.SELECTORS.editDishCategory).value;
     const recipeValue = document.getElementById(CONSTANTS.SELECTORS.editDishRecipe).value;
-    // v5.36: БЕЗ Number() — id может быть строкой
     const recipeId = recipeValue ? recipeValue : null;
 
     const editMealTypesGroup = document.getElementById(CONSTANTS.SELECTORS.editDishMealTypesGroup);
@@ -1808,10 +1805,6 @@ export const Renderer = (function() {
   function setSearchQuery(q) { searchQuery = q; renderMenu(); }
   function setStatusFilter(f) { statusFilter = f; renderMenu(); }
   function setCategoryFilter(f) { categoryFilter = f; renderMenu(); }
-
-  // ============================================================
-  // КАРТОЧКА РЕЦЕПТА
-  // ============================================================
 
   function formatNutriValue(n) {
     if (n == null || !isFinite(n)) return '—';
@@ -2345,7 +2338,6 @@ export const Renderer = (function() {
       });
       document.getElementById(CONSTANTS.SELECTORS.editDishRecipe).addEventListener('change', function() {
         if (!this.value) return;
-        // v5.36: БЕЗ Number()
         const recipe = RecipeStore.getById(this.value);
         if (recipe) {
           document.getElementById(CONSTANTS.SELECTORS.editDishName).value = recipe.name;
@@ -2357,7 +2349,6 @@ export const Renderer = (function() {
     if (addRecipeSelect) {
       addRecipeSelect.addEventListener('change', function() {
         if (!this.value) return;
-        // v5.36: БЕЗ Number()
         const recipe = RecipeStore.getById(this.value);
         if (recipe) {
           document.getElementById(CONSTANTS.SELECTORS.newDishName).value = recipe.name;
@@ -2409,7 +2400,8 @@ export const Renderer = (function() {
     setChoiceCategory,
     setChoiceOnlyFavorites,
     setChoiceRecipesSource,
-    rerollChoiceDish
+    rerollChoiceDish,
+    replaceDishHandler: null
   };
 })();
 
