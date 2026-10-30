@@ -1,13 +1,18 @@
 /**
  * main.js — точка входа приложения.
  *
+ * v6.3.3:
+ *   • executeGeneration: атомарное сохранение через DishStore.replaceRangeAtomically.
+ *   • Проверка результата сохранения (saveOk) — при ошибке меню не применяется.
+ *   • Сохранение заметок и DONE-записей при «Заменить».
+ *   • Отображение оценки (score) от MenuOptimizer.
+ *
  * v6.3.2:
- *   • Отображение оценки (score) от MenuOptimizer в сообщении после сборки.
  *   • Адаптация executeGeneration под новый формат { items: [] }.
- *   • replaceDishHandler передает mealRole для корректной замены.
+ *   • replaceDishHandler передает mealRole.
  *
  * v6.1.0:
- *   • Защита от отсутствия #generateMenuBtn: проверка на null.
+ *   • Защита от отсутствия #generateMenuBtn.
  *
  * v6.0.0:
  *   • Переход на две темы: light и dark.
@@ -463,58 +468,73 @@ const DEFAULT_THEME = THEMES.LIGHT;
       maxWeekdayTime: maxTime
     });
 
-    if (result.success) {
-      const dishesToSave = [];
-      
-      // Парсим новый формат { items: [] }
-      Object.keys(result.menu).forEach(dateStr => {
-        Object.keys(result.menu[dateStr]).forEach(mealType => {
-          const composition = result.menu[dateStr][mealType];
-          if (composition && Array.isArray(composition.items)) {
-            composition.items.forEach(item => {
-              dishesToSave.push({
-                name: item.name,
-                date: dateStr,
-                category: item.category || Utils.guessCategory(item.name),
-                recipeId: item.id,
-                mealRole: item.mealRole || 'main',
-                mealTypes: [mealType]
-              });
-            });
-          }
-        });
-      });
-
-      if (replaceExisting) {
-        const uniqueDates = [...new Set(dishesToSave.map(d => d.date))];
-        uniqueDates.forEach(date => {
-          const existing = DishStore.getForDate(date);
-          existing.forEach(d => {
-            if (d.status !== STATUSES.DONE) {
-              DishStore.removeDish(d.id);
-            }
-          });
-        });
-      }
-
-      DishStore.addMultipleDishes(dishesToSave.map(d => ({
-         name: d.name,
-         date: d.date,
-         category: d.category,
-         recipeId: d.recipeId,
-         mealRole: d.mealRole,
-         mealTypes: d.mealTypes
-      })));
-
-      const scoreText = result.score ? ` (Оценка: ${Math.round(result.score)}/100)` : '';
-      showMessage(`✨ Меню на ${days} дней собрано!${scoreText}`);
-      
-      closeGenerateModal();
-      Renderer.renderCalendar(Renderer.getCurrentView(), Renderer.getCurrentDate());
-    } else {
+    if (!result.success) {
       showMessage(result.message || 'Не удалось собрать меню', 'error');
       closeGenerateModal();
+      pendingGenerationData = null;
+      return;
     }
+
+    // 1. Разворачиваем items в плоский массив
+    const dishesToSave = [];
+    Object.keys(result.menu).forEach(dateStr => {
+      Object.keys(result.menu[dateStr]).forEach(mealType => {
+        const composition = result.menu[dateStr][mealType];
+        if (composition && Array.isArray(composition.items)) {
+          composition.items.forEach(item => {
+            dishesToSave.push({
+              name: item.name,
+              date: dateStr,
+              category: item.category || Utils.guessCategory(item.name),
+              recipeId: item.id,
+              mealRole: item.mealRole || 'main',
+              mealTypes: [mealType]
+            });
+          });
+        }
+      });
+    });
+
+    if (dishesToSave.length === 0) {
+      showMessage('Не удалось собрать меню — попробуйте другие настройки', 'error');
+      closeGenerateModal();
+      pendingGenerationData = null;
+      return;
+    }
+
+    // 2. Сохраняем: атомарно, с защитой данных
+    let saveOk = false;
+
+    if (replaceExisting) {
+      const startObj = new Date(startDate);
+      const endObj = new Date(startDate);
+      endObj.setDate(endObj.getDate() + days - 1);
+      const startString = Utils.formatDateLocal(startObj);
+      const endString = Utils.formatDateLocal(endObj);
+
+      saveOk = DishStore.replaceRangeAtomically({
+        startDate: startString,
+        endDate: endString,
+        newDishes: dishesToSave,
+        preserveDone: true,
+        preserveNotes: true
+      });
+    } else {
+      saveOk = DishStore.addMultipleDishes(dishesToSave);
+    }
+
+    if (!saveOk) {
+      showMessage('Не удалось сохранить меню. Возможно, закончилось место в хранилище.', 'error');
+      closeGenerateModal();
+      pendingGenerationData = null;
+      return;
+    }
+
+    // 3. Успех
+    const scoreText = result.score ? ` (Оценка: ${Math.round(result.score)}/100)` : '';
+    showMessage(`✨ Меню на ${days} дней собрано!${scoreText}`);
+    closeGenerateModal();
+    Renderer.renderCalendar(Renderer.getCurrentView(), Renderer.getCurrentDate());
     pendingGenerationData = null;
   }
 
@@ -575,7 +595,6 @@ const DEFAULT_THEME = THEMES.LIGHT;
     const dateStr = dish.date;
     const mealType = (dish.mealTypes && dish.mealTypes.length > 0) ? dish.mealTypes[0] : 'dinner';
 
-    // Собираем текущее меню для передачи в генератор
     const currentMenu = {};
     DishStore.getAll().forEach(d => {
       if (!currentMenu[d.date]) currentMenu[d.date] = {};
@@ -891,7 +910,7 @@ const DEFAULT_THEME = THEMES.LIGHT;
     }
     const recipeValue = recipeSelect ? recipeSelect.value : '';
     const recipeId = recipeValue ? recipeValue : null;
-    
+
     let mealRole = null;
     if (recipeId) {
       const recipe = RecipeStore.getById(recipeId);
