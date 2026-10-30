@@ -2,6 +2,13 @@
  * Renderer — отрисовка всех экранов и модалок приложения.
  * Зависит от: Constants, Utils, EventBus, DishStore, RecipeStore,
  *             RecommendationEngine, notifications, focusTrap, Recipes.
+ *
+ * v5.45:
+ *   • «Сегодня»: стрелки ‹ › в шапке для листания дней (для ПК).
+ *   • «Сегодня»: три кнопки в порядке Собрать (акцент) → Что приготовить
+ *     (вторичная) → Добавить (вторичная). «Как это работает» — внизу.
+ *   • Кнопка «Собрать» больше не в index.html — создаётся здесь.
+ *     Обработчик в main.js — через делегирование.
  */
 import {
   STATUSES, CATEGORIES, MEAL_TYPES, MEAL_TYPE_LABELS, CONSTANTS,
@@ -30,7 +37,6 @@ export const Renderer = (function() {
   let openSwipeCard = null;
   let activeUndoSnackbar = null;
 
-  // ---- Состояние экрана «Что приготовить?» ----
   let choiceSource = 'menu';
   let choiceFilterMealType = '';
   let choiceFilterCategory = 'all';
@@ -107,7 +113,6 @@ export const Renderer = (function() {
   const SWIPE_REVEAL_THRESHOLD = SWIPE_ACTION_WIDTH / 2;
   const UNDO_TIMEOUT_MS = 5000;
 
-  // Иконки статусов (SVG)
   const ICON_DONE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
   const ICON_PLANNED = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`;
   const ICON_DONE_SMALL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
@@ -1426,6 +1431,18 @@ export const Renderer = (function() {
     const header = document.createElement('div');
     header.className = 'today-header';
 
+    // v5.45: стрелки листания дней (для ПК, где нет свайпа)
+    const navWrap = document.createElement('div');
+    navWrap.className = 'today-nav-wrap';
+
+    const prevBtn = document.createElement('button');
+    prevBtn.type = 'button';
+    prevBtn.className = 'today-nav-btn';
+    prevBtn.setAttribute('aria-label', 'Предыдущий день');
+    prevBtn.textContent = '‹';
+    prevBtn.addEventListener('click', () => shiftTodayViewDate(-1));
+    navWrap.appendChild(prevBtn);
+
     const dateEl = document.createElement('div');
     dateEl.className = 'today-date';
     dateEl.textContent = Utils.formatDate(todayViewDate);
@@ -1435,7 +1452,17 @@ export const Renderer = (function() {
       relEl.textContent = relativeDayLabel(todayViewDate, realToday);
       dateEl.appendChild(relEl);
     }
-    header.appendChild(dateEl);
+    navWrap.appendChild(dateEl);
+
+    const nextBtn = document.createElement('button');
+    nextBtn.type = 'button';
+    nextBtn.className = 'today-nav-btn';
+    nextBtn.setAttribute('aria-label', 'Следующий день');
+    nextBtn.textContent = '›';
+    nextBtn.addEventListener('click', () => shiftTodayViewDate(1));
+    navWrap.appendChild(nextBtn);
+
+    header.appendChild(navWrap);
 
     const countEl = document.createElement('div');
     countEl.className = 'today-count';
@@ -1489,12 +1516,16 @@ export const Renderer = (function() {
     const actions = document.createElement('div');
     actions.className = 'today-actions';
 
-    const addBtn = document.createElement('button');
-    addBtn.type = 'button';
-    addBtn.className = 'today-action-btn today-action-add';
-    addBtn.textContent = '➕ Добавить блюдо';
-    addBtn.addEventListener('click', () => openAddModal(dateStr));
-    actions.appendChild(addBtn);
+    // v5.45: три кнопки в порядке Собрать → Что приготовить → Добавить.
+    // Первая акцентная, остальные вторичные.
+    const generateBtn = document.createElement('button');
+    generateBtn.type = 'button';
+    generateBtn.className = 'today-action-btn today-action-generate';
+    generateBtn.id = 'generateMenuBtnToday';
+    generateBtn.textContent = '✨ Собрать меню на неделю';
+    // Обработчик — в main.js через делегирование (кнопка создаётся
+    // динамически, на момент init main.js её может ещё не быть в DOM).
+    actions.appendChild(generateBtn);
 
     const suggestBtn = document.createElement('button');
     suggestBtn.type = 'button';
@@ -1505,8 +1536,16 @@ export const Renderer = (function() {
     });
     actions.appendChild(suggestBtn);
 
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'today-action-btn today-action-suggest';
+    addBtn.textContent = '➕ Добавить блюдо';
+    addBtn.addEventListener('click', () => openAddModal(dateStr));
+    actions.appendChild(addBtn);
+
     container.appendChild(actions);
 
+    // v5.45: «Как это работает» — в самом низу, после всех кнопок
     if (dayDishes.length > 0) {
       container.appendChild(buildTodayHints());
     }
