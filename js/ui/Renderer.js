@@ -9,6 +9,11 @@
  *     (вторичная) → Добавить (вторичная). «Как это работает» — внизу.
  *   • Кнопка «Собрать» больше не в index.html — создаётся здесь.
  *     Обработчик в main.js — через делегирование.
+ *
+ * v5.46:
+ *   • showUndoSnackbar({ text, actionText, onAction }) — универсальная.
+ *     Используется и для блюд (DishStore.restoreDish), и для рецептов
+ *     (RecipeStore.restore). Экспортируется наружу для Recipes.js.
  */
 import {
   STATUSES, CATEGORIES, MEAL_TYPES, MEAL_TYPE_LABELS, CONSTANTS,
@@ -187,7 +192,14 @@ export const Renderer = (function() {
     }, 250);
   }
 
-  function showUndoSnackbar(dish) {
+  /**
+   * v5.46: универсальный снекбар.
+   * @param {Object} opts
+   * @param {string} opts.text — основной текст («Рецепт “X” удалён»)
+   * @param {string} [opts.actionText='Вернуть'] — текст кнопки
+   * @param {Function} [opts.onAction] — колбэк при клике на кнопку
+   */
+  function showUndoSnackbar({ text, actionText = 'Вернуть', onAction }) {
     closeUndoSnackbar();
 
     const snackbar = document.createElement('div');
@@ -195,19 +207,18 @@ export const Renderer = (function() {
     snackbar.setAttribute('role', 'status');
     snackbar.setAttribute('aria-live', 'polite');
 
-    const text = document.createElement('span');
-    text.className = 'undo-snackbar-text';
-    text.textContent = `«${dish.name}» удалено`;
-    snackbar.appendChild(text);
+    const textEl = document.createElement('span');
+    textEl.className = 'undo-snackbar-text';
+    textEl.textContent = text;
+    snackbar.appendChild(textEl);
 
     const undoBtn = document.createElement('button');
     undoBtn.type = 'button';
     undoBtn.className = 'undo-snackbar-btn';
-    undoBtn.textContent = 'Вернуть';
+    undoBtn.textContent = actionText;
     undoBtn.addEventListener('click', () => {
-      DishStore.restoreDish(dish);
+      if (typeof onAction === 'function') onAction();
       closeUndoSnackbar();
-      showMessage('↩️ Блюдо вернули в меню');
     });
     snackbar.appendChild(undoBtn);
 
@@ -528,7 +539,13 @@ export const Renderer = (function() {
       };
       DishStore.removeDish(dish.id);
       if (openSwipeCard === wrap) openSwipeCard = null;
-      showUndoSnackbar(dishSnapshot);
+      showUndoSnackbar({
+        text: `«${dish.name}» удалено`,
+        onAction: () => {
+          DishStore.restoreDish(dishSnapshot);
+          showMessage('↩️ Блюдо вернули в меню');
+        }
+      });
     });
 
     return wrap;
@@ -1431,7 +1448,6 @@ export const Renderer = (function() {
     const header = document.createElement('div');
     header.className = 'today-header';
 
-    // v5.45: стрелки листания дней (для ПК, где нет свайпа)
     const navWrap = document.createElement('div');
     navWrap.className = 'today-nav-wrap';
 
@@ -1516,15 +1532,11 @@ export const Renderer = (function() {
     const actions = document.createElement('div');
     actions.className = 'today-actions';
 
-    // v5.45: три кнопки в порядке Собрать → Что приготовить → Добавить.
-    // Первая акцентная, остальные вторичные.
     const generateBtn = document.createElement('button');
     generateBtn.type = 'button';
     generateBtn.className = 'today-action-btn today-action-generate';
     generateBtn.id = 'generateMenuBtnToday';
     generateBtn.textContent = '✨ Собрать меню на неделю';
-    // Обработчик — в main.js через делегирование (кнопка создаётся
-    // динамически, на момент init main.js её может ещё не быть в DOM).
     actions.appendChild(generateBtn);
 
     const suggestBtn = document.createElement('button');
@@ -1545,7 +1557,6 @@ export const Renderer = (function() {
 
     container.appendChild(actions);
 
-    // v5.45: «Как это работает» — в самом низу, после всех кнопок
     if (dayDishes.length > 0) {
       container.appendChild(buildTodayHints());
     }
@@ -2429,6 +2440,7 @@ export const Renderer = (function() {
       renderToday();
     },
     showRecipeCard,
+    showUndoSnackbar,
     closeEditDishModal,
     closeRepeatMenuModal,
     openChoiceScreen,
