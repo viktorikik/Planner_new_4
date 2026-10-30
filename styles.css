@@ -5248,3 +5248,34 @@ body:has(.onboarding-overlay.active) {
     font-size: 20px;
   }
 }
+
+
+/* Фикс растянутых чекбоксов во всех модалках */
+.modal input[type="checkbox"],
+.choice-modal input[type="checkbox"],
+.add-modal input[type="checkbox"] {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  flex-shrink: 0 !important;
+  margin: 0 !important;
+  appearance: auto !important;
+  -webkit-appearance: checkbox !important;
+  border-radius: 4px;
+}
+
+/* Чтобы лейблы с чекбоксами были аккуратными */
+.modal label:has(input[type="checkbox"]) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+/* Фикс обрезки кнопок в автосборщике */
+#generateMenuOverlay .modal {
+  max-height: 90vh;
+  overflow-y: auto;
+  padding-bottom: 20px;
+}
