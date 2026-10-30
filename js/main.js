@@ -3,15 +3,16 @@
  *
  * v5.43:
  *   • DEFAULT_TAB = 'today' — приложение открывается на вкладке «Сегодня».
- *   • На «Сегодня» добавлена кнопка «Собрать меню на неделю» (generateMenuBtnToday).
+ *   • На «Сегодня» добавлена кнопка «Собрать меню на неделю».
  *
  * v5.44.1:
  *   • Escape теперь закрывает и динамические модалки (карточка рецепта).
- *     Если активная модалка не найдена в списке `modals`, вызывается
- *     closeTopActiveModal() — он умеет работать с `overlay._closeFn`.
- *   • closeTopActiveModal при равных z-index берёт последнюю в DOM
- *     (визуально верхнюю), а не первую — иначе Escape закрывал бы
- *     модалку под карточкой рецепта.
+ *   • closeTopActiveModal при равных z-index берёт последнюю в DOM.
+ *
+ * v5.45:
+ *   • Обработчик generateMenuBtnToday — через делегирование на document.
+ *     Кнопка создаётся динамически в Renderer.renderToday, на момент
+ *     инициализации main.js её ещё нет в DOM.
  */
 import { STATUSES, CONSTANTS, THEMES, DEFAULT_THEME, THEME_LEGACY_MAP } from './utils/Constants.js';
 import { Utils } from './utils/Utils.js';
@@ -404,12 +405,17 @@ import { MenuGenerator } from './features/MenuGenerator.js';
     }
   }
 
-  // v5.43: обе кнопки открывают одну и ту же модалку
+  // Кнопка в шапке календаря — статическая, можно вешать напрямую
   document.getElementById('generateMenuBtn').addEventListener('click', openGenerateModal);
-  const generateMenuBtnToday = document.getElementById('generateMenuBtnToday');
-  if (generateMenuBtnToday) {
-    generateMenuBtnToday.addEventListener('click', openGenerateModal);
-  }
+
+  // v5.45: кнопка на «Сегодня» создаётся динамически в Renderer.renderToday.
+  // Вешаем через делегирование — на момент init её может ещё не быть в DOM,
+  // а после перерисовок она пересоздаётся. Делегирование решает оба случая.
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('#generateMenuBtnToday')) {
+      openGenerateModal();
+    }
+  });
 
   document.getElementById('generateMenuClose').addEventListener('click', closeGenerateModal);
   document.getElementById('generateMenuCancel').addEventListener('click', closeGenerateModal);
@@ -660,9 +666,6 @@ import { MenuGenerator } from './features/MenuGenerator.js';
     if (overlays.length === 0) return;
 
     // v5.44.1: при равных z-index берём последнюю в DOM (визуально сверху).
-    // Иначе карточка рецепта (создаётся позже, z-index такой же, как у
-    // обычных модалок) не закрывалась бы по Escape — закрывалась бы
-    // модалка дня под ней.
     let top = overlays[0];
     let topZ = parseInt(getComputedStyle(top).zIndex, 10) || 0;
     for (let i = 1; i < overlays.length; i++) {
@@ -709,7 +712,6 @@ import { MenuGenerator } from './features/MenuGenerator.js';
       return;
     }
     // v5.44.1: fallback для динамических модалок (карточка рецепта).
-    // closeTopActiveModal умеет работать с overlay._closeFn.
     closeTopActiveModal();
   });
 
