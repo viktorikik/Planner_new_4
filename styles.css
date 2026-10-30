@@ -694,7 +694,7 @@ button,
 .week-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--spacing-sm);
   padding: var(--spacing-xs) 0;
 }
 
@@ -1392,7 +1392,7 @@ button,
   max-width: 540px;
 }
 .add-modal .form-group {
-  margin-bottom: 16px;
+  margin-bottom: var(--spacing-md);
 }
 .add-modal .form-group label {
   display: block;
@@ -2196,7 +2196,7 @@ button,
 .recipes-tab {
 }
 .recipes-tab-header {
-  margin-bottom: 16px;
+  margin-bottom: var(--spacing-md);
 }
 .recipes-tab-header h2 {
   color: var(--text-primary);
@@ -2497,7 +2497,7 @@ button,
 }
 .shopping-tab-title {
   color: var(--text-primary);
-  margin: 0 0 16px 0;
+  margin: 0 0 var(--spacing-md) 0;
 }
 
 .shopping-dates-row {
@@ -3533,9 +3533,9 @@ button,
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 6px 12px;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
+  gap: var(--spacing-xs) var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-md);
   border-bottom: 2px solid var(--cell-border);
 }
 
@@ -3655,8 +3655,8 @@ button,
 .today-actions {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 8px;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
 }
 .today-action-btn {
   width: 100%;
@@ -5172,8 +5172,8 @@ body:has(.onboarding-overlay.active) {
 .recipe-category-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 10px;
-  margin-top: 4px;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-xs);
 }
 
 @media (min-width: 500px) {
