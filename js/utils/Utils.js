@@ -1,3 +1,14 @@
+/**
+ * Utils — чистые вспомогательные функции.
+ * Зависит от: Constants.
+ *
+ * v5.44.1:
+ *   • guessCategory: возвращает SIDE_DISH для явных гарниров
+ *     (пюре, отварные крупы, овощи на пару, брокколи и т.п.),
+ *     если в названии нет мяса/рыбы.
+ *   • «Пюре» больше не считается супом автоматически — только
+ *     «суп-пюре»/«крем-суп» (по слову «суп»).
+ */
 import { CATEGORIES, PRODUCT_WORDS, UNITS, UNIT_LABELS } from './Constants.js';
 
 // ============================================================
@@ -134,6 +145,17 @@ function formatNumber(n) {
 }
 
 // ============================================================
+// КАТЕГОРИЗАЦИЯ БЛЮД (v5.44.1)
+// ============================================================
+
+// Слова, которые указывают на мясо/рыбу. Если они есть в названии,
+// блюдо не считается «чистым гарниром» — уходит в main/soup.
+const MEAT_PATTERN = /(мясо|курин|куриц|индей|говяд|свинин|баранин|телятин|рыб|фарш|котлет|колбас|бекон|сосиск|сардельк|печень|стейк|бифштекс|буженин|карбонад|ветчин)/;
+
+// Явные признаки гарнира. Проверяются только если нет мяса.
+const GARNISH_PATTERN = /(гарнир|на пару|отварн|пюре|пюре картофельн|картофельное пюре|картофель отварн|картошка отварн|рис отварн|гречка|гречневая каша|брокколи|спарж|цветная капуста|стручковая фасоль|зелёный горошек|зеленый горошек|кускус|булгур|киноа|полба)/;
+
+// ============================================================
 // ПУБЛИЧНЫЙ ОБЪЕКТ UTILS
 // ============================================================
 
@@ -163,8 +185,15 @@ export const Utils = {
     return `${diff} дней назад`;
   },
 
+  /**
+   * v5.44.1: возвращает SIDE_DISH для явных гарниров без мяса.
+   * «Пюре» больше не считается супом автоматически — только
+   * «суп-пюре»/«крем-суп» (по слову «суп»).
+   */
   guessCategory(name) {
-    const lower = name.toLowerCase();
+    const lower = String(name || '').toLowerCase();
+
+    // 1. Выпечка — как было.
     if (lower.includes('пирог') || lower.includes('пирож') || lower.includes('торт') ||
         lower.includes('кекс') || lower.includes('печенье') || lower.includes('булочк') ||
         lower.includes('хлеб') || lower.includes('блин') || lower.includes('олад') ||
@@ -176,15 +205,34 @@ export const Utils = {
         lower.includes('корж') || lower.includes('багет') || lower.includes('лаваш')) {
       return CATEGORIES.BAKERY;
     }
-    if (lower.includes('суп') || lower.includes('борщ') || lower.includes('пюре') || lower.includes('бульон')) return CATEGORIES.SOUP;
-    if (lower.includes('салат') || lower.includes('винегрет') || lower.includes('овощ') || lower.includes('зелень')) return CATEGORIES.SALAD;
+
+    // 2. Суп: суп, борщ, бульон. «Пюре» отдельно не считается супом.
+    if (lower.includes('суп') || lower.includes('борщ') || lower.includes('бульон')) {
+      return CATEGORIES.SOUP;
+    }
+
+    // 3. Салат — как было.
+    if (lower.includes('салат') || lower.includes('винегрет') ||
+        lower.includes('овощ') || lower.includes('зелень')) {
+      return CATEGORIES.SALAD;
+    }
+
+    // 4. Гарнир (v5.44.1): явный гарнир без мяса/рыбы.
+    if (!MEAT_PATTERN.test(lower) && GARNISH_PATTERN.test(lower)) {
+      return CATEGORIES.SIDE_DISH;
+    }
+
+    // 5. Основное — как было.
     if (lower.includes('котлет') || lower.includes('запекан') || lower.includes('тушен') ||
         lower.includes('колбас') || lower.includes('жарен') || lower.includes('печень') ||
         lower.includes('мясо') || lower.includes('курин') || lower.includes('индей') ||
         lower.includes('рыб') || lower.includes('бифштекс') || lower.includes('стейк') ||
         lower.includes('паста') || lower.includes('макарон') || lower.includes('греч') ||
         lower.includes('рис') || lower.includes('плов') || lower.includes('картош') ||
-        lower.includes('каш')) return CATEGORIES.MAIN;
+        lower.includes('каш')) {
+      return CATEGORIES.MAIN;
+    }
+
     return CATEGORIES.OTHER;
   },
 
