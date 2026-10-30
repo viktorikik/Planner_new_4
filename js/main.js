@@ -1,6 +1,12 @@
 /**
  * main.js — точка входа приложения.
  *
+ * v6.2.7:
+ *   • Сегментированный выбор периода автосборщика (3/5/7/14 дней).
+ *     HTML: #generateDaysGroup + скрытый #generateDaysCount.
+ *     JS: обработчик кликов пишет значение в hidden input —
+ *     остальная логика сбора не меняется.
+ *
  * v6.1.0:
  *   • Защита от отсутствия #generateMenuBtn: проверка на null.
  *     Кнопка удалена с вкладки «Меню», но JS не должен падать.
@@ -397,6 +403,28 @@ const DEFAULT_THEME = THEMES.LIGHT;
       if (this.checked) {
         document.getElementById('generateFridgeInput').focus();
       }
+    });
+  }
+
+  // v6.2.7: сегментированный выбор периода (3/5/7/14).
+  // Пишем значение в скрытый #generateDaysCount — остальная логика не меняется.
+  const generateDaysGroup = document.getElementById('generateDaysGroup');
+  const generateDaysCountInput = document.getElementById('generateDaysCount');
+  if (generateDaysGroup && generateDaysCountInput) {
+    generateDaysGroup.addEventListener('click', function(e) {
+      const btn = e.target.closest('.generate-days-btn');
+      if (!btn) return;
+      generateDaysGroup.querySelectorAll('.generate-days-btn').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-pressed', 'false');
+      });
+      btn.classList.add('active');
+      btn.setAttribute('aria-pressed', 'true');
+      generateDaysCountInput.value = btn.dataset.days;
+    });
+    // Начальное состояние aria-pressed для активной кнопки
+    generateDaysGroup.querySelectorAll('.generate-days-btn').forEach(b => {
+      b.setAttribute('aria-pressed', b.classList.contains('active') ? 'true' : 'false');
     });
   }
 
