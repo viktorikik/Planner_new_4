@@ -1,35 +1,42 @@
-// ============================================================
-// Движок рекомендаций для экрана «Что приготовить?».
-// Считает score для каждого элемента (блюда или рецепта) и
-// возвращает отсортированный список — от более желанного к менее.
-// Никакого машинного обучения: простая сумма баллов, чтобы
-// поведение было предсказуемым и его можно было объяснить словами.
-//
-// v2 (Блок 2 · подэтап 2.2):
-//   Движок больше не знает, блюдо это или рецепт. Он работает с
-//   универсальным «item» — объект с уже подготовленными полями.
-//   Кто и как их готовит (Renderer) — не его забота.
-//   Это позволяет ранжировать и блюда, и рецепты одним и тем же кодом.
-// ============================================================
+/**
+ * RecommendationEngine — движок рекомендаций для экрана «Что приготовить?».
+ *
+ * v3 (v5.43):
+ *   • Добавлен учёт истории последних 2 дней: штрафы за повтор
+ *     типа белка, способа готовки и гарнира — та же логика,
+ *     что и в MenuGenerator (автосборщик меню на неделю).
+ *   • Работает только для items с recipeId: если у блюда нет
+ *     привязанного рецепта, штраф не начисляется.
+ *   • Для базовых правил (давно не готовили, любимое, mealType)
+ *     поведение не изменилось.
+ *
+ * Зависит от: DishStore, RecipeStore, Utils.
+ */
+import { DishStore } from '../stores/DishStore.js';
+import { RecipeStore } from '../stores/RecipeStore.js';
+import { Utils } from '../utils/Utils.js';
 
 export const RecommendationEngine = (function() {
-  // Веса факторов. Подобраны «на глаз» — если после недели использования
-  // что-то будет казаться неправильным, правим здесь, в одном месте.
-  //
-  // «Ещё не готовили» и «давно не готовили» — самые сильные факторы,
-  // чтобы список не зацикливался на одном и том же. «Любимое» — второй
-  // по силе. «Подходит под приём пищи» — третий.
   const WEIGHTS = {
-    NEVER_COOKED: 50,       // никогда не готовили — максимальный бонус
-    DAYS_SINCE_MAX: 50,     // потолок за «давность» (дальше не растёт)
-    DAYS_SINCE_FACTOR: 2,   // 1 день = +2, 25 дней = +50
-    LIKED: 30,              // есть 👍 хоть где-то
-    MEAL_TYPE_MATCH: 20,    // блюдо помечено именно этим приёмом пищи
-    MEAL_TYPE_ANY: 10,      // пустой mealTypes = «подходит ко всему»
-    RANDOM_JITTER: 5        // небольшой шум, чтобы разорвать связи
+    NEVER_COOKED: 50,
+    DAYS_SINCE_MAX: 50,
+    DAYS_SINCE_FACTOR: 2,
+    LIKED: 30,
+    MEAL_TYPE_MATCH: 20,
+    MEAL_TYPE_ANY: 10,
+    RANDOM_JITTER: 5
   };
 
-  // Сколько дней прошло с даты (в формате YYYY-MM-DD).
+  // v5.43: штрафы за повторение блюд из последних дней.
+  // Подобраны так, чтобы не «убивать» хорошие блюда, но
+  // предотвращать очевидные повторы (курица два дня подряд и т.п.).
+  const REPEAT_PENALTIES = {
+    SAME_PROTEIN_YESTERDAY: 25,
+    SAME_METHOD_YESTERDAY: 12,
+    SAME_BASE_YESTERDAY: 18,
+    SAME_PROTEIN_DAY_BEFORE: 10
+  };
+
   function daysSince(dateStr) {
     const then = new Date(dateStr + 'T00:00:00');
     const now = new Date();
@@ -52,18 +59,74 @@ export const RecommendationEngine = (function() {
     return `${n} ${pluralDays(n)} назад`;
   }
 
-  // Считает score одного элемента и собирает список коротких причин —
-  // их потом показываем в карточке результата.
-  //
-  // item: {
-  //   name,
-  //   lastDoneDate,   // 'YYYY-MM-DD' или null («ещё не готовили»)
-  //   liked,          // boolean
-  //   disliked,       // boolean (не участвует в score — используется снаружи)
-  //   mealTypes       // массив строк из MEAL_TYPES
-  // }
-  // context: { mealType: string|null }
-  function scoreItem(item, context) {
+  // Собираем теги блюд за последние N дней (по recipeId).
+  function getRecentTags(daysBack) {
+    const history = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    for (let i = 1; i <= daysBack; i++) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const dateStr = Utils.formatDateLocal(d);
+      const dishes = DishStore.getForDate(dateStr);
+      dishes.forEach(dish => {
+        if (!dish.recipeId) return;
+        const recipe = RecipeStore.getById(dish.recipeId);
+        if (recipe && recipe.tags) {
+          history.push({ tags: recipe.tags, daysAgo: i });
+        }
+      });
+    }
+    return history;
+  }
+
+  // Штраф за повторение по истории последних дней.
+  function calculateRepeatPenalty(item, history) {
+    if (!item.recipeId || !history || history.length === 0) {
+      return { penalty: 0, reasons: [] };
+    }
+    const recipe = RecipeStore.getById(item.recipeId);
+    if (!recipe || !recipe.tags) {
+      return { penalty: 0, reasons: [] };
+    }
+
+    const tags = recipe.tags;
+    let penalty = 0;
+
+    history.forEach(h => {
+      const hTags = h.tags;
+      if (!hTags) return;
+
+      if (h.daysAgo === 1) {
+        if (tags.proteinSource && hTags.proteinSource &&
+            tags.proteinSource === hTags.proteinSource &&
+            tags.proteinSource !== 'vegetarian') {
+          penalty += REPEAT_PENALTIES.SAME_PROTEIN_YESTERDAY;
+        }
+        if (tags.cookingMethod && hTags.cookingMethod &&
+            tags.cookingMethod === hTags.cookingMethod) {
+          penalty += REPEAT_PENALTIES.SAME_METHOD_YESTERDAY;
+        }
+        if (tags.baseType && hTags.baseType &&
+            tags.baseType === hTags.baseType &&
+            tags.baseType !== 'none') {
+          penalty += REPEAT_PENALTIES.SAME_BASE_YESTERDAY;
+        }
+      } else if (h.daysAgo === 2) {
+        if (tags.proteinSource && hTags.proteinSource &&
+            tags.proteinSource === hTags.proteinSource &&
+            tags.proteinSource !== 'vegetarian') {
+          penalty += REPEAT_PENALTIES.SAME_PROTEIN_DAY_BEFORE;
+        }
+      }
+    });
+
+    const reasons = penalty > 0 ? ['недавно было похожее'] : [];
+    return { penalty, reasons };
+  }
+
+  function scoreItem(item, context, history) {
     let score = 0;
     const reasons = [];
 
@@ -78,17 +141,13 @@ export const RecommendationEngine = (function() {
       reasons.push(formatDaysAgo(days));
     }
 
-    // 2. Любимое — берётся прямо из item.
-    //    Для блюда сюда кладётся «хоть одна запись с 👍» (готовит Renderer).
-    //    Для рецепта — recipe.liked.
+    // 2. Любимое
     if (item.liked) {
       score += WEIGHTS.LIKED;
       reasons.push('👍 любимое');
     }
 
-    // 3. Подходит под выбранный приём пищи.
-    //    Это добавляет только балл, но НЕ причину: пользователь сам
-    //    выбрал фильтр, значит и так знает, зачем ему эти элементы.
+    // 3. Подходит под выбранный приём пищи
     if (context.mealType) {
       const types = Array.isArray(item.mealTypes) ? item.mealTypes : [];
       if (types.length === 0) {
@@ -98,20 +157,26 @@ export const RecommendationEngine = (function() {
       }
     }
 
-    // 4. Небольшой случайный шум — чтобы при равных score порядок
-    //    не был всегда одинаковым. Не перебивает основные факторы.
+    // 4. v5.43: штраф за повтор по истории последних дней
+    const repeatResult = calculateRepeatPenalty(item, history);
+    score -= repeatResult.penalty;
+    if (repeatResult.reasons.length > 0) {
+      reasons.push(...repeatResult.reasons);
+    }
+
+    // 5. Небольшой случайный шум
     score += Math.random() * WEIGHTS.RANDOM_JITTER;
 
     return { score, reasons };
   }
 
-  // Публичная функция. Принимает список items и контекст,
-  // возвращает копию списка с полями score и reasons, отсортированную
-  // по убыванию score.
   function rank(items, context) {
     const ctx = context || {};
+    // v5.43: история последних 2 дней (та же логика, что в MenuGenerator)
+    const history = getRecentTags(2);
+
     const result = items.map(item => {
-      const { score, reasons } = scoreItem(item, ctx);
+      const { score, reasons } = scoreItem(item, ctx, history);
       return { ...item, score, reasons };
     });
     result.sort((a, b) => b.score - a.score);
