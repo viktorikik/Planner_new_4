@@ -1,12 +1,5 @@
 /**
  * main.js — точка входа приложения.
- * Инициализирует сторы, роутинг по табам, темы, обработчики модалок,
- * экран «Что приготовить?», drag-and-drop, PWA.
- *
- * v5.36:
- *   • Фикс привязки блюда к рецепту: recipeId сохраняется как строка,
- *     без Number(). Иначе Number("recipe_…") давал NaN и связь терялась.
- *   • При запуске вызывается RecipeStore.syncWithServer().
  */
 import { STATUSES, CONSTANTS, THEMES, DEFAULT_THEME, THEME_LEGACY_MAP } from './utils/Constants.js';
 import { Utils } from './utils/Utils.js';
@@ -40,6 +33,7 @@ import {
 } from './features/ShoppingList.js';
 import { Onboarding } from './features/Onboarding.js';
 import { printWeeklyMenu } from './features/Print.js';
+import { MenuGenerator } from './features/MenuGenerator.js'; // <--- ДОБАВЛЕНО
 
 // ============================================================
 // ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ
@@ -368,6 +362,156 @@ import { printWeeklyMenu } from './features/Print.js';
     draggedDishId = null; draggedFromDate = null;
   });
 
+  // ---------- АВТОСБОРЩИК МЕНЮ ----------
+  const generateMenuOverlay = document.getElementById('generateMenuOverlay');
+  const generateFridgeMode = document.getElementById('generateFridgeMode');
+  const fridgeIngredientsWrap = document.getElementById('fridgeIngredientsWrap');
+  
+  if (generateFridgeMode) {
+    generateFridgeMode.addEventListener('change', function() {
+      fridgeIngredientsWrap.hidden = !this.checked;
+      if (this.checked) {
+        document.getElementById('generateFridgeInput').focus();
+      }
+    });
+  }
+
+  function openGenerateModal() {
+    if (!generateMenuOverlay) return;
+    generateMenuOverlay.classList.add('active');
+    trapFocus(generateMenuOverlay, closeGenerateModal);
+  }
+
+  function closeGenerateModal() {
+    if (!generateMenuOverlay) return;
+    generateMenuOverlay.classList.remove('active');
+    if (generateMenuOverlay._trapFocusCleanup) {
+      generateMenuOverlay._trapFocusCleanup();
+      delete generateMenuOverlay._trapFocusCleanup;
+    }
+  }
+
+  document.getElementById('generateMenuBtn').addEventListener('click', openGenerateModal);
+  document.getElementById('generateMenuClose').addEventListener('click', closeGenerateModal);
+  document.getElementById('generateMenuCancel').addEventListener('click', closeGenerateModal);
+  
+  document.getElementById('generateMenuSave').addEventListener('click', function() {
+    const days = parseInt(document.getElementById('generateDaysCount').value, 10);
+    const maxTime = parseInt(document.getElementById('generateMaxTime').value, 10);
+    const isFridgeMode = generateFridgeMode.checked;
+    const fridgeInput = document.getElementById('generateFridgeInput').value;
+    const fridgeIngredients = isFridgeMode && fridgeInput ? fridgeInput.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+    const mealTypes = [];
+    document.querySelectorAll('input[data-gen-meal]:checked').forEach(cb => {
+      mealTypes.push(cb.dataset.genMeal);
+    });
+
+    if (mealTypes.length === 0) {
+      showMessage('Выберите хотя бы один приём пищи', 'error');
+      return;
+    }
+
+    // Блокируем кнопку на время сборки
+    const saveBtn = this;
+    const originalText = saveBtn.textContent;
+    saveBtn.textContent = 'Собираем...';
+    saveBtn.disabled = true;
+
+    setTimeout(() => {
+      const startDate = Utils.formatDateLocal(new Date());
+      const result = MenuGenerator.generateMenu({
+        startDate,
+        days,
+        mealTypes,
+        fridgeIngredients,
+        maxWeekdayTime: maxTime
+      });
+
+      if (result.success) {
+        const dishesToSave = [];
+        Object.keys(result.menu).forEach(dateStr => {
+          Object.keys(result.menu[dateStr]).forEach(mealType => {
+            const dish = result.menu[dateStr][mealType];
+            dishesToSave.push({
+              name: dish.name,
+              date: dateStr,
+              mealType: mealType,
+              category: dish.category || Utils.guessCategory(dish.name),
+              recipeId: dish.id
+            });
+          });
+        });
+
+        // Группируем по датам и удаляем старые (чтобы не дублировалось)
+        const uniqueDates = [...new Set(dishesToSave.map(d => d.date))];
+        uniqueDates.forEach(date => {
+            const existing = DishStore.getForDate(date);
+            existing.forEach(d => DishStore.removeDish(d.id));
+        });
+
+        DishStore.addMultipleDishes(dishesToSave.map(d => ({
+           name: d.name,
+           date: d.date,
+           category: d.category,
+           recipeId: d.recipeId,
+           mealTypes: [d.mealType]
+        })));
+
+        showMessage(`✨ Меню на ${days} дней успешно собрано!`);
+        closeGenerateModal();
+        Renderer.renderCalendar(Renderer.getCurrentView(), Renderer.getCurrentDate());
+      } else {
+        showMessage(result.message || 'Не удалось собрать меню', 'error');
+      }
+
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 50);
+  });
+
+  // Обработчик замены блюда (Reroll)
+  Renderer.replaceDishHandler = function(dishId) {
+    const dish = DishStore.getAll().find(d => d.id === dishId);
+    if (!dish) return;
+
+    const dateStr = dish.date;
+    const mealType = (dish.mealTypes && dish.mealTypes.length > 0) ? dish.mealTypes[0] : 'dinner';
+    
+    // Собираем контекст текущего меню на неделю
+    const currentMenu = {};
+    DishStore.getAll().forEach(d => {
+      if (!currentMenu[d.date]) currentMenu[d.date] = {};
+      const mt = (d.mealTypes && d.mealTypes.length > 0) ? d.mealTypes[0] : 'dinner';
+      currentMenu[d.date][mt] = { id: d.id, name: d.name, tags: d.tags || {} };
+    });
+
+    const newDish = MenuGenerator.getReplacement(
+      dish.recipeId || dish.id, 
+      dateStr, 
+      mealType, 
+      currentMenu, 
+      { maxWeekdayTime: 40 }
+    );
+
+    if (newDish) {
+      DishStore.updateDish(dishId, {
+        name: newDish.name,
+        recipeId: newDish.id,
+        category: newDish.category || Utils.guessCategory(newDish.name)
+      });
+      showMessage(`🎲 Заменено на "${newDish.name}"`);
+      
+      const modalOverlay = document.getElementById(CONSTANTS.SELECTORS.modalOverlay);
+      if (modalOverlay && modalOverlay.classList.contains('active')) {
+        Renderer.openModal(dateStr);
+      }
+    } else {
+      showMessage('Не удалось подобрать замену', 'error');
+    }
+  };
+  // ---------- КОНЕЦ АВТОСБОРЩИКА ----------
+
   // ---------- Первичная отрисовка ----------
   const now = new Date();
   Renderer.setCurrentDate(now);
@@ -429,7 +573,8 @@ import { printWeeklyMenu } from './features/Print.js';
     { overlay: document.getElementById(CONSTANTS.SELECTORS.choiceOverlay), close: closeChoiceModal },
     { overlay: document.getElementById(CONSTANTS.SELECTORS.welcomeOverlay), close: hideWelcome },
     { overlay: document.getElementById(CONSTANTS.SELECTORS.recipeFormOverlay), close: closeRecipeForm },
-    { overlay: themeOverlay, close: closeThemeModal }
+    { overlay: themeOverlay, close: closeThemeModal },
+    { overlay: generateMenuOverlay, close: closeGenerateModal } // <-- Добавили модалку в список
   ];
 
   modals.forEach(({ overlay, close }) => {
@@ -642,7 +787,6 @@ import { printWeeklyMenu } from './features/Print.js';
       mealTypes = Array.from(checkedBoxes).map(cb => cb.dataset.mealType);
     }
     const recipeValue = recipeSelect ? recipeSelect.value : '';
-    // v5.36: НЕ приводим к Number — id может быть строкой "recipe_…"
     const recipeId = recipeValue ? recipeValue : null;
     DishStore.addDish(name, statusSelect.value, date, categorySelect.value, false, note, recipeId, mealTypes);
     Renderer.closeAddModal();
