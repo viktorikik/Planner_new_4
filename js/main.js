@@ -2,11 +2,11 @@
  * main.js — точка входа приложения.
  *
  * v6.1.0:
- *   • Клики по стрелкам ‹ › на экране «Сегодня». Раньше работал
- *     только свайп. Делегирование на document — кнопки
- *     пересоздаются при каждом renderToday.
  *   • Защита от отсутствия #generateMenuBtn: проверка на null.
  *     Кнопка удалена с вкладки «Меню», но JS не должен падать.
+ *   • Стрелки ‹ › на «Сегодня» обрабатываются локально в Renderer.js
+ *     (shiftTodayViewDate). Делегирование в main.js убрано, чтобы
+ *     не срабатывало дважды.
  *
  * v6.0.0:
  *   • Переход на две темы: light и dark.
@@ -122,46 +122,6 @@ const DEFAULT_THEME = THEMES.LIGHT;
       }
       window.location.hash = tab;
     });
-  });
-
-  // ---------- v6.1.0: Стрелки ‹ › на экране «Сегодня» ----------
-  // Кнопки создаются динамически в Renderer.renderToday, поэтому
-  // вешаем делегирование на document. Направление определяем
-  // по data-direction (если есть), по тексту кнопки или по позиции
-  // в .today-nav-wrap (первая = назад, последняя = вперёд).
-  document.addEventListener('click', function(e) {
-    const btn = e.target.closest('.today-nav-btn');
-    if (!btn) return;
-
-    // Не реагируем, если клик был на свайп-карточке
-    if (e.target.closest('.dish-swipe-wrap')) return;
-
-    let direction = null;
-
-    const dataDir = btn.dataset.dir || btn.dataset.direction;
-    if (dataDir === 'prev' || dataDir === 'back') direction = -1;
-    else if (dataDir === 'next' || dataDir === 'forward') direction = 1;
-
-    if (direction === null) {
-      const txt = (btn.textContent || '').trim();
-      if (txt === '‹' || txt === '<' || txt === '←') direction = -1;
-      else if (txt === '›' || txt === '>' || txt === '→') direction = 1;
-    }
-
-    if (direction === null) {
-      const wrap = btn.closest('.today-nav-wrap') || btn.closest('.today-header');
-      if (wrap) {
-        const buttons = Array.from(wrap.querySelectorAll('.today-nav-btn'));
-        const idx = buttons.indexOf(btn);
-        if (idx === 0) direction = -1;
-        else if (idx === buttons.length - 1) direction = 1;
-      }
-    }
-
-    if (direction !== null) {
-      e.preventDefault();
-      Renderer.shiftTodayViewDate(direction);
-    }
   });
 
   // ---------- Приветственное окно ----------
