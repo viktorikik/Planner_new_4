@@ -1,16 +1,18 @@
 /**
  * RecipeStore — хранилище рецептов (схема v2).
  * Ключ localStorage: CONSTANTS.STORAGE_KEYS.RECIPES ('smartMenuRecipes_v2').
- * Автоматическая миграция из v1 при загрузке.
- * Зависит от: Constants, Utils, EventBus, notifications.
- *
- * v5.46:
- *   • Добавлен метод restore(snapshot) для восстановления удалённого рецепта.
+ * 
+ * v6.3.0:
+ *   • Интеграция с RecipeFeatureEngine: обогащение рецептов mealRole,
+ *     flavorProfile, texture, isHeavy, isQuick.
+ *   • autoDetectTags перенесен в RecipeFeatureEngine.
+ *   • Удален мёртвый код.
  */
 import { CONSTANTS } from '../utils/Constants.js';
 import { Utils } from '../utils/Utils.js';
 import { EventBus } from '../utils/EventBus.js';
 import { showStorageError } from '../utils/notifications.js';
+import { RecipeFeatureEngine } from '../features/RecipeFeatureEngine.js';
 
 export const RecipeStore = (function() {
   const STORAGE_KEY = CONSTANTS.STORAGE_KEYS.RECIPES;
@@ -46,7 +48,8 @@ export const RecipeStore = (function() {
     'молоко': 'milk', 'глютен': 'gluten', 'яйца': 'eggs', 'яйцо': 'eggs',
     'орехи': 'nuts', 'арахис': 'peanut', 'рыба': 'fish', 'соя': 'soy',
     'моллюски': 'molluscs', 'ракообразные': 'crustaceans', 'горчица': 'mustard',
-    'кунжут': 'sesame', 'клубника': 'strawberry', 'сельдерей': 'celery', 'люпин': 'lupin'
+    'кунжут': 'sesame', 'клубника': 'strawberry', 'сельдерей': 'celery', 'люпин': 'lupin',
+    'сульфиты': 'sulfites'
   };
 
   const RU_DIFFICULTY_MAP = {
@@ -98,7 +101,6 @@ export const RecipeStore = (function() {
   // ============================================================
   // НОРМАЛИЗАЦИЯ (схема v2)
   // ============================================================
-
   function normalizeIngredient(ing) {
     if (typeof ing === 'string') {
       const parsed = Utils.parseRecipeText(ing).ingredients;
@@ -132,59 +134,7 @@ export const RecipeStore = (function() {
   }
 
   // ============================================================
-  // АВТООПРЕДЕЛЕНИЕ ТЕГОВ (v5.40)
-  // ============================================================
-  function autoDetectTags(recipe) {
-    const text = (
-      (recipe.name || '') + ' ' + 
-      (recipe.ingredients || []).map(i => i.name).join(' ')
-    ).toLowerCase().replace(/ё/g, 'е');
-
-    let tags = {
-      proteinSource: 'vegetarian',
-      proteinForm: 'none',
-      cookingMethod: 'bake',
-      baseType: 'none',
-      nutritionProfile: 'balanced'
-    };
-
-    if (/куриц|куриное|цыплен|индейк|утк/.test(text)) tags.proteinSource = 'chicken';
-    else if (/говяд|телятин|баранин/.test(text)) tags.proteinSource = 'beef';
-    else if (/свинин|бекон|карбонад|ветчин/.test(text)) tags.proteinSource = 'pork';
-    else if (/рыб|сельд|минтай|лосось|треск|тунец|скумбри/.test(text)) tags.proteinSource = 'fish';
-    else if (/креветк|кальмар|краб|морепродукт|моллюск/.test(text)) tags.proteinSource = 'seafood';
-    else if (/фарш/.test(text) && tags.proteinSource === 'vegetarian') tags.proteinSource = 'mixed';
-
-    if (/фарш|котлет|тефтел|фрикадел/.test(text)) tags.proteinForm = 'minced';
-    else if (/колбас|сосиск|сардельк/.test(text)) tags.proteinForm = 'processed';
-    else if (tags.proteinSource !== 'vegetarian') tags.proteinForm = 'whole';
-
-    if (recipe.category === 'salad' || /сырой|свеж/.test(text)) tags.cookingMethod = 'raw';
-    else if (/запек|духовк|запекан/.test(text)) tags.cookingMethod = 'bake';
-    else if (/туш|рагу|бигус|бигос|плов/.test(text)) tags.cookingMethod = 'stew';
-    else if (/жар|обжар|сковород|шницель|блин/.test(text)) tags.cookingMethod = 'fry';
-    else if (/вар|суп|бульон|паров/.test(text)) tags.cookingMethod = 'boil';
-
-    if (/картоф|пюре/.test(text)) tags.baseType = 'potato';
-    else if (/рис/.test(text)) tags.baseType = 'rice';
-    else if (/макарон|паст|спагетти|лапш/.test(text)) tags.baseType = 'pasta';
-    else if (/греч|булгур|перлов|круп|овсян|киноа/.test(text)) tags.baseType = 'grains';
-    else if (/фасол|горох|чечевиц|нут/.test(text)) tags.baseType = 'legumes';
-    else if (/овощ|капуст|кабач|брокколи|салат/.test(text)) tags.baseType = 'vegetables';
-
-    if (recipe.category === 'salad' || tags.baseType === 'vegetables' || tags.baseType === 'legumes') {
-      tags.nutritionProfile = 'high_fiber';
-    } else if (tags.proteinSource !== 'vegetarian' && tags.baseType === 'none') {
-      tags.nutritionProfile = 'high_protein';
-    } else if (recipe.category === 'soup') {
-      tags.nutritionProfile = 'light';
-    }
-
-    return tags;
-  }
-
-  // ============================================================
-  // СБОРКА РЕЦЕПТА
+  // СБОРКА РЕЦЕПТА (с интеграцией движка)
   // ============================================================
   function normalizeRecipe(r) {
     const normalized = normalizeRussianKeys(r || {});
@@ -192,18 +142,8 @@ export const RecipeStore = (function() {
     
     const normIngredients = normalizeIngredients(safe.ingredients);
     
-    const defaultTags = autoDetectTags({ 
-      name: safe.name || '', 
-      ingredients: normIngredients,
-      category: safe.category || '' 
-    });
-
-    const finalTags = {
-      ...defaultTags,
-      ...(safe.tags || {}) 
-    };
-
-    return {
+    // Базовая структура
+    let recipe = {
       id: safe.id != null ? String(safe.id) : String(generateId()),
       name: safe.name || '',
       ingredients: normIngredients,
@@ -218,14 +158,26 @@ export const RecipeStore = (function() {
       cuisine: safe.cuisine || null,
       allergens: Array.isArray(safe.allergens) ? safe.allergens.slice() : [],
       mealTypes: Array.isArray(safe.mealTypes) ? safe.mealTypes.slice() : [],
-      tags: finalTags,
       liked: !!safe.liked,
       disliked: !!safe.disliked,
       builtIn: !!safe.builtIn,
       hidden: !!safe.hidden,
       comments: safe.comments != null ? String(safe.comments) : '',
-      createdAt: safe.createdAt || new Date().toISOString()
+      createdAt: safe.createdAt || new Date().toISOString(),
+      
+      // Новые поля из JSON
+      flavorProfile: Array.isArray(safe.flavorProfile) ? safe.flavorProfile : [],
+      texture: Array.isArray(safe.texture) ? safe.texture : [],
+      isHeavy: !!safe.isHeavy,
+      isQuick: !!safe.isQuick,
+      mealRole: safe.mealRole || null,
+      tags: safe.tags || null
     };
+
+    // Обогащение через движок
+    recipe = RecipeFeatureEngine.enrichRecipe(recipe);
+
+    return recipe;
   }
 
   function migrateLegacyRecipe(oldRecipe) {
@@ -235,7 +187,6 @@ export const RecipeStore = (function() {
   // ============================================================
   // ЗАГРУЗКА И СОХРАНЕНИЕ
   // ============================================================
-
   function load() {
     try {
       const savedV2 = localStorage.getItem(STORAGE_KEY);
@@ -263,7 +214,6 @@ export const RecipeStore = (function() {
               console.error('Ошибка сохранения мигрированных рецептов:', e);
               showStorageError('рецепты');
             }
-            console.log(`Рецепты мигрированы v1 → v2: ${recipes.length} записей`);
             return true;
           }
         }
@@ -370,7 +320,6 @@ export const RecipeStore = (function() {
   // ============================================================
   // ПУБЛИЧНЫЙ API
   // ============================================================
-
   function getAll() { return recipes.slice(); }
 
   function getById(id) {
@@ -425,7 +374,8 @@ export const RecipeStore = (function() {
       ingredients: ingredients !== undefined ? ingredients : recipe.ingredients,
       instructions: instructions !== undefined ? instructions : recipe.instructions,
       category: category !== undefined ? category : recipe.category,
-      ...extra
+      ...extra,
+      updatedAt: new Date().toISOString() // для сброса кэша в движке
     });
 
     Object.assign(recipe, updated);
@@ -442,19 +392,11 @@ export const RecipeStore = (function() {
     return true;
   }
 
-  // v5.46: восстановление удалённого рецепта
   function restore(snapshot) {
     if (!snapshot || !snapshot.name) return false;
-    
-    // Проверяем, нет ли уже рецепта с таким ID
     const existing = getById(snapshot.id);
     const newId = existing ? generateId() : snapshot.id;
-    
-    const copy = normalizeRecipe({
-      ...snapshot,
-      id: newId
-    });
-    
+    const copy = normalizeRecipe({ ...snapshot, id: newId });
     recipes.push(copy);
     save();
     return true;
