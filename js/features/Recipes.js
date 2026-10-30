@@ -7,6 +7,13 @@
  * v5.46:
  *   • handleDeleteOrHide: для своих рецептов убран confirm().
  *     Удаление мгновенное, с возможностью вернуть через undo-плашку.
+ *
+ * v5.47:
+ *   • Ленивый рендер списка рецептов. Для свёрнутых категорий
+ *     создаётся только заголовок, <ul> с рецептами строится
+ *     при первом раскрытии и кэшируется в замыкании.
+ *     Цель — убрать задержки при переключении на вкладку «Рецепты»
+ *     на телефоне, когда категорий много, а раскрыта одна.
  */
 import { CATEGORIES, CATEGORY_LABELS, RECIPE_SOURCES, CONSTANTS, UNIT_LABELS } from '../utils/Constants.js';
 import { Utils } from '../utils/Utils.js';
@@ -220,6 +227,53 @@ function attachSwipeHandlers(wrap, content) {
 }
 
 // ============================================================
+// v5.47: построение <ul> с рецептами вынесено отдельно,
+// чтобы вызывать его лениво — только при раскрытии категории.
+// ============================================================
+
+function buildRecipeListUl(items) {
+  const ul = document.createElement('ul');
+  ul.className = 'recipe-list';
+
+  items.forEach(recipe => {
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = recipe.name;
+    nameSpan.className = 'recipe-name-clickable';
+    nameSpan.setAttribute('tabindex', '0');
+    nameSpan.setAttribute('role', 'button');
+    nameSpan.setAttribute('aria-label', `Открыть рецепт ${recipe.name}`);
+    nameSpan.addEventListener('click', () => {
+      Renderer.showRecipeCard(recipe);
+    });
+    nameSpan.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        Renderer.showRecipeCard(recipe);
+      }
+    });
+
+    if (recipe.builtIn) {
+      const li = document.createElement('li');
+      li.className = 'recipe-list-item';
+      if (recipe.hidden) li.classList.add('recipe-list-item-hidden');
+      li.appendChild(nameSpan);
+
+      const badge = document.createElement('span');
+      badge.className = 'recipe-list-badge';
+      badge.textContent = 'база';
+      badge.title = 'Рецепт из базы';
+      li.appendChild(badge);
+
+      ul.appendChild(li);
+    } else {
+      ul.appendChild(createSwipeItem(recipe, nameSpan));
+    }
+  });
+
+  return ul;
+}
+
+// ============================================================
 
 export function renderRecipesList() {
   const list = document.getElementById(CONSTANTS.SELECTORS.recipesList);
@@ -318,6 +372,17 @@ export function renderRecipesList() {
     countSpan.textContent = `(${items.length})`;
     header.appendChild(countSpan);
 
+    // v5.47: <ul> создаётся сразу только для развёрнутых категорий.
+    // Для свёрнутых — лениво, в обработчике клика, с кэшированием
+    // в замыкании через флаг ulCreated.
+    let ul = null;
+    let ulCreated = false;
+
+    if (!isCollapsed || forceExpand) {
+      ul = buildRecipeListUl(items);
+      ulCreated = true;
+    }
+
     header.addEventListener('click', function() {
       const wasCollapsed = section.classList.contains('collapsed');
 
@@ -331,6 +396,13 @@ export function renderRecipesList() {
       if (wasCollapsed) {
         section.classList.remove('collapsed');
         header.setAttribute('aria-expanded', 'true');
+
+        // Ленивое создание списка при первом раскрытии.
+        if (!ulCreated) {
+          ul = buildRecipeListUl(items);
+          section.appendChild(ul);
+          ulCreated = true;
+        }
       }
 
       Object.keys(collapsedCategories).forEach(k => { collapsedCategories[k] = true; });
@@ -341,46 +413,7 @@ export function renderRecipesList() {
     });
 
     section.appendChild(header);
-
-    const ul = document.createElement('ul');
-    ul.className = 'recipe-list';
-
-    items.forEach(recipe => {
-      const nameSpan = document.createElement('span');
-      nameSpan.textContent = recipe.name;
-      nameSpan.className = 'recipe-name-clickable';
-      nameSpan.setAttribute('tabindex', '0');
-      nameSpan.setAttribute('role', 'button');
-      nameSpan.setAttribute('aria-label', `Открыть рецепт ${recipe.name}`);
-      nameSpan.addEventListener('click', () => {
-        Renderer.showRecipeCard(recipe);
-      });
-      nameSpan.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          Renderer.showRecipeCard(recipe);
-        }
-      });
-
-      if (recipe.builtIn) {
-        const li = document.createElement('li');
-        li.className = 'recipe-list-item';
-        if (recipe.hidden) li.classList.add('recipe-list-item-hidden');
-        li.appendChild(nameSpan);
-
-        const badge = document.createElement('span');
-        badge.className = 'recipe-list-badge';
-        badge.textContent = 'база';
-        badge.title = 'Рецепт из базы';
-        li.appendChild(badge);
-
-        ul.appendChild(li);
-      } else {
-        ul.appendChild(createSwipeItem(recipe, nameSpan));
-      }
-    });
-
-    section.appendChild(ul);
+    if (ul) section.appendChild(ul);
     list.appendChild(section);
   });
 }
