@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <!--
   Меню и рецепты · index.html
-  v5.43:
-  - Первой открывается вкладка «Сегодня» (data-active-tab="today").
-  - На «Сегодня» добавлена кнопка «Собрать меню на неделю» (открывает ту же модалку).
+  v5.45:
+  - Кнопка «Собрать меню на неделю» перенесена из HTML в Renderer.renderToday
+    (на первом экране теперь три кнопки в порядке: Собрать → Что приготовить → Добавить).
+  - Экспорт/Импорт на «Меню» приведён к виду «Рецептов» (.bottom-actions + .btn-secondary).
 -->
 <html lang="ru" data-theme="classic-light">
 <head>
@@ -67,9 +68,6 @@
   <!-- ============ ТАБ: СЕГОДНЯ ============ -->
   <div class="tab-view" data-tab-view="today">
     <div id="todayContent"></div>
-    <div class="today-generate-section">
-      <button class="generate-menu-btn" id="generateMenuBtnToday" type="button">✨ Собрать меню на неделю</button>
-    </div>
   </div>
 
   <!-- ============ ТАБ: МЕНЮ ============ -->
@@ -129,9 +127,9 @@
     </section>
 
     <section class="backup-section">
-      <div class="backup-row">
-        <button class="btn btn-export" id="exportBtn">Экспорт</button>
-        <button class="btn btn-import" id="importBtn">Импорт</button>
+      <div class="bottom-actions">
+        <button class="btn-secondary" id="exportBtn">Экспорт</button>
+        <button class="btn-secondary" id="importBtn">Импорт</button>
       </div>
       <div class="backup-hint">
         📌 Не забывайте делать резервную копию, выберите для этого формат <strong>JSON</strong>.
@@ -183,7 +181,7 @@
 
       <div id="recipesList"></div>
 
-      <div class="recipes-bottom-actions">
+      <div class="bottom-actions">
         <button class="btn-secondary" id="exportRecipesBtn">Экспорт рецептов</button>
         <button class="btn-secondary" id="importRecipesBtn">Импорт рецептов</button>
       </div>
