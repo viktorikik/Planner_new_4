@@ -4,9 +4,11 @@
  * Зависит от: Constants, Utils, RecipeStore, DishStore, Renderer,
  *             notifications, focusTrap, ExportImport.
  *
- * v5.43:
- *   • В список «Мои рецепты» добавлено свайп-удаление (свайп влево → «Удалить»).
- *   • Для базовых рецептов свайпа нет — они скрываются через «Показать скрытые».
+ * v5.44.2:
+ *   • saveRecipeForm: если пользователь оставил категорию «Другое»
+ *     (значение по умолчанию в форме), пробуем Utils.guessCategory(name).
+ *     Раньше любой рецепт без явно выбранной категории сохранялся
+ *     как «Другое», и guessCategory не вызывалась никогда.
  */
 import { CATEGORIES, CATEGORY_LABELS, RECIPE_SOURCES, CONSTANTS, UNIT_LABELS } from '../utils/Constants.js';
 import { Utils } from '../utils/Utils.js';
@@ -659,7 +661,17 @@ function saveRecipeForm() {
   const ingredients = collectIngredientRows();
   if (ingredients.length === 0) { showMessage('Добавьте хотя бы один ингредиент', 'error'); return; }
 
-  const category = document.getElementById(CONSTANTS.SELECTORS.recipeCategory).value;
+  // v5.44.2: «Другое» — это значение по умолчанию в форме, а не осознанный
+  // выбор. Пробуем определить категорию по названию. Если guessCategory
+  // вернёт OTHER — оставляем OTHER.
+  let category = document.getElementById(CONSTANTS.SELECTORS.recipeCategory).value;
+  if (!category || category === CATEGORIES.OTHER) {
+    const guessed = Utils.guessCategory(name);
+    if (guessed && guessed !== CATEGORIES.OTHER) {
+      category = guessed;
+    }
+  }
+
   const cuisine = document.getElementById(CONSTANTS.SELECTORS.recipeCuisine).value || null;
 
   const servingsRaw = document.getElementById(CONSTANTS.SELECTORS.recipeServings).value;
