@@ -712,10 +712,11 @@ button,
   padding: var(--spacing-sm) var(--spacing-md);
   border: 1px solid var(--cell-border);
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
 }
 .week-row:hover {
   background: var(--day-hover);
+  border-color: var(--accent-color);
   transform: translateX(4px);
 }
 
@@ -3454,8 +3455,11 @@ button,
   font-size: 12px;
   font-weight: 600;
   border-radius: var(--radius-sm);
-  transition: var(--transition-fast);
+  transition: color 0.2s ease, transform 0.2s ease;
   appearance: none;
+}
+.bottom-nav-btn:active .bottom-nav-icon {
+  transform: scale(0.85);
 }
 
 .bottom-nav-btn:hover {
@@ -3494,12 +3498,23 @@ button,
 
 .tab-view {
   display: none;
+  opacity: 0;
+  transform: translateY(4px);
 }
+
 .app[data-active-tab="today"] .tab-view[data-tab-view="today"],
 .app[data-active-tab="menu"] .tab-view[data-tab-view="menu"],
 .app[data-active-tab="recipes"] .tab-view[data-tab-view="recipes"],
 .app[data-active-tab="shopping"] .tab-view[data-tab-view="shopping"] {
   display: block;
+  animation: tabFadeIn 0.25s ease forwards;
+}
+
+@keyframes tabFadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ============================================================
@@ -3661,14 +3676,29 @@ button,
   background: var(--accent-color);
   color: var(--accent-text);
   box-shadow: 0 2px 8px var(--accent-shadow);
+  animation: pulseGlow 2.5s infinite;
 }
 .today-action-generate:hover {
   filter: brightness(1.05);
   transform: translateY(-2px);
   box-shadow: 0 8px 16px var(--accent-shadow);
+  animation: none;
 }
 .today-action-generate:active {
   transform: translateY(0);
+  animation: none;
+}
+
+@keyframes pulseGlow {
+  0% {
+    box-shadow: 0 0 0 0 var(--accent-shadow);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(213, 232, 74, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(213, 232, 74, 0);
+  }
 }
 
 .today-action-suggest {
@@ -5159,7 +5189,7 @@ body:has(.onboarding-overlay.active) {
   font-weight: 600;
   text-align: left;
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
   appearance: none;
   -webkit-tap-highlight-color: transparent;
 }
@@ -5167,11 +5197,13 @@ body:has(.onboarding-overlay.active) {
 .recipe-category-card:hover {
   background: var(--card-hover-bg);
   border-color: var(--accent-color);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
 }
 
 .recipe-category-card:active {
-  transform: scale(0.98);
+  transform: scale(0.97);
+  box-shadow: none;
 }
 
 .recipe-category-card:focus-visible {
