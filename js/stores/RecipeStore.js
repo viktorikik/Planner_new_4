@@ -9,6 +9,12 @@
  *   • Добавлен автоопределитель тегов (autoDetectTags) на основе названия и ингредиентов.
  *   • В nutrition добавлено поле fiber (клетчатка).
  *   • Все рецепты (включая старые) при загрузке нормализуются и получают блок tags.
+ *
+ * v5.44.2:
+ *   • Одноразовая миграция категорий: рецепты с category === 'other'
+ *     прогоняются через Utils.guessCategory(name). Если guessCategory
+ *     возвращает другую категорию — обновляем. Флаг в localStorage,
+ *     чтобы не перезаписывать осознанно выбранное «Другое» каждый раз.
  */
 import { CONSTANTS } from '../utils/Constants.js';
 import { Utils } from '../utils/Utils.js';
@@ -18,6 +24,7 @@ import { showStorageError } from '../utils/notifications.js';
 export const RecipeStore = (function() {
   const STORAGE_KEY = CONSTANTS.STORAGE_KEYS.RECIPES;
   const LEGACY_KEY = CONSTANTS.STORAGE_KEYS.RECIPES_LEGACY;
+  const CATEGORY_MIGRATION_KEY = 'smartMenuCategoryMigration_v1';
   let recipes = [];
 
   function generateId() { return Date.now() + Math.random() * 10000; }
@@ -287,6 +294,46 @@ export const RecipeStore = (function() {
     return false;
   }
 
+  // ============================================================
+  // v5.44.2: ОДНОРАЗОВАЯ МИГРАЦИЯ КАТЕГОРИЙ
+  // Рецепты с category === 'other' прогоняются через guessCategory.
+  // Флаг в localStorage, чтобы не перезаписывать осознанно выбранное
+  // «Другое» при каждой загрузке.
+  // ============================================================
+  function migrateCategoriesOnce() {
+    try {
+      if (localStorage.getItem(CATEGORY_MIGRATION_KEY) === '1') return;
+
+      let changed = false;
+      recipes.forEach(r => {
+        if (r.category === 'other') {
+          const guessed = Utils.guessCategory(r.name);
+          if (guessed && guessed !== 'other') {
+            r.category = guessed;
+            changed = true;
+          }
+        }
+      });
+
+      if (changed) {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(recipes));
+          console.log(`Миграция категорий: обновлено ${recipes.filter(r => r.category !== 'other').length} рецептов.`);
+        } catch (e) {
+          console.warn('Не удалось сохранить миграцию категорий:', e);
+        }
+      }
+
+      try {
+        localStorage.setItem(CATEGORY_MIGRATION_KEY, '1');
+      } catch (e) {
+        /* молча: если localStorage недоступен, миграция повторится при следующем запуске */
+      }
+    } catch (e) {
+      console.warn('Ошибка миграции категорий:', e);
+    }
+  }
+
   function save() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(recipes));
@@ -313,6 +360,10 @@ export const RecipeStore = (function() {
     } catch(e) {
       console.warn('Не удалось сохранить нормализованные рецепты', e);
     }
+
+    // v5.44.2: одноразовая миграция категорий
+    migrateCategoriesOnce();
+
     EventBus.emit(CONSTANTS.EVENTS.RECIPES_CHANGED);
   }
 
