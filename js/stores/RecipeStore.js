@@ -4,12 +4,11 @@
  * Автоматическая миграция из v1 при загрузке.
  * Зависит от: Constants, Utils, EventBus, notifications.
  *
- * v5.36:
- *   • getById и другие методы ищут по String(id), чтобы работать
- *     и со строковыми ID из recipes.json ("recipe_..."), и с числовыми.
- *   • Метод syncWithServer() подтягивает рецепты из recipes.json
- *     в корне сайта и объединяет с локальными.
- *   • Нормализация русских ключей (категории, mealTypes, аллергены).
+ * v5.40:
+ *   • Добавлена поддержка тегов (tags) для умного подбора меню.
+ *   • Добавлен автоопределитель тегов (autoDetectTags) на основе названия и ингредиентов.
+ *   • В nutrition добавлено поле fiber (клетчатка).
+ *   • Все рецепты (включая старые) при загрузке нормализуются и получают блок tags.
  */
 import { CONSTANTS } from '../utils/Constants.js';
 import { Utils } from '../utils/Utils.js';
@@ -125,22 +124,101 @@ export const RecipeStore = (function() {
     return [];
   }
 
+  // v5.40: добавлено поле fiber
   function normalizeNutrition(n) {
-    const base = { kcal: null, protein: null, fat: null, carbs: null };
+    const base = { kcal: null, protein: null, fat: null, carbs: null, fiber: null };
     if (!n || typeof n !== 'object') return base;
-    ['kcal', 'protein', 'fat', 'carbs'].forEach(k => {
+    ['kcal', 'protein', 'fat', 'carbs', 'fiber'].forEach(k => {
       if (typeof n[k] === 'number' && isFinite(n[k])) base[k] = n[k];
     });
     return base;
   }
 
+  // ============================================================
+  // АВТООПРЕДЕЛЕНИЕ ТЕГОВ (v5.40)
+  // ============================================================
+  function autoDetectTags(recipe) {
+    // Собираем весь текст рецепта для анализа
+    const text = (
+      (recipe.name || '') + ' ' + 
+      (recipe.ingredients || []).map(i => i.name).join(' ')
+    ).toLowerCase().replace(/ё/g, 'е');
+
+    let tags = {
+      proteinSource: 'vegetarian', // По умолчанию без мяса
+      proteinForm: 'none',
+      cookingMethod: 'bake',       // По умолчанию запекание
+      baseType: 'none',
+      nutritionProfile: 'balanced'
+    };
+
+    // 1. Тип белка (Protein Source)
+    if (/куриц|куриное|цыплен|индейк|утк/.test(text)) tags.proteinSource = 'chicken';
+    else if (/говяд|телятин|баранин/.test(text)) tags.proteinSource = 'beef';
+    else if (/свинин|бекон|карбонад|ветчин/.test(text)) tags.proteinSource = 'pork';
+    else if (/рыб|сельд|минтай|лосось|треск|тунец|скумбри/.test(text)) tags.proteinSource = 'fish';
+    else if (/креветк|кальмар|краб|морепродукт|моллюск/.test(text)) tags.proteinSource = 'seafood';
+    else if (/фарш/.test(text) && tags.proteinSource === 'vegetarian') tags.proteinSource = 'mixed';
+
+    // 2. Форма белка (Protein Form)
+    if (/фарш|котлет|тефтел|фрикадел/.test(text)) tags.proteinForm = 'minced';
+    else if (/колбас|сосиск|сардельк/.test(text)) tags.proteinForm = 'processed';
+    else if (tags.proteinSource !== 'vegetarian') tags.proteinForm = 'whole';
+
+    // 3. Способ готовки (Cooking Method)
+    if (recipe.category === 'salad' || /сырой|свеж/.test(text)) tags.cookingMethod = 'raw';
+    else if (/запек|духовк|запекан/.test(text)) tags.cookingMethod = 'bake';
+    else if (/туш|рагу|бигус|бигос|плов/.test(text)) tags.cookingMethod = 'stew';
+    else if (/жар|обжар|сковород|шницель|блин/.test(text)) tags.cookingMethod = 'fry';
+    else if (/вар|суп|бульон|паров/.test(text)) tags.cookingMethod = 'boil';
+
+    // 4. Основа/Гарнир (Base Type)
+    if (/картоф|пюре/.test(text)) tags.baseType = 'potato';
+    else if (/рис/.test(text)) tags.baseType = 'rice';
+    else if (/макарон|паст|спагетти|лапш/.test(text)) tags.baseType = 'pasta';
+    else if (/греч|булгур|перлов|круп|овсян|киноа/.test(text)) tags.baseType = 'grains';
+    else if (/фасол|горох|чечевиц|нут/.test(text)) tags.baseType = 'legumes';
+    else if (/овощ|капуст|кабач|брокколи|салат/.test(text)) tags.baseType = 'vegetables';
+
+    // 5. Пищевой профиль (Nutrition Profile)
+    if (recipe.category === 'salad' || tags.baseType === 'vegetables' || tags.baseType === 'legumes') {
+      tags.nutritionProfile = 'high_fiber'; // Много клетчатки
+    } else if (tags.proteinSource !== 'vegetarian' && tags.baseType === 'none') {
+      tags.nutritionProfile = 'high_protein'; // Много белка
+    } else if (recipe.category === 'soup') {
+      tags.nutritionProfile = 'light'; // Легкое
+    }
+
+    return tags;
+  }
+
+  // ============================================================
+  // СБОРКА РЕЦЕПТА
+  // ============================================================
   function normalizeRecipe(r) {
     const normalized = normalizeRussianKeys(r || {});
     const safe = normalized;
+    
+    // Сначала нормализуем ингредиенты, чтобы передать их в автоопределитель
+    const normIngredients = normalizeIngredients(safe.ingredients);
+    
+    // Генерируем базовые теги
+    const defaultTags = autoDetectTags({ 
+      name: safe.name || '', 
+      ingredients: normIngredients,
+      category: safe.category || '' 
+    });
+
+    // Если в рецепте уже есть теги (например, выставленные вручную), они перекрывают автоопределение
+    const finalTags = {
+      ...defaultTags,
+      ...(safe.tags || {}) 
+    };
+
     return {
       id: safe.id != null ? String(safe.id) : String(generateId()),
       name: safe.name || '',
-      ingredients: normalizeIngredients(safe.ingredients),
+      ingredients: normIngredients,
       instructions: safe.instructions || '',
       category: safe.category || Utils.guessCategory(safe.name || ''),
       servings: (typeof safe.servings === 'number' && safe.servings > 0) ? safe.servings : 1,
@@ -152,6 +230,7 @@ export const RecipeStore = (function() {
       cuisine: safe.cuisine || null,
       allergens: Array.isArray(safe.allergens) ? safe.allergens.slice() : [],
       mealTypes: Array.isArray(safe.mealTypes) ? safe.mealTypes.slice() : [],
+      tags: finalTags, // <--- НОВОЕ ПОЛЕ
       liked: !!safe.liked,
       disliked: !!safe.disliked,
       builtIn: !!safe.builtIn,
@@ -281,7 +360,6 @@ export const RecipeStore = (function() {
 
   function getAll() { return recipes.slice(); }
 
-  // v5.36: сравниваем через String — id может быть и числом, и строкой.
   function getById(id) {
     if (id == null) return null;
     const idStr = String(id);
