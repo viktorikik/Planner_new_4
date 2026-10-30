@@ -5097,3 +5097,32 @@ body:has(.onboarding-overlay.active) {
 [data-theme="brand-dark"] button {
   color: var(--text-primary);
 }
+/* ============================================================
+   v5.6.0 · ФИКС КНОПКИ АВТОСБОРЩИКА (в стиле проекта)
+   ============================================================ */
+.generate-menu-btn {
+  background: var(--accent-light) !important;
+  color: var(--accent-color) !important;
+  border: 1.5px solid var(--accent-color) !important;
+  border-radius: var(--radius-md) !important;
+  padding: var(--spacing-sm) var(--spacing-md) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+  transition: var(--transition-fast) !important;
+  box-shadow: none !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+}
+
+.generate-menu-btn:hover {
+  background: var(--accent-color) !important;
+  color: var(--accent-text) !important;
+  transform: translateY(-1px) !important;
+}
+
+.generate-menu-btn:active {
+  transform: translateY(0) !important;
+}
