@@ -4,7 +4,7 @@
 // v5.5.6 (Фикс: больше не отдаёт HTML вместо CSS при сбое сети)
 // ============================================================
 
-const CACHE_NAME = 'menu-recipes-v5.42';
+const CACHE_NAME = 'menu-recipes-v5.43';
 
 self.addEventListener('install', function(event) {
   self.skipWaiting();
