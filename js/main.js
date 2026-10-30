@@ -1,15 +1,13 @@
 /**
  * main.js — точка входа приложения.
  *
- * v6.2.7:
- *   • Автосборщик: стартовая дата (#generateStartDate) + период 3/5/7/14.
- *   • Автосборщик: проверка конфликтов. Если на выбранных датах уже есть
- *     блюда — показываем блок #generateConflictBlock с выбором
- *     «Заменить» / «Добавить».
+ * v6.3.1:
+ *   • executeGeneration: поддержка нового формата { items: [] } от MenuGenerator.
+ *   • Сохранение mealRole в DishStore.
+ *   • replaceDishHandler: передача mealRole для корректной замены.
  *
  * v6.1.0:
  *   • Защита от отсутствия #generateMenuBtn: проверка на null.
- *   • Стрелки ‹ › на «Сегодня» — в Renderer.js (shiftTodayViewDate).
  *
  * v6.0.0:
  *   • Переход на две темы: light и dark.
@@ -149,7 +147,7 @@ const DEFAULT_THEME = THEMES.LIGHT;
     Onboarding.open();
   });
 
-  // ---------- Тема (v6.0.0: light/dark) ----------
+  // ---------- Тема ----------
   function getStoredTheme() {
     let raw;
     try {
@@ -281,9 +279,7 @@ const DEFAULT_THEME = THEMES.LIGHT;
   }
 
   buildThemeTiles();
-
   document.getElementById(CONSTANTS.SELECTORS.themeToggle).addEventListener('click', openThemeModal);
-
   if (themeOverlay) {
     document.getElementById(CONSTANTS.SELECTORS.themeClose).addEventListener('click', closeThemeModal);
   }
@@ -400,7 +396,6 @@ const DEFAULT_THEME = THEMES.LIGHT;
     });
   }
 
-  // v6.2.7: Сегментированный выбор периода
   const generateDaysGroup = document.getElementById('generateDaysGroup');
   const generateDaysCountInput = document.getElementById('generateDaysCount');
   if (generateDaysGroup && generateDaysCountInput) {
@@ -422,11 +417,9 @@ const DEFAULT_THEME = THEMES.LIGHT;
 
   function openGenerateModal() {
     if (!generateMenuOverlay) return;
-    // Сброс UI при открытии
     generateFormContent.hidden = false;
     generateConflictBlock.hidden = true;
     generateStartDate.value = Utils.formatDateLocal(new Date());
-
     generateMenuOverlay.classList.add('active');
     trapFocus(generateMenuOverlay, closeGenerateModal);
   }
@@ -434,7 +427,6 @@ const DEFAULT_THEME = THEMES.LIGHT;
   function closeGenerateModal() {
     if (!generateMenuOverlay) return;
     generateMenuOverlay.classList.remove('active');
-    // Сброс UI при закрытии
     generateFormContent.hidden = false;
     generateConflictBlock.hidden = true;
     if (generateMenuOverlay._trapFocusCleanup) {
@@ -443,7 +435,6 @@ const DEFAULT_THEME = THEMES.LIGHT;
     }
   }
 
-  // v6.1.0: кнопку могли удалить из HTML (с вкладки «Меню»).
   const generateMenuBtn = document.getElementById('generateMenuBtn');
   if (generateMenuBtn) {
     generateMenuBtn.addEventListener('click', openGenerateModal);
@@ -458,7 +449,6 @@ const DEFAULT_THEME = THEMES.LIGHT;
   document.getElementById('generateMenuClose').addEventListener('click', closeGenerateModal);
   document.getElementById('generateMenuCancel').addEventListener('click', closeGenerateModal);
 
-  // Функция непосредственной сборки и сохранения
   let pendingGenerationData = null;
 
   function executeGeneration(replaceExisting) {
@@ -475,16 +465,23 @@ const DEFAULT_THEME = THEMES.LIGHT;
 
     if (result.success) {
       const dishesToSave = [];
+      
+      // Парсим новый формат { items: [] }
       Object.keys(result.menu).forEach(dateStr => {
         Object.keys(result.menu[dateStr]).forEach(mealType => {
-          const dish = result.menu[dateStr][mealType];
-          dishesToSave.push({
-            name: dish.name,
-            date: dateStr,
-            mealType: mealType,
-            category: dish.category || Utils.guessCategory(dish.name),
-            recipeId: dish.id
-          });
+          const composition = result.menu[dateStr][mealType];
+          if (composition && Array.isArray(composition.items)) {
+            composition.items.forEach(item => {
+              dishesToSave.push({
+                name: item.name,
+                date: dateStr,
+                category: item.category || Utils.guessCategory(item.name),
+                recipeId: item.id,
+                mealRole: item.mealRole || 'main',
+                mealTypes: [mealType]
+              });
+            });
+          }
         });
       });
 
@@ -492,7 +489,11 @@ const DEFAULT_THEME = THEMES.LIGHT;
         const uniqueDates = [...new Set(dishesToSave.map(d => d.date))];
         uniqueDates.forEach(date => {
           const existing = DishStore.getForDate(date);
-          existing.forEach(d => DishStore.removeDish(d.id));
+          existing.forEach(d => {
+            if (d.status !== STATUSES.DONE) {
+              DishStore.removeDish(d.id);
+            }
+          });
         });
       }
 
@@ -501,7 +502,8 @@ const DEFAULT_THEME = THEMES.LIGHT;
          date: d.date,
          category: d.category,
          recipeId: d.recipeId,
-         mealTypes: [d.mealType]
+         mealRole: d.mealRole,
+         mealTypes: d.mealTypes
       })));
 
       showMessage(`✨ Меню на ${days} дней успешно собрано!`);
@@ -514,7 +516,6 @@ const DEFAULT_THEME = THEMES.LIGHT;
     pendingGenerationData = null;
   }
 
-  // Обработчик кнопки «Собрать»
   document.getElementById('generateMenuSave').addEventListener('click', function() {
     const days = parseInt(document.getElementById('generateDaysCount').value, 10);
     const startDateStr = generateStartDate.value;
@@ -538,7 +539,6 @@ const DEFAULT_THEME = THEMES.LIGHT;
       return;
     }
 
-    // Проверка на существующие блюда в диапазоне
     const start = new Date(startDateStr);
     const end = new Date(start);
     end.setDate(end.getDate() + days - 1);
@@ -548,18 +548,15 @@ const DEFAULT_THEME = THEMES.LIGHT;
     const existingDishes = DishStore.getAll().filter(d => d.date >= startString && d.date <= endString);
 
     if (existingDishes.length > 0) {
-      // Есть конфликты! Показываем блок выбора.
       pendingGenerationData = { days, mealTypes, fridgeIngredients, maxTime, startDate: startDateStr };
       generateFormContent.hidden = true;
       generateConflictBlock.hidden = false;
     } else {
-      // Конфликтов нет — собираем и сохраняем сразу
       pendingGenerationData = { days, mealTypes, fridgeIngredients, maxTime, startDate: startDateStr };
       executeGeneration(false);
     }
   });
 
-  // Кнопки в блоке конфликтов
   document.getElementById('generateConflictReplace').addEventListener('click', function() {
     executeGeneration(true);
   });
@@ -568,7 +565,7 @@ const DEFAULT_THEME = THEMES.LIGHT;
     executeGeneration(false);
   });
 
-  // Обработчик замены блюда (Reroll)
+  // ---------- Замена блюда (Reroll) ----------
   Renderer.replaceDishHandler = function(dishId) {
     const dish = DishStore.getAll().find(d => d.id === dishId);
     if (!dish) return;
@@ -576,11 +573,13 @@ const DEFAULT_THEME = THEMES.LIGHT;
     const dateStr = dish.date;
     const mealType = (dish.mealTypes && dish.mealTypes.length > 0) ? dish.mealTypes[0] : 'dinner';
 
+    // Собираем текущее меню для передачи в генератор
     const currentMenu = {};
     DishStore.getAll().forEach(d => {
       if (!currentMenu[d.date]) currentMenu[d.date] = {};
       const mt = (d.mealTypes && d.mealTypes.length > 0) ? d.mealTypes[0] : 'dinner';
-      currentMenu[d.date][mt] = { id: d.id, name: d.name, tags: d.tags || {} };
+      if (!currentMenu[d.date][mt]) currentMenu[d.date][mt] = { items: [] };
+      currentMenu[d.date][mt].items.push({ id: d.recipeId || d.id, name: d.name });
     });
 
     const newDish = MenuGenerator.getReplacement(
@@ -588,14 +587,15 @@ const DEFAULT_THEME = THEMES.LIGHT;
       dateStr,
       mealType,
       currentMenu,
-      { maxWeekdayTime: 40 }
+      { maxWeekdayTime: 40, mealRole: dish.mealRole }
     );
 
     if (newDish) {
       DishStore.updateDish(dishId, {
         name: newDish.name,
         recipeId: newDish.id,
-        category: newDish.category || Utils.guessCategory(newDish.name)
+        category: newDish.category || Utils.guessCategory(newDish.name),
+        mealRole: newDish.mealRole
       });
       showMessage(`🎲 Заменено на "${newDish.name}"`);
 
@@ -889,7 +889,15 @@ const DEFAULT_THEME = THEMES.LIGHT;
     }
     const recipeValue = recipeSelect ? recipeSelect.value : '';
     const recipeId = recipeValue ? recipeValue : null;
-    DishStore.addDish(name, statusSelect.value, date, categorySelect.value, false, note, recipeId, mealTypes);
+    
+    // При ручном добавлении пытаемся достать mealRole из рецепта
+    let mealRole = null;
+    if (recipeId) {
+      const recipe = RecipeStore.getById(recipeId);
+      if (recipe) mealRole = recipe.mealRole;
+    }
+
+    DishStore.addDish(name, statusSelect.value, date, categorySelect.value, false, note, recipeId, mealTypes, false, mealRole);
     Renderer.closeAddModal();
     nameInput.value = '';
     noteInput.value = '';
