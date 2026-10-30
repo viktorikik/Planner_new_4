@@ -2,7 +2,7 @@
  * main.js — точка входа приложения.
  *
  * v6.0.0:
- *   • Переход на две темы: light и dark (без classic-*/brand-*).
+ *   • Переход на две темы: light и dark (без classic-/brand-).
  *     Миграция старых значений localStorage → light/dark.
  *     THEMES, DEFAULT_THEME, THEME_LEGACY_MAP больше не импортируются
  *     из Constants.js — определены локально.
