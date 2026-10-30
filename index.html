@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <!--
   Меню и рецепты · index.html
+
+  v6.2.7:
+  - Автосборщик: сегментированный выбор периода (3/5/7/14) вместо <select>.
+    HTML: #generateDaysGroup + скрытый #generateDaysCount.
+    CSS: раздел 50 в styles.css (добавляется отдельно).
+  - styles.css?v=7.0.13 (cache-bust под новый раздел 50).
+
   v6.0.0:
   - Новая дизайн-система: две темы (light/dark), шрифт Manrope,
     палитра молочный + графит + лайм.
@@ -28,7 +35,7 @@
   <meta name="apple-mobile-web-app-title" content="Меню и рецепты">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
-  <link rel="stylesheet" href="styles.css?v=7.0.12">
+  <link rel="stylesheet" href="styles.css?v=7.0.13">
 
   <script>
     (function() {
@@ -95,7 +102,7 @@
           <button class="active" data-view="week" aria-pressed="true">Неделя</button>
           <button data-view="month" aria-pressed="false">Месяц</button>
         </div>
-        
+
         <div class="month-nav-wrapper">
           <button id="prevMonth" class="month-nav-btn" aria-label="Предыдущий месяц">‹</button>
           <h2 id="monthTitle">Август 2026</h2>
@@ -103,7 +110,7 @@
         </div>
 
         <button class="today-btn" id="todayBtn">Сегодня</button>
-       
+
       </div>
 
       <div class="weekdays" role="row">
@@ -779,17 +786,18 @@
       <h3 id="generateMenuTitle">✨ Автосборщик меню</h3>
       <button class="modal-close" id="generateMenuClose" aria-label="Закрыть">✕</button>
     </div>
-    
+
     <p class="modal-desc">Мы подберем блюда так, чтобы они не повторялись по составу и способу приготовления.</p>
 
     <div class="form-group">
-      <label for="generateDaysCount">На сколько дней собрать?</label>
-      <select id="generateDaysCount">
-        <option value="3">3 дня</option>
-        <option value="5">5 дней</option>
-        <option value="7" selected>7 дней (неделя)</option>
-        <option value="14">14 дней</option>
-      </select>
+      <label>На сколько дней собрать?</label>
+      <div class="generate-days-segment" id="generateDaysGroup" role="group" aria-label="Количество дней для меню">
+        <button type="button" class="generate-days-btn" data-days="3" aria-pressed="false">3 дня</button>
+        <button type="button" class="generate-days-btn" data-days="5" aria-pressed="false">5 дней</button>
+        <button type="button" class="generate-days-btn active" data-days="7" aria-pressed="true">7 дней</button>
+        <button type="button" class="generate-days-btn" data-days="14" aria-pressed="false">14 дней</button>
+      </div>
+      <input type="hidden" id="generateDaysCount" value="7">
     </div>
 
     <div class="form-group">
