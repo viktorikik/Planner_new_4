@@ -5091,12 +5091,7 @@ body:has(.onboarding-overlay.active) {
   color: var(--accent-text);
 }
 
-/* Кнопки без явного фона (иконки закрытия, лайки, статусы) —
-   задаём только color, чтобы не перебить background: none. */
-[data-theme="classic-dark"] button,
-[data-theme="brand-dark"] button {
-  color: var(--text-primary);
-}
+
 /* ============================================================
    v5.6.0 · ФИКС КНОПКИ АВТОСБОРЩИКА (в стиле проекта)
    ============================================================ */
@@ -5147,4 +5142,75 @@ body:has(.onboarding-overlay.active) {
 .today-generate-section .generate-menu-btn {
   width: 100%;
   max-width: 340px;
+}
+
+
+/* ============================================================
+   47. v5.43 · Свайп-удаление своих рецептов в списке «Рецепты»
+   ============================================================ */
+.recipe-list-item-swipe {
+  display: block;
+  padding: 0;
+  background: transparent;
+  border-bottom: 1px dashed var(--cell-border);
+}
+
+.recipe-swipe-wrap {
+  position: relative;
+  overflow: hidden;
+}
+
+.recipe-swipe-content {
+  position: relative;
+  z-index: 1;
+  background: var(--bg-app);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.22s ease;
+  touch-action: pan-y;
+}
+
+.recipe-swipe-content.swiping {
+  transition: none;
+  will-change: transform;
+}
+
+.recipe-swipe-content .recipe-name-clickable {
+  flex: 1;
+  min-width: 0;
+}
+
+.recipe-swipe-delete {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 92px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: #e53935;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+  font-family: inherit;
+  appearance: none;
+}
+
+.recipe-swipe-delete:active {
+  background: #c62828;
+}
+
+.recipe-swipe-wrap.is-shifted .recipe-swipe-delete {
+  opacity: 1;
+  pointer-events: auto;
 }
