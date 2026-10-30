@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <!--
   Меню и рецепты · index.html
-  v5.41 (Автосборщик меню):
-  - Добавлена кнопка «Собрать» в шапку календаря.
-  - Добавлена модалка настроек автосборщика (дни, приемы пищи, режим холодильника).
+  v5.43:
+  - Первой открывается вкладка «Сегодня» (data-active-tab="today").
+  - На «Сегодня» добавлена кнопка «Собрать меню на неделю» (открывает ту же модалку).
 -->
 <html lang="ru" data-theme="classic-light">
 <head>
@@ -20,7 +20,7 @@
   <meta name="apple-mobile-web-app-title" content="Меню и рецепты">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
-  <link rel="stylesheet" href="styles.css?v=5.5.7">
+  <link rel="stylesheet" href="styles.css?v=5.6.1">
 
   <script>
     (function() {
@@ -35,7 +35,7 @@
 </head>
 <body>
 
-<div class="app" data-active-tab="menu">
+<div class="app" data-active-tab="today">
   <!-- ШАПКА -->
   <header class="app-header">
     <div class="logo">
@@ -67,6 +67,9 @@
   <!-- ============ ТАБ: СЕГОДНЯ ============ -->
   <div class="tab-view" data-tab-view="today">
     <div id="todayContent"></div>
+    <div class="today-generate-section">
+      <button class="generate-menu-btn" id="generateMenuBtnToday" type="button">✨ Собрать меню на неделю</button>
+    </div>
   </div>
 
   <!-- ============ ТАБ: МЕНЮ ============ -->
@@ -754,7 +757,7 @@
   </div>
 </div>
 
-<!-- НОВАЯ МОДАЛКА: АВТОСБОРЩИК МЕНЮ -->
+<!-- МОДАЛКА: АВТОСБОРЩИК МЕНЮ -->
 <div class="modal-overlay add-modal" id="generateMenuOverlay" role="dialog" aria-modal="true" aria-labelledby="generateMenuTitle">
   <div class="modal">
     <div class="modal-header">
