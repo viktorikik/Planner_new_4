@@ -2,26 +2,17 @@
  * main.js — точка входа приложения.
  *
  * v6.2.7:
- *   • Сегментированный выбор периода автосборщика (3/5/7/14 дней).
- *     HTML: #generateDaysGroup + скрытый #generateDaysCount.
- *     JS: обработчик кликов пишет значение в hidden input —
- *     остальная логика сбора не меняется.
+ *   • Автосборщик: стартовая дата (#generateStartDate) + период 3/5/7/14.
+ *   • Автосборщик: проверка конфликтов. Если на выбранных датах уже есть
+ *     блюда — показываем блок #generateConflictBlock с выбором
+ *     «Заменить» / «Добавить».
  *
  * v6.1.0:
  *   • Защита от отсутствия #generateMenuBtn: проверка на null.
- *     Кнопка удалена с вкладки «Меню», но JS не должен падать.
- *   • Стрелки ‹ › на «Сегодня» обрабатываются локально в Renderer.js
- *     (shiftTodayViewDate). Делегирование в main.js убрано, чтобы
- *     не срабатывало дважды.
+ *   • Стрелки ‹ › на «Сегодня» — в Renderer.js (shiftTodayViewDate).
  *
  * v6.0.0:
  *   • Переход на две темы: light и dark.
- *   • THEMES, DEFAULT_THEME, THEME_LEGACY_MAP — локальные.
- *   • THEME_PREVIEW и buildThemeTiles под 2 темы.
- *
- * v5.43–v5.45: DEFAULT_TAB = 'today', кнопка «Собрать» на «Сегодня»,
- * Escape закрывает динамические модалки, generateMenuBtnToday — через
- * делегирование.
  */
 import { STATUSES, CONSTANTS } from './utils/Constants.js';
 import { Utils } from './utils/Utils.js';
@@ -394,6 +385,9 @@ const DEFAULT_THEME = THEMES.LIGHT;
 
   // ---------- АВТОСБОРЩИК МЕНЮ ----------
   const generateMenuOverlay = document.getElementById('generateMenuOverlay');
+  const generateFormContent = document.getElementById('generateFormContent');
+  const generateConflictBlock = document.getElementById('generateConflictBlock');
+  const generateStartDate = document.getElementById('generateStartDate');
   const generateFridgeMode = document.getElementById('generateFridgeMode');
   const fridgeIngredientsWrap = document.getElementById('fridgeIngredientsWrap');
 
@@ -406,8 +400,7 @@ const DEFAULT_THEME = THEMES.LIGHT;
     });
   }
 
-  // v6.2.7: сегментированный выбор периода (3/5/7/14).
-  // Пишем значение в скрытый #generateDaysCount — остальная логика не меняется.
+  // v6.2.7: Сегментированный выбор периода
   const generateDaysGroup = document.getElementById('generateDaysGroup');
   const generateDaysCountInput = document.getElementById('generateDaysCount');
   if (generateDaysGroup && generateDaysCountInput) {
@@ -422,7 +415,6 @@ const DEFAULT_THEME = THEMES.LIGHT;
       btn.setAttribute('aria-pressed', 'true');
       generateDaysCountInput.value = btn.dataset.days;
     });
-    // Начальное состояние aria-pressed для активной кнопки
     generateDaysGroup.querySelectorAll('.generate-days-btn').forEach(b => {
       b.setAttribute('aria-pressed', b.classList.contains('active') ? 'true' : 'false');
     });
@@ -430,6 +422,11 @@ const DEFAULT_THEME = THEMES.LIGHT;
 
   function openGenerateModal() {
     if (!generateMenuOverlay) return;
+    // Сброс UI при открытии
+    generateFormContent.hidden = false;
+    generateConflictBlock.hidden = true;
+    generateStartDate.value = Utils.formatDateLocal(new Date());
+
     generateMenuOverlay.classList.add('active');
     trapFocus(generateMenuOverlay, closeGenerateModal);
   }
@@ -437,6 +434,9 @@ const DEFAULT_THEME = THEMES.LIGHT;
   function closeGenerateModal() {
     if (!generateMenuOverlay) return;
     generateMenuOverlay.classList.remove('active');
+    // Сброс UI при закрытии
+    generateFormContent.hidden = false;
+    generateConflictBlock.hidden = true;
     if (generateMenuOverlay._trapFocusCleanup) {
       generateMenuOverlay._trapFocusCleanup();
       delete generateMenuOverlay._trapFocusCleanup;
@@ -444,13 +444,11 @@ const DEFAULT_THEME = THEMES.LIGHT;
   }
 
   // v6.1.0: кнопку могли удалить из HTML (с вкладки «Меню»).
-  // Проверяем на null, чтобы main.js не падал.
   const generateMenuBtn = document.getElementById('generateMenuBtn');
   if (generateMenuBtn) {
     generateMenuBtn.addEventListener('click', openGenerateModal);
   }
 
-  // Кнопка на «Сегодня» создаётся динамически — делегирование.
   document.addEventListener('click', function(e) {
     if (e.target.closest('#generateMenuBtnToday')) {
       openGenerateModal();
@@ -460,8 +458,71 @@ const DEFAULT_THEME = THEMES.LIGHT;
   document.getElementById('generateMenuClose').addEventListener('click', closeGenerateModal);
   document.getElementById('generateMenuCancel').addEventListener('click', closeGenerateModal);
 
+  // Функция непосредственной сборки и сохранения
+  let pendingGenerationData = null;
+
+  function executeGeneration(replaceExisting) {
+    if (!pendingGenerationData) return;
+    const { days, mealTypes, fridgeIngredients, maxTime, startDate } = pendingGenerationData;
+
+    const result = MenuGenerator.generateMenu({
+      startDate,
+      days,
+      mealTypes,
+      fridgeIngredients,
+      maxWeekdayTime: maxTime
+    });
+
+    if (result.success) {
+      const dishesToSave = [];
+      Object.keys(result.menu).forEach(dateStr => {
+        Object.keys(result.menu[dateStr]).forEach(mealType => {
+          const dish = result.menu[dateStr][mealType];
+          dishesToSave.push({
+            name: dish.name,
+            date: dateStr,
+            mealType: mealType,
+            category: dish.category || Utils.guessCategory(dish.name),
+            recipeId: dish.id
+          });
+        });
+      });
+
+      if (replaceExisting) {
+        const uniqueDates = [...new Set(dishesToSave.map(d => d.date))];
+        uniqueDates.forEach(date => {
+          const existing = DishStore.getForDate(date);
+          existing.forEach(d => DishStore.removeDish(d.id));
+        });
+      }
+
+      DishStore.addMultipleDishes(dishesToSave.map(d => ({
+         name: d.name,
+         date: d.date,
+         category: d.category,
+         recipeId: d.recipeId,
+         mealTypes: [d.mealType]
+      })));
+
+      showMessage(`✨ Меню на ${days} дней успешно собрано!`);
+      closeGenerateModal();
+      Renderer.renderCalendar(Renderer.getCurrentView(), Renderer.getCurrentDate());
+    } else {
+      showMessage(result.message || 'Не удалось собрать меню', 'error');
+      closeGenerateModal();
+    }
+    pendingGenerationData = null;
+  }
+
+  // Обработчик кнопки «Собрать»
   document.getElementById('generateMenuSave').addEventListener('click', function() {
     const days = parseInt(document.getElementById('generateDaysCount').value, 10);
+    const startDateStr = generateStartDate.value;
+    if (!startDateStr) {
+      showMessage('Выберите дату начала', 'error');
+      return;
+    }
+
     const maxTime = parseInt(document.getElementById('generateMaxTime').value, 10);
     const isFridgeMode = generateFridgeMode.checked;
     const fridgeInput = document.getElementById('generateFridgeInput').value;
@@ -477,60 +538,34 @@ const DEFAULT_THEME = THEMES.LIGHT;
       return;
     }
 
-    const saveBtn = this;
-    const originalText = saveBtn.textContent;
-    saveBtn.textContent = 'Собираем...';
-    saveBtn.disabled = true;
+    // Проверка на существующие блюда в диапазоне
+    const start = new Date(startDateStr);
+    const end = new Date(start);
+    end.setDate(end.getDate() + days - 1);
+    const startString = Utils.formatDateLocal(start);
+    const endString = Utils.formatDateLocal(end);
 
-    setTimeout(() => {
-      const startDate = Utils.formatDateLocal(new Date());
-      const result = MenuGenerator.generateMenu({
-        startDate,
-        days,
-        mealTypes,
-        fridgeIngredients,
-        maxWeekdayTime: maxTime
-      });
+    const existingDishes = DishStore.getAll().filter(d => d.date >= startString && d.date <= endString);
 
-      if (result.success) {
-        const dishesToSave = [];
-        Object.keys(result.menu).forEach(dateStr => {
-          Object.keys(result.menu[dateStr]).forEach(mealType => {
-            const dish = result.menu[dateStr][mealType];
-            dishesToSave.push({
-              name: dish.name,
-              date: dateStr,
-              mealType: mealType,
-              category: dish.category || Utils.guessCategory(dish.name),
-              recipeId: dish.id
-            });
-          });
-        });
+    if (existingDishes.length > 0) {
+      // Есть конфликты! Показываем блок выбора.
+      pendingGenerationData = { days, mealTypes, fridgeIngredients, maxTime, startDate: startDateStr };
+      generateFormContent.hidden = true;
+      generateConflictBlock.hidden = false;
+    } else {
+      // Конфликтов нет — собираем и сохраняем сразу
+      pendingGenerationData = { days, mealTypes, fridgeIngredients, maxTime, startDate: startDateStr };
+      executeGeneration(false);
+    }
+  });
 
-        const uniqueDates = [...new Set(dishesToSave.map(d => d.date))];
-        uniqueDates.forEach(date => {
-            const existing = DishStore.getForDate(date);
-            existing.forEach(d => DishStore.removeDish(d.id));
-        });
+  // Кнопки в блоке конфликтов
+  document.getElementById('generateConflictReplace').addEventListener('click', function() {
+    executeGeneration(true);
+  });
 
-        DishStore.addMultipleDishes(dishesToSave.map(d => ({
-           name: d.name,
-           date: d.date,
-           category: d.category,
-           recipeId: d.recipeId,
-           mealTypes: [d.mealType]
-        })));
-
-        showMessage(`✨ Меню на ${days} дней успешно собрано!`);
-        closeGenerateModal();
-        Renderer.renderCalendar(Renderer.getCurrentView(), Renderer.getCurrentDate());
-      } else {
-        showMessage(result.message || 'Не удалось собрать меню', 'error');
-      }
-
-      saveBtn.textContent = originalText;
-      saveBtn.disabled = false;
-    }, 50);
+  document.getElementById('generateConflictAdd').addEventListener('click', function() {
+    executeGeneration(false);
   });
 
   // Обработчик замены блюда (Reroll)
