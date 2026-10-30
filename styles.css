@@ -2218,9 +2218,9 @@ button,
   background: var(--day-hover);
 }
 .recipe-source-tab.active {
-  background: var(--accent-color) !important; /* Сплошной лайм */
-  color: var(--accent-text) !important;       /* Тёмный текст */
-  box-shadow: none !important;
+  background: var(--accent-color);
+  color: var(--accent-text);
+  box-shadow: none;
   font-weight: 700;
 }
 .recipe-source-tab:focus-visible {
