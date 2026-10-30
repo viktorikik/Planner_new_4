@@ -4,9 +4,9 @@
  * Зависит от: Constants, Utils, RecipeStore, DishStore, Renderer,
  *             notifications, focusTrap, ExportImport.
  *
- * v5.36:
- *   • Убрано приведение id к Number() при сохранении формы.
- *     ID рецептов — строки, Number("recipe_...") давал NaN.
+ * v5.43:
+ *   • В список «Мои рецепты» добавлено свайп-удаление (свайп влево → «Удалить»).
+ *   • Для базовых рецептов свайпа нет — они скрываются через «Показать скрытые».
  */
 import { CATEGORIES, CATEGORY_LABELS, RECIPE_SOURCES, CONSTANTS, UNIT_LABELS } from '../utils/Constants.js';
 import { Utils } from '../utils/Utils.js';
@@ -27,6 +27,9 @@ const CATEGORY_ORDER = [
   CATEGORIES.DESSERT,
   CATEGORIES.OTHER
 ];
+
+const SWIPE_REVEAL_WIDTH = 92;
+const SWIPE_THRESHOLD = 40;
 
 let recipesSearchQuery = '';
 let recipesCategoryFilter = 'all';
@@ -113,6 +116,111 @@ export function resetOpenedFromChoice() {
   openedFromChoice = false;
   updateBackBtnVisibility();
 }
+
+// ============================================================
+// v5.43: Свайп-удаление своих рецептов
+// ============================================================
+
+function createSwipeItem(recipe, nameSpan) {
+  const li = document.createElement('li');
+  li.className = 'recipe-list-item recipe-list-item-swipe';
+  if (recipe.hidden) li.classList.add('recipe-list-item-hidden');
+
+  const deleteBtn = document.createElement('button');
+  deleteBtn.type = 'button';
+  deleteBtn.className = 'recipe-swipe-delete';
+  deleteBtn.textContent = 'Удалить';
+  deleteBtn.setAttribute('aria-label', `Удалить рецепт ${recipe.name}`);
+  deleteBtn.addEventListener('click', function() {
+    handleDeleteOrHide(recipe);
+  });
+
+  const content = document.createElement('div');
+  content.className = 'recipe-swipe-content';
+  content.appendChild(nameSpan);
+
+  const wrap = document.createElement('div');
+  wrap.className = 'recipe-swipe-wrap';
+  wrap.appendChild(deleteBtn);
+  wrap.appendChild(content);
+
+  li.appendChild(wrap);
+  attachSwipeHandlers(wrap, content);
+  return li;
+}
+
+function attachSwipeHandlers(wrap, content) {
+  let startX = 0;
+  let startY = 0;
+  let currentX = 0;
+  let isDragging = false;
+  let initialShift = 0;
+
+  content.addEventListener('touchstart', function(e) {
+    const t = e.touches[0];
+    startX = t.clientX;
+    startY = t.clientY;
+    currentX = 0;
+    isDragging = false;
+    initialShift = wrap.classList.contains('is-shifted') ? -SWIPE_REVEAL_WIDTH : 0;
+    content.classList.remove('swiping');
+  }, { passive: true });
+
+  content.addEventListener('touchmove', function(e) {
+    const t = e.touches[0];
+    const dx = t.clientX - startX;
+    const dy = t.clientY - startY;
+
+    if (!isDragging) {
+      if (Math.abs(dx) < 8) return;
+      if (Math.abs(dy) > Math.abs(dx)) return;
+      isDragging = true;
+      content.classList.add('swiping');
+    }
+
+    let nextX = initialShift + dx;
+    if (nextX > 0) nextX = 0;
+    if (nextX < -SWIPE_REVEAL_WIDTH) nextX = -SWIPE_REVEAL_WIDTH;
+    currentX = nextX;
+    content.style.transform = `translateX(${currentX}px)`;
+  }, { passive: true });
+
+  content.addEventListener('touchend', function() {
+    if (!isDragging) return;
+    content.classList.remove('swiping');
+    isDragging = false;
+
+    if (currentX <= -SWIPE_THRESHOLD) {
+      wrap.classList.add('is-shifted');
+      content.style.transform = `translateX(-${SWIPE_REVEAL_WIDTH}px)`;
+    } else {
+      wrap.classList.remove('is-shifted');
+      content.style.transform = '';
+    }
+  }, { passive: true });
+
+  content.addEventListener('touchcancel', function() {
+    content.classList.remove('swiping');
+    isDragging = false;
+    if (wrap.classList.contains('is-shifted')) {
+      content.style.transform = `translateX(-${SWIPE_REVEAL_WIDTH}px)`;
+    } else {
+      content.style.transform = '';
+    }
+  }, { passive: true });
+
+  // Если свайп открыт — клик по контенту закрывает его, а не открывает карточку
+  content.addEventListener('click', function(e) {
+    if (wrap.classList.contains('is-shifted')) {
+      e.preventDefault();
+      e.stopPropagation();
+      wrap.classList.remove('is-shifted');
+      content.style.transform = '';
+    }
+  }, true);
+}
+
+// ============================================================
 
 export function renderRecipesList() {
   const list = document.getElementById(CONSTANTS.SELECTORS.recipesList);
@@ -239,10 +347,6 @@ export function renderRecipesList() {
     ul.className = 'recipe-list';
 
     items.forEach(recipe => {
-      const li = document.createElement('li');
-      li.className = 'recipe-list-item';
-      if (recipe.hidden) li.classList.add('recipe-list-item-hidden');
-
       const nameSpan = document.createElement('span');
       nameSpan.textContent = recipe.name;
       nameSpan.className = 'recipe-name-clickable';
@@ -258,17 +362,24 @@ export function renderRecipesList() {
           Renderer.showRecipeCard(recipe);
         }
       });
-      li.appendChild(nameSpan);
 
       if (recipe.builtIn) {
+        const li = document.createElement('li');
+        li.className = 'recipe-list-item';
+        if (recipe.hidden) li.classList.add('recipe-list-item-hidden');
+        li.appendChild(nameSpan);
+
         const badge = document.createElement('span');
         badge.className = 'recipe-list-badge';
         badge.textContent = 'база';
         badge.title = 'Рецепт из базы';
         li.appendChild(badge);
-      }
 
-      ul.appendChild(li);
+        ul.appendChild(li);
+      } else {
+        // v5.43: свои рецепты — со свайпом на удаление
+        ul.appendChild(createSwipeItem(recipe, nameSpan));
+      }
     });
 
     section.appendChild(ul);
