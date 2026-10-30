@@ -1,3 +1,13 @@
+/**
+ * ExportImport — экспорт/импорт данных приложения.
+ * Зависит от: Constants, Utils, DishStore, RecipeStore, notifications.
+ *
+ * v5.44.1 (фикс валидации импорта):
+ *   • validateDish больше не требует recipeId строго числом.
+ *     С v5.36 ID рецептов — строки. Экспорт писал строки,
+ *     импорт падал с ошибкой «recipeId должно быть числом».
+ *     Теперь принимается string | number | null.
+ */
 import {
   STATUSES, CATEGORIES, CATEGORY_LABELS, CONSTANTS,
   MEAL_TYPES, ALLERGENS, CUISINES, UNITS
@@ -183,7 +193,12 @@ function validateDish(dish, index) {
   if (!validCategories.includes(dish.category)) return `Блюдо №${index + 1}: недопустимая категория`;
   if (dish.liked !== undefined && typeof dish.liked !== 'boolean') return `Блюдо №${index + 1}: поле liked должно быть boolean`;
   if (dish.note !== undefined && typeof dish.note !== 'string') return `Блюдо №${index + 1}: поле note должно быть строкой`;
-  if (dish.recipeId !== undefined && dish.recipeId !== null && typeof dish.recipeId !== 'number') return `Блюдо №${index + 1}: recipeId должно быть числом или null`;
+  // v5.44.1: recipeId — строка (основной формат), но принимаем и число
+  // для обратной совместимости со старыми бэкапами.
+  if (dish.recipeId !== undefined && dish.recipeId !== null &&
+      typeof dish.recipeId !== 'string' && typeof dish.recipeId !== 'number') {
+    return `Блюдо №${index + 1}: recipeId должно быть строкой, числом или null`;
+  }
   return null;
 }
 
