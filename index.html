@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <!--
   Меню и рецепты · index.html
-  v5.34 (Блок 6 · База): 
-  - Добавлена категория «Гарниры» (side_dish) во все фильтры и селекты.
-  - Обновлена версия CSS до 5.5.4.
-  - Шапка календаря перестроена в одну строку.
+  v5.41 (Автосборщик меню):
+  - Добавлена кнопка «Собрать» в шапку календаря.
+  - Добавлена модалка настроек автосборщика (дни, приемы пищи, режим холодильника).
 -->
 <html lang="ru" data-theme="classic-light">
 <head>
@@ -21,7 +20,7 @@
   <meta name="apple-mobile-web-app-title" content="Меню и рецепты">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
-  <link rel="stylesheet" href="styles.css?v=5.5.6">
+  <link rel="stylesheet" href="styles.css?v=5.5.7">
 
   <script>
     (function() {
@@ -86,6 +85,7 @@
         </div>
 
         <button class="today-btn" id="todayBtn">Сегодня</button>
+        <button class="generate-menu-btn" id="generateMenuBtn">✨ Собрать</button>
       </div>
 
       <div class="weekdays" role="row">
@@ -751,6 +751,58 @@
     </div>
     <p class="modal-desc">Выберите оформление приложения. Тема сохраняется и применяется сразу.</p>
     <div class="theme-grid" id="themeGrid"></div>
+  </div>
+</div>
+
+<!-- НОВАЯ МОДАЛКА: АВТОСБОРЩИК МЕНЮ -->
+<div class="modal-overlay add-modal" id="generateMenuOverlay" role="dialog" aria-modal="true" aria-labelledby="generateMenuTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="generateMenuTitle">✨ Автосборщик меню</h3>
+      <button class="modal-close" id="generateMenuClose" aria-label="Закрыть">✕</button>
+    </div>
+    
+    <p class="modal-desc">Мы подберем блюда так, чтобы они не повторялись по составу и способу приготовления.</p>
+
+    <div class="form-group">
+      <label for="generateDaysCount">На сколько дней собрать?</label>
+      <select id="generateDaysCount">
+        <option value="3">3 дня</option>
+        <option value="5">5 дней</option>
+        <option value="7" selected>7 дней (неделя)</option>
+        <option value="14">14 дней</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Какие приемы пищи включить?</label>
+      <div class="meal-types-group">
+        <label class="meal-type-checkbox"><input type="checkbox" data-gen-meal="breakfast"><span>Завтрак</span></label>
+        <label class="meal-type-checkbox"><input type="checkbox" data-gen-meal="lunch" checked><span>Обед</span></label>
+        <label class="meal-type-checkbox"><input type="checkbox" data-gen-meal="dinner" checked><span>Ужин</span></label>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="generateMaxTime">Макс. время готовки в будни (мин)</label>
+      <input type="number" id="generateMaxTime" value="40" min="10" max="180" step="5">
+    </div>
+
+    <div class="form-group" style="background: var(--badge-bg); padding: 12px; border-radius: var(--radius-md);">
+      <label class="meal-type-checkbox" style="border: none; background: transparent; padding: 0; margin-bottom: 8px;">
+        <input type="checkbox" id="generateFridgeMode">
+        <span>🧊 Режим «Холодильник»</span>
+      </label>
+      <div id="fridgeIngredientsWrap" hidden>
+        <input type="text" id="generateFridgeInput" placeholder="Что есть? (курица, рис, сливки...)" style="margin-bottom: 4px;">
+        <small style="color: var(--text-muted); font-size: 11px;">Введите продукты через запятую. Блюда с ними получат приоритет.</small>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn-secondary" id="generateMenuCancel">Отмена</button>
+      <button class="btn-primary" id="generateMenuSave">Собрать</button>
+    </div>
   </div>
 </div>
 
