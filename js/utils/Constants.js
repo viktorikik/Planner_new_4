@@ -1,3 +1,10 @@
+/**
+ * Constants.js — центральные константы приложения.
+ *
+ * v6.2.7: удалён мёртвый код тем (THEMES, DEFAULT_THEME, THEME_LEGACY_MAP).
+ *   С v6.0.0 темы light/dark описаны локально в main.js.
+ */
+
 // Статусы
 export const STATUSES = {
   DONE: 'done',
@@ -212,21 +219,6 @@ export const PRODUCT_WORDS = [
   'дрожжи', 'разрыхлитель', 'сода', 'уксус', 'лимонная кислота',
   'желатин', 'пудра', 'цукаты', 'карамель', 'сгущёнка', 'ванильный сахар'
 ];
-
-// Темы
-export const THEMES = {
-  CLASSIC_LIGHT: 'classic-light',
-  CLASSIC_DARK:  'classic-dark',
-  BRAND_LIGHT:   'brand-light',
-  BRAND_DARK:    'brand-dark'
-};
-
-export const DEFAULT_THEME = THEMES.CLASSIC_LIGHT;
-
-export const THEME_LEGACY_MAP = {
-  'light': THEMES.CLASSIC_LIGHT,
-  'dark':  THEMES.CLASSIC_DARK
-};
 
 export const CONSTANTS = {
   STORAGE_KEYS: {
