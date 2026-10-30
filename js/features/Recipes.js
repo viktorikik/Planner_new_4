@@ -4,11 +4,9 @@
  * Зависит от: Constants, Utils, RecipeStore, DishStore, Renderer,
  *             notifications, focusTrap, ExportImport.
  *
- * v5.44.2:
- *   • saveRecipeForm: если пользователь оставил категорию «Другое»
- *     (значение по умолчанию в форме), пробуем Utils.guessCategory(name).
- *     Раньше любой рецепт без явно выбранной категории сохранялся
- *     как «Другое», и guessCategory не вызывалась никогда.
+ * v5.46:
+ *   • handleDeleteOrHide: для своих рецептов убран confirm().
+ *     Удаление мгновенное, с возможностью вернуть через undo-плашку.
  */
 import { CATEGORIES, CATEGORY_LABELS, RECIPE_SOURCES, CONSTANTS, UNIT_LABELS } from '../utils/Constants.js';
 import { Utils } from '../utils/Utils.js';
@@ -211,7 +209,6 @@ function attachSwipeHandlers(wrap, content) {
     }
   }, { passive: true });
 
-  // Если свайп открыт — клик по контенту закрывает его, а не открывает карточку
   content.addEventListener('click', function(e) {
     if (wrap.classList.contains('is-shifted')) {
       e.preventDefault();
@@ -379,7 +376,6 @@ export function renderRecipesList() {
 
         ul.appendChild(li);
       } else {
-        // v5.43: свои рецепты — со свайпом на удаление
         ul.appendChild(createSwipeItem(recipe, nameSpan));
       }
     });
@@ -404,14 +400,24 @@ export function handleDeleteOrHide(recipe) {
     return;
   }
 
-  const answer = confirm(
-    `Удалить рецепт "${recipe.name}"?\n\n` +
-    `Блюда, которые на него ссылаются, потеряют связь с рецептом.`
-  );
-  if (!answer) return;
+  // v5.46: для своих рецептов — мгновенное удаление с undo-плашкой.
+  // Создаём глубокую копию (снимок) для восстановления.
+  const snapshot = JSON.parse(JSON.stringify(recipe));
+  
   DishStore.clearRecipeRefs(recipe.id);
   RecipeStore.remove(recipe.id);
   renderRecipesList();
+
+  if (Renderer.showUndoSnackbar) {
+    Renderer.showUndoSnackbar({
+      text: `«${recipe.name}» удалён`,
+      onAction: () => {
+        RecipeStore.restore(snapshot);
+        renderRecipesList();
+        showMessage('↩️ Рецепт восстановлен');
+      }
+    });
+  }
 }
 
 function updateIngredientDatalist() {
@@ -661,9 +667,6 @@ function saveRecipeForm() {
   const ingredients = collectIngredientRows();
   if (ingredients.length === 0) { showMessage('Добавьте хотя бы один ингредиент', 'error'); return; }
 
-  // v5.44.2: «Другое» — это значение по умолчанию в форме, а не осознанный
-  // выбор. Пробуем определить категорию по названию. Если guessCategory
-  // вернёт OTHER — оставляем OTHER.
   let category = document.getElementById(CONSTANTS.SELECTORS.recipeCategory).value;
   if (!category || category === CATEGORIES.OTHER) {
     const guessed = Utils.guessCategory(name);
@@ -723,7 +726,6 @@ function saveRecipeForm() {
   };
 
   if (id) {
-    // v5.36: БЕЗ Number(id) — id может быть строкой
     RecipeStore.update(id, name, ingredients, instructions, category, extra);
   } else {
     RecipeStore.add(name, ingredients, instructions, category, extra);
