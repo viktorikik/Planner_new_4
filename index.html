@@ -1,33 +1,50 @@
 <!DOCTYPE html>
 <!--
   Меню и рецепты · index.html
+  v6.0.0:
+  - Новая дизайн-система: две темы (light/dark), шрифт Manrope,
+    палитра молочный + графит + лайм.
+  - Убрана внешняя рамка у .app (фон теперь на body).
+  - Inline-скрипт мигрирует старые значения тем (classic-light,
+    classic-dark, brand-light, brand-dark) в light/dark.
+
   v5.47:
   - Кнопка «Собрать меню на неделю» перенесена из HTML в Renderer.renderToday
     (на первом экране теперь три кнопки в порядке: Собрать → Что приготовить → Добавить).
   - Экспорт/Импорт на «Меню» приведён к виду «Рецептов» (.bottom-actions + .btn-secondary).
 -->
-<html lang="ru" data-theme="classic-light">
+<html lang="ru" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
   <title>Меню и рецепты · Календарь</title>
 
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#ff6b35" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#1e1e2e" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#F6F4ED" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#201F1C" media="(prefers-color-scheme: dark)">
 
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Меню и рецепты">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
-  <link rel="stylesheet" href="styles.css?v=5.6.2">
+  <link rel="stylesheet" href="styles.css?v=6.0.0">
 
   <script>
     (function() {
       try {
         var theme = localStorage.getItem('mealPlannerTheme');
-        if (theme) {
+        var LEGACY = {
+          'classic-light': 'light',
+          'brand-light': 'light',
+          'classic-dark': 'dark',
+          'brand-dark': 'dark'
+        };
+        if (theme && LEGACY[theme]) {
+          theme = LEGACY[theme];
+          localStorage.setItem('mealPlannerTheme', theme);
+        }
+        if (theme === 'light' || theme === 'dark') {
           document.documentElement.setAttribute('data-theme', theme);
         }
       } catch (e) {}
