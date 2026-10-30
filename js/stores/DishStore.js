@@ -1,9 +1,12 @@
 /**
  * DishStore — хранилище запланированных блюд.
  * 
- * v6.3.0:
- *   • Добавлена поддержка mealRole (роль блюда в композиции).
- *   • Пакетное сохранение для addMultipleDishes.
+ * v6.3.3:
+ *   • save() теперь возвращает boolean (успех/неуспех).
+ *   • Новый метод replaceRangeAtomically: атомарная замена блюд в диапазоне
+ *     с сохранением заметок и защитой DONE-записей.
+ *   • addMultipleDishes сделан атомарным (сначала валидация, потом save).
+ *   • mealRole добавлен как обязательное поле в нормализации.
  */
 import { STATUSES, CATEGORIES, CONSTANTS } from '../utils/Constants.js';
 import { Utils } from '../utils/Utils.js';
@@ -55,7 +58,7 @@ export const DishStore = (function() {
     if (dish.disliked === undefined) dish.disliked = false;
     if (!dish.id) dish.id = generateId();
     if (dish.recipeId === undefined) dish.recipeId = null;
-    if (dish.mealRole === undefined) dish.mealRole = null; // новое поле
+    if (dish.mealRole === undefined) dish.mealRole = null;
 
     if (dish.mealTypes === undefined) {
       if (dish.mealType) {
@@ -88,15 +91,21 @@ export const DishStore = (function() {
     return false;
   }
 
+  /**
+   * v6.3.3: save() возвращает boolean — успех/неуспех записи.
+   * Событие EventBus эмитится только при успешной записи.
+   */
   function save() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(dishes));
       cacheAllWithDone = null;
+      EventBus.emit(CONSTANTS.EVENTS.DISHES_CHANGED);
+      return true;
     } catch (e) {
       console.error('Ошибка сохранения данных:', e);
       showStorageError('блюда');
+      return false;
     }
-    EventBus.emit(CONSTANTS.EVENTS.DISHES_CHANGED);
   }
 
   function init() {
@@ -140,38 +149,126 @@ export const DishStore = (function() {
     const id = generateId();
     const normalized = normalizeMealTypes(mealTypes);
     const finalLiked = disliked ? false : !!liked;
+    const backup = dishes.slice();
     dishes.push({
       id, name, status, date, category,
       liked: finalLiked,
       disliked: !!disliked,
       note, recipeId, mealRole, mealTypes: normalized
     });
-    save();
-    return true;
+    const ok = save();
+    if (!ok) dishes = backup;
+    return ok;
   }
 
+  /**
+   * v6.3.3: атомарное добавление. Сначала валидация всего массива,
+   * затем push, затем save. При ошибке save — откат.
+   */
   function addMultipleDishes(dishesArray) {
     if (!Array.isArray(dishesArray) || dishesArray.length === 0) return false;
     
-    dishesArray.forEach(d => {
-      if (!d.name || !d.date) return;
-      const id = generateId();
+    const valid = dishesArray.filter(d => d && d.name && d.date);
+    if (valid.length === 0) return false;
+
+    const backup = dishes.slice();
+    valid.forEach(d => {
       dishes.push({
-        id,
+        id: generateId(),
         name: d.name,
         status: STATUSES.PLANNED,
         date: d.date,
         category: d.category || Utils.guessCategory(d.name),
         liked: false,
         disliked: false,
-        note: '',
+        note: d.note || '',
         recipeId: d.recipeId || null,
         mealRole: d.mealRole || null,
         mealTypes: Array.isArray(d.mealTypes) ? d.mealTypes : []
       });
     });
-    
-    save();
+
+    const ok = save();
+    if (!ok) dishes = backup;
+    return ok;
+  }
+
+  /**
+   * v6.3.3: атомарная замена диапазона дат.
+   * 
+   * @param {Object} options
+   * @param {string} options.startDate — YYYY-MM-DD
+   * @param {string} options.endDate   — YYYY-MM-DD
+   * @param {Array}  options.newDishes — массив новых блюд
+   * @param {boolean} [options.preserveDone=true]  — не удалять DONE-записи в диапазоне
+   * @param {boolean} [options.preserveNotes=true] — переносить заметки по совпадению name
+   * @returns {boolean} true, если сохранение прошло успешно
+   * 
+   * Поведение:
+   *   1. Сохраняем копию dishes для отката.
+   *   2. Собираем заметки старых блюд в диапазоне (по name).
+   *   3. Удаляем старые блюда в диапазоне (кроме DONE, если preserveDone).
+   *   4. Добавляем новые с перенесёнными заметками.
+   *   5. Пытаемся сохранить. Если не вышло — откатываем всё.
+   */
+  function replaceRangeAtomically(options) {
+    const {
+      startDate,
+      endDate,
+      newDishes,
+      preserveDone = true,
+      preserveNotes = true
+    } = options || {};
+
+    if (!startDate || !endDate || !Array.isArray(newDishes)) return false;
+
+    const backup = dishes.slice();
+
+    // 1. Собираем заметки старых блюд в диапазоне
+    const notesByName = new Map();
+    if (preserveNotes) {
+      dishes.forEach(d => {
+        if (d.date >= startDate && d.date <= endDate && d.note) {
+          notesByName.set(d.name, d.note);
+        }
+      });
+    }
+
+    // 2. Удаляем старые в диапазоне (кроме DONE, если preserveDone)
+    dishes = dishes.filter(d => {
+      const inRange = d.date >= startDate && d.date <= endDate;
+      if (!inRange) return true;
+      if (preserveDone && d.status === STATUSES.DONE) return true;
+      return false;
+    });
+
+    // 3. Добавляем новые с перенесёнными заметками
+    newDishes.forEach(d => {
+      if (!d || !d.name || !d.date) return;
+      const preservedNote = preserveNotes && notesByName.has(d.name)
+        ? notesByName.get(d.name)
+        : '';
+      dishes.push({
+        id: generateId(),
+        name: d.name,
+        status: STATUSES.PLANNED,
+        date: d.date,
+        category: d.category || Utils.guessCategory(d.name),
+        liked: false,
+        disliked: false,
+        note: preservedNote,
+        recipeId: d.recipeId || null,
+        mealRole: d.mealRole || null,
+        mealTypes: Array.isArray(d.mealTypes) ? d.mealTypes : []
+      });
+    });
+
+    // 4. Сохраняем. При неудаче — откат.
+    const ok = save();
+    if (!ok) {
+      dishes = backup;
+      return false;
+    }
     return true;
   }
 
@@ -179,6 +276,7 @@ export const DishStore = (function() {
     if (!snapshot || !snapshot.name || !snapshot.status || !snapshot.date || !snapshot.category) {
       return false;
     }
+    const backup = dishes.slice();
     const copy = {
       id: snapshot.id || generateId(),
       name: snapshot.name,
@@ -194,16 +292,19 @@ export const DishStore = (function() {
     };
     const normalized = normalizeDish(copy);
     dishes.push(normalized);
-    save();
-    return true;
+    const ok = save();
+    if (!ok) dishes = backup;
+    return ok;
   }
 
   function removeDish(id) {
     const index = dishes.findIndex(d => d.id === id);
     if (index === -1) return false;
+    const backup = dishes.slice();
     dishes.splice(index, 1);
-    save();
-    return true;
+    const ok = save();
+    if (!ok) dishes = backup;
+    return ok;
   }
 
   function toggleStatus(id) {
@@ -302,33 +403,43 @@ export const DishStore = (function() {
   function getFavorites() { return dishes.filter(d => d.liked); }
   
   function replaceAll(newDishes) {
+    const backup = dishes.slice();
     dishes = newDishes.map(normalizeDish);
-    save();
+    const ok = save();
+    if (!ok) dishes = backup;
+    return ok;
   }
 
   function updateDishDate(id, newDate) {
     const dish = dishes.find(d => d.id === id);
     if (!dish) return false;
+    const oldDate = dish.date;
     dish.date = newDate;
-    save();
-    return true;
+    const ok = save();
+    if (!ok) dish.date = oldDate;
+    return ok;
   }
 
   function clearRecipeRefs(recipeId) {
     let changed = false;
+    const backup = dishes.map(d => ({ ...d }));
     dishes.forEach(d => {
       if (d.recipeId === recipeId) {
         d.recipeId = null;
         changed = true;
       }
     });
-    if (changed) save();
+    if (changed) {
+      const ok = save();
+      if (!ok) dishes = backup;
+    }
     return changed;
   }
 
   function updateDish(id, fields) {
     const dish = dishes.find(d => d.id === id);
     if (!dish) return false;
+    const backup = { ...dish };
     if (fields.name !== undefined) dish.name = String(fields.name).trim();
     if (fields.status !== undefined) dish.status = fields.status;
     if (fields.category !== undefined) dish.category = fields.category;
@@ -338,13 +449,15 @@ export const DishStore = (function() {
     if (fields.liked !== undefined) dish.liked = fields.liked;
     if (fields.disliked !== undefined) dish.disliked = fields.disliked;
     if (fields.mealTypes !== undefined) dish.mealTypes = normalizeMealTypes(fields.mealTypes);
-    save();
-    return true;
+    const ok = save();
+    if (!ok) Object.assign(dish, backup);
+    return ok;
   }
 
   return {
     init, getAll, getForDate, addDish, addMultipleDishes, removeDish,
     restoreDish,
+    replaceRangeAtomically,
     toggleStatus, toggleLike, toggleThumbUp, toggleThumbDown,
     isDishNameDisliked,
     getAllUniqueWithLastDone,
