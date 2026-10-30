@@ -1,52 +1,98 @@
 /* ============================================================
    Меню и рецепты · styles.css
-   v5.6.2 (Экран «Сегодня» + унификация Экспорт/Импорт):
-     • .today-nav-wrap и .today-nav-btn — стрелки листания дней.
-     • .today-action-add → .today-action-generate.
-     • .recipes-bottom-actions → .bottom-actions.
-     • .backup-row удалён.
-     • .btn-row .btn-export / .btn-import удалены.
+   v6.0.0 (дизайн-система Modern Lifestyle):
+     • Две темы: light и dark (вместо classic-*/brand-*).
+     • Шрифт Manrope (self-hosted, variable).
+     • Палитра: молочный + графит + лайм #D5E84A.
+     • Убрана внешняя рамка у .app — фон на body.
+     • Единый акцент в обеих темах — лайм.
    ============================================================ */
-:root,
-[data-theme="classic-light"] {
-  --bg-primary: #faf7f2;
-  --bg-app: #ffffff;
-  --bg-app-border: rgba(74, 65, 57, 0.08);
-  --text-primary: #2a2420;
-  --text-secondary: #4a4139;
-  --text-muted: #877b6e;
-  --cell-bg: #ffffff;
-  --cell-border: rgba(74, 65, 57, 0.12);
-  --tag-bg: #ffffff;
-  --shadow: 0 20px 40px -12px rgba(74, 50, 40, 0.15);
-  --btn-bg: #2a2420;
-  --btn-text: #ffffff;
-  --input-bg: #ffffff;
-  --badge-bg: rgba(74, 65, 57, 0.05);
-  --empty-border: rgba(74, 65, 57, 0.08);
-  --planned-color: #b87830;
-  --done-color: #5a8a63;
-  --liked-color: #c44a3d;
-  --planned-bg: rgba(184, 120, 48, 0.12);
-  --done-bg: rgba(90, 138, 99, 0.12);
-  --modal-overlay: rgba(42, 36, 32, 0.4);
-  --modal-bg: #ffffff;
-  --day-hover: rgba(74, 65, 57, 0.04);
-  --modal-text: #2a2420;
-  --chip-bg: #f2ebe1;
-  --week-row-bg: rgba(255, 255, 255, 0.8);
-  --menu-item-bg: #f7f2ea;
-  --suggest-item-bg: rgba(74, 65, 57, 0.04);
-  --rec-item-bg: rgba(74, 65, 57, 0.04);
-  --color-soup: #b87830;
-  --color-salad: #5a8a63;
-  --color-main: #c44a3d;
-  --color-appetizer: #4a7a8a;
-  --color-bakery: #a86a2c;
-  --color-dessert: #a0427d;
-  --search-bg: #ffffff;
-  --search-border: #d9cfc2;
 
+/* ============================================================
+   РАЗДЕЛ 1 · Переменные — темы оформления
+   ============================================================ */
+
+@font-face {
+  font-family: 'Manrope';
+  src: url('fonts/Manrope-Variable.ttf') format('truetype-variations');
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root,
+[data-theme="light"] {
+  /* Поверхности */
+  --bg-primary: #F6F4ED;
+  --bg-app: #FFFFFF;
+  --bg-app-border: #E8E6DC;
+
+  /* Текст */
+  --text-primary: #292B25;
+  --text-secondary: #4A4C44;
+  --text-muted: #77786E;
+
+  /* Акцент — единый лайм в обеих темах */
+  --accent-color: #D5E84A;
+  --accent-hover: #C4D63F;
+  --accent-light: rgba(213, 232, 74, 0.25);
+  --accent-text: #25251F;
+  --accent-shadow: rgba(213, 232, 74, 0.4);
+
+  /* Ячейки и поля */
+  --cell-bg: #FFFFFF;
+  --cell-border: #E8E6DC;
+  --input-bg: #FFFFFF;
+  --search-bg: #FFFFFF;
+  --search-border: #E8E6DC;
+  --chip-bg: #EFEDE4;
+  --menu-item-bg: #F6F4ED;
+  --week-row-bg: rgba(255, 255, 255, 0.85);
+  --card-bg: #FFFFFF;
+  --card-hover-bg: #F6F4ED;
+  --suggest-item-bg: #F6F4ED;
+  --rec-item-bg: #F6F4ED;
+  --tag-bg: #FFFFFF;
+  --badge-bg: rgba(41, 43, 37, 0.06);
+  --empty-border: #E8E6DC;
+  --day-hover: rgba(41, 43, 37, 0.04);
+
+  /* Нейтральные кнопки */
+  --btn-bg: #292B25;
+  --btn-text: #F6F4ED;
+
+  /* Модалки */
+  --modal-overlay: rgba(32, 31, 28, 0.5);
+  --modal-bg: #FFFFFF;
+  --modal-text: #292B25;
+
+  /* Статусы */
+  --planned-color: #D8A65A;
+  --done-color: #789879;
+  --liked-color: #D4776D;
+  --planned-bg: rgba(216, 166, 90, 0.14);
+  --done-bg: rgba(120, 152, 121, 0.15);
+
+  /* Семантические */
+  --color-success: #789879;
+  --color-warning: #D8A65A;
+  --color-error: #D4776D;
+  --color-info: #78A8C2;
+
+  /* Категории */
+  --color-soup: #B8873D;
+  --color-salad: #789879;
+  --color-main: #C47066;
+  --color-appetizer: #6A98A8;
+  --color-bakery: #B8924A;
+  --color-dessert: #B07090;
+
+  /* Тени */
+  --shadow: 0 12px 34px rgba(39, 39, 31, 0.07);
+  --shadow-sm: 0 2px 8px rgba(39, 39, 31, 0.05);
+  --shadow-md: 0 8px 24px -8px rgba(39, 39, 31, 0.12);
+
+  /* Отступы, радиусы, анимации (не меняются между темами) */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
   --spacing-md: 16px;
@@ -55,181 +101,85 @@
   --radius-sm: 12px;
   --radius-md: 24px;
   --radius-lg: 40px;
-  --shadow-sm: 0 2px 8px rgba(74, 50, 40, 0.05);
-  --shadow-md: 0 8px 24px -8px rgba(74, 50, 40, 0.12);
   --transition-fast: 0.15s;
   --transition-normal: 0.25s;
-
-  --card-bg: #ffffff;
-  --card-hover-bg: #f7f2ea;
   --input-padding: 8px 14px;
   --btn-padding: 8px 20px;
 
-  --accent-color: #c25a3a;
-  --accent-hover: #a94a2d;
-  --accent-light: rgba(194, 90, 58, 0.1);
-  --accent-text: #ffffff;
-  --accent-shadow: rgba(194, 90, 58, 0.28);
+  color-scheme: light;
 }
 
-[data-theme="classic-dark"] {
-  --bg-primary: #17130f;
-  --bg-app: rgba(30, 25, 20, 0.95);
-  --bg-app-border: rgba(255, 240, 220, 0.06);
-  --text-primary: #ebe5dc;
-  --text-secondary: #c4bab0;
-  --text-muted: #948880;
-  --cell-bg: rgba(45, 38, 32, 0.6);
-  --cell-border: rgba(255, 240, 220, 0.08);
-  --tag-bg: rgba(50, 42, 35, 0.7);
-  --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
-  --btn-bg: #4a3e34;
-  --btn-text: #ebe5dc;
-  --input-bg: rgba(50, 42, 35, 0.6);
-  --badge-bg: rgba(255, 240, 220, 0.05);
-  --empty-border: rgba(255, 240, 220, 0.03);
-  --planned-color: #d9a558;
-  --done-color: #7fb08a;
-  --liked-color: #e07a6d;
-  --planned-bg: rgba(217, 165, 88, 0.14);
-  --done-bg: rgba(127, 176, 138, 0.14);
-  --modal-overlay: rgba(0, 0, 0, 0.7);
-  --modal-bg: #221d18;
-  --day-hover: rgba(255, 240, 220, 0.05);
-  --modal-text: #ebe5dc;
-  --chip-bg: rgba(50, 42, 35, 0.7);
-  --week-row-bg: rgba(45, 38, 32, 0.5);
-  --menu-item-bg: rgba(45, 38, 32, 0.5);
-  --suggest-item-bg: rgba(65, 55, 45, 0.4);
-  --rec-item-bg: rgba(65, 55, 45, 0.4);
-  --color-soup: #e0b365;
-  --color-salad: #8dc19a;
-  --color-main: #e88578;
-  --color-appetizer: #6fa0b0;
-  --color-bakery: #d9a558;
-  --color-dessert: #d07aab;
-  --search-bg: rgba(50, 42, 35, 0.6);
-  --search-border: rgba(255, 240, 220, 0.1);
-  --card-bg: rgba(45, 38, 32, 0.7);
-  --card-hover-bg: rgba(255, 240, 220, 0.04);
-  --accent-color: #d8785a;
-  --accent-hover: #e58a6d;
-  --accent-light: rgba(216, 120, 90, 0.18);
-  --accent-text: #1a1310;
-  --accent-shadow: rgba(216, 120, 90, 0.35);
-}
+[data-theme="dark"] {
+  /* Поверхности */
+  --bg-primary: #201F1C;
+  --bg-app: #2B2925;
+  --bg-app-border: #403D36;
 
-[data-theme="brand-light"] {
-  --bg-primary: #F4EBDD;
-  --bg-app: #FFFAF1;
-  --bg-app-border: rgba(41, 39, 36, 0.10);
-  --cell-bg: #FFFAF1;
-  --cell-border: rgba(41, 39, 36, 0.15);
-  --tag-bg: #FFFAF1;
-  --input-bg: #FFFAF1;
-  --modal-bg: #FFFAF1;
-  --card-bg: #FFFAF1;
-  --search-bg: #FFFAF1;
-  --search-border: #DED1B8;
-  --chip-bg: #EDE1CB;
-  --menu-item-bg: #F8F0DF;
-  --week-row-bg: rgba(255, 250, 241, 0.85);
+  /* Текст */
+  --text-primary: #F1EEE5;
+  --text-secondary: #D4D0C4;
+  --text-muted: #AAA49A;
 
-  --text-primary: #292724;
-  --text-secondary: #4A4439;
-  --text-muted: #756F65;
-  --modal-text: #292724;
+  /* Акцент — тот же лайм, тёмный текст на нём */
+  --accent-color: #D5E84A;
+  --accent-hover: #C4D63F;
+  --accent-light: rgba(213, 232, 74, 0.15);
+  --accent-text: #25251F;
+  --accent-shadow: rgba(213, 232, 74, 0.3);
 
-  --shadow: 0 20px 40px -12px rgba(41, 39, 36, 0.18);
+  /* Ячейки и поля */
+  --cell-bg: #363430;
+  --cell-border: #403D36;
+  --input-bg: #363430;
+  --search-bg: #363430;
+  --search-border: #403D36;
+  --chip-bg: #363430;
+  --menu-item-bg: #26241F;
+  --week-row-bg: rgba(43, 41, 37, 0.6);
+  --card-bg: #2B2925;
+  --card-hover-bg: #363430;
+  --suggest-item-bg: #363430;
+  --rec-item-bg: #363430;
+  --tag-bg: #363430;
+  --badge-bg: rgba(241, 238, 229, 0.06);
+  --empty-border: #403D36;
+  --day-hover: rgba(241, 238, 229, 0.05);
 
-  --btn-bg: #292724;
-  --btn-text: #DCEB32;
+  /* Нейтральные кнопки */
+  --btn-bg: #F1EEE5;
+  --btn-text: #201F1C;
 
-  --badge-bg: rgba(41, 39, 36, 0.05);
-  --empty-border: rgba(41, 39, 36, 0.08);
-  --day-hover: rgba(41, 39, 36, 0.05);
-  --suggest-item-bg: rgba(41, 39, 36, 0.04);
-  --rec-item-bg: rgba(41, 39, 36, 0.04);
-
-  --modal-overlay: rgba(41, 39, 36, 0.5);
-
-  --planned-color: #A86A2C;
-  --done-color: #687B59;
-  --liked-color: #F27691;
-  --planned-bg: rgba(168, 106, 44, 0.12);
-  --done-bg: rgba(104, 123, 89, 0.15);
-
-  --color-soup: #A0404F;
-  --color-salad: #687B59;
-  --color-main: #C25A3A;
-  --color-appetizer: #4A6B7A;
-  --color-bakery: #8B6914;
-  --color-dessert: #B0426A;
-
-  --accent-color: #292724;
-  --accent-hover: #3A3632;
-  --accent-light: rgba(220, 235, 50, 0.22);
-  --accent-text: #DCEB32;
-  --accent-shadow: rgba(41, 39, 36, 0.18);
-}
-
-[data-theme="brand-dark"] {
-  --bg-primary: #1A1816;
-  --bg-app: rgba(41, 39, 36, 0.95);
-  --bg-app-border: rgba(244, 235, 221, 0.06);
-  --cell-bg: rgba(60, 56, 50, 0.55);
-  --cell-border: rgba(244, 235, 221, 0.08);
-  --tag-bg: rgba(60, 56, 50, 0.7);
-  --input-bg: rgba(60, 56, 50, 0.6);
-  --modal-bg: #221F1C;
-  --card-bg: rgba(60, 56, 50, 0.65);
-  --card-hover-bg: rgba(244, 235, 221, 0.06);
-  --search-bg: rgba(60, 56, 50, 0.6);
-  --search-border: rgba(244, 235, 221, 0.1);
-  --chip-bg: rgba(60, 56, 50, 0.7);
-  --menu-item-bg: rgba(60, 56, 50, 0.5);
-  --week-row-bg: rgba(60, 56, 50, 0.5);
-
-  --text-primary: #F4EBDD;
-  --text-secondary: #D9CFC2;
-  --text-muted: #948880;
-  --modal-text: #F4EBDD;
-
-  --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75);
-
-  --btn-bg: #DCEB32;
-  --btn-text: #292724;
-
-  --badge-bg: rgba(244, 235, 221, 0.05);
-  --empty-border: rgba(244, 235, 221, 0.03);
-  --day-hover: rgba(244, 235, 221, 0.05);
-  --suggest-item-bg: rgba(80, 75, 65, 0.4);
-  --rec-item-bg: rgba(80, 75, 65, 0.4);
-
+  /* Модалки */
   --modal-overlay: rgba(0, 0, 0, 0.75);
+  --modal-bg: #2B2925;
+  --modal-text: #F1EEE5;
 
-  --planned-color: #D9A558;
-  --done-color: #8DC19A;
-  --liked-color: #F89BAF;
-  --planned-bg: rgba(217, 165, 88, 0.14);
-  --done-bg: rgba(141, 193, 154, 0.14);
+  /* Статусы */
+  --planned-color: #D8A65A;
+  --done-color: #8FA88F;
+  --liked-color: #E08A80;
+  --planned-bg: rgba(216, 166, 90, 0.14);
+  --done-bg: rgba(143, 168, 143, 0.15);
 
-  --color-soup: #E88A9A;
-  --color-salad: #8DC19A;
-  --color-main: #E88578;
-  --color-appetizer: #8DB8C8;
-  --color-bakery: #D9A558;
-  --color-dessert: #E0A0C8;
+  /* Семантические */
+  --color-success: #8FA88F;
+  --color-warning: #D8A65A;
+  --color-error: #E08A80;
+  --color-info: #9ABBD0;
 
-  --accent-color: #DCEB32;
-  --accent-hover: #C7D42A;
-  --accent-light: rgba(220, 235, 50, 0.15);
-  --accent-text: #292724;
-  --accent-shadow: rgba(0, 0, 0, 0.4);
-}
+  /* Категории */
+  --color-soup: #D8A65A;
+  --color-salad: #8FA88F;
+  --color-main: #E08A80;
+  --color-appetizer: #9ABBD0;
+  --color-bakery: #D8A65A;
+  --color-dessert: #D0A0B8;
 
-[data-theme="classic-dark"],
-[data-theme="brand-dark"] {
+  /* Тени */
+  --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 24px -8px rgba(0, 0, 0, 0.5);
+
   color-scheme: dark;
 }
 
@@ -237,7 +187,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  font-family: 'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
 }
 
 summary {
@@ -248,6 +198,7 @@ summary {
 
 body {
   background: var(--bg-primary);
+  color: var(--text-primary);
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -285,14 +236,7 @@ textarea:focus-visible {
 .app {
   max-width: 960px;
   width: 100%;
-  background: var(--bg-app);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-radius: var(--radius-lg);
   padding: var(--spacing-xl) var(--spacing-xl);
-  box-shadow: var(--shadow);
-  border: 1px solid var(--bg-app-border);
-  transition: all var(--transition-normal);
   margin: 0 auto;
 }
 
@@ -1122,12 +1066,12 @@ button,
   outline-offset: 2px;
 }
 
-[data-theme="classic-dark"] .modal-dish .recipe-chip {
-  background: rgba(216, 120, 90, 0.18);
+[data-theme="dark"] .modal-dish .recipe-chip {
+  background: rgba(213, 232, 74, 0.15);
 }
-[data-theme="classic-dark"] .modal-dish .recipe-chip:hover {
+[data-theme="dark"] .modal-dish .recipe-chip:hover {
   background: var(--accent-color);
-  color: #1a1a1a;
+  color: var(--accent-text);
 }
 
 .modal-dish .status-toggle-btn {
@@ -2319,17 +2263,16 @@ button,
   transform: translateY(0);
 }
 
-[data-theme="classic-dark"] .recipes-toolbar > button {
+[data-theme="dark"] .recipes-toolbar > button {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
-[data-theme="classic-dark"] .recipes-toolbar > .btn-done {
+[data-theme="dark"] .recipes-toolbar > .btn-done {
   box-shadow: 0 4px 12px var(--accent-shadow);
 }
-[data-theme="classic-dark"] .recipes-toolbar > .btn-secondary:hover {
+[data-theme="dark"] .recipes-toolbar > .btn-secondary:hover {
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
 }
 
-/* v5.6.2: Общий блок для Экспорт/Импорт (Меню и Рецепты) */
 .bottom-actions {
   display: flex;
   gap: 8px;
@@ -2856,17 +2799,17 @@ button,
   transform: translateY(-2px);
 }
 
-[data-theme="classic-dark"] #shoppingListDisplay .shopping-group h4,
-[data-theme="classic-dark"] .saved-list-item .list-date,
-[data-theme="classic-dark"] #savedListsList .saved-list-item {
+[data-theme="dark"] #shoppingListDisplay .shopping-group h4,
+[data-theme="dark"] .saved-list-item .list-date,
+[data-theme="dark"] #savedListsList .saved-list-item {
   color: var(--text-primary);
 }
 
-[data-theme="classic-dark"] .shopping-tab h4 {
+[data-theme="dark"] .shopping-tab h4 {
   color: var(--text-primary);
 }
-[data-theme="classic-dark"] #shoppingListOverlay h4,
-[data-theme="classic-dark"] #savedListsContainer h4 {
+[data-theme="dark"] #shoppingListOverlay h4,
+[data-theme="dark"] #savedListsContainer h4 {
   color: var(--text-primary);
 }
 
@@ -3313,7 +3256,7 @@ button,
   transform: none;
 }
 
-[data-theme="classic-dark"] .onboarding-modal {
+[data-theme="dark"] .onboarding-modal {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
 }
 
@@ -3431,7 +3374,7 @@ button,
   text-align: center;
 }
 
-[data-theme="classic-dark"] .more-menu {
+[data-theme="dark"] .more-menu {
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
 }
 
@@ -3494,7 +3437,7 @@ button,
   white-space: nowrap;
 }
 
-[data-theme="classic-dark"] .bottom-nav {
+[data-theme="dark"] .bottom-nav {
   box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.4);
 }
 
@@ -3889,7 +3832,6 @@ button,
 
   .app {
     padding: var(--spacing-md) var(--spacing-sm);
-    border-radius: var(--radius-md);
   }
   .logo h1 {
     font-size: 22px;
@@ -4113,7 +4055,6 @@ button,
 @media (min-width: 700px) {
   .app {
     padding: var(--spacing-xl) var(--spacing-xl);
-    border-radius: var(--radius-lg);
   }
 
   .app-header {
@@ -4769,6 +4710,8 @@ button,
   border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
+
+
 .theme-option-chip {
   display: inline-flex;
   align-items: center;
@@ -4936,29 +4879,23 @@ body:has(.onboarding-overlay.active) {
   overflow: hidden;
 }
 
-[data-theme="classic-dark"] *,
-[data-theme="brand-dark"] * {
+[data-theme="dark"] * {
   -webkit-tap-highlight-color: transparent;
 }
 
-[data-theme="classic-dark"] input:not([type="checkbox"]):not([type="radio"]),
-[data-theme="classic-dark"] select,
-[data-theme="classic-dark"] textarea,
-[data-theme="brand-dark"] input:not([type="checkbox"]):not([type="radio"]),
-[data-theme="brand-dark"] select,
-[data-theme="brand-dark"] textarea {
+[data-theme="dark"] input:not([type="checkbox"]):not([type="radio"]),
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
   background-color: var(--input-bg);
   color: var(--text-primary);
 }
 
-[data-theme="classic-dark"] option,
-[data-theme="brand-dark"] option {
+[data-theme="dark"] option {
   background-color: var(--modal-bg);
   color: var(--text-primary);
 }
 
-[data-theme="classic-dark"] ::selection,
-[data-theme="brand-dark"] ::selection {
+[data-theme="dark"] ::selection {
   background: var(--accent-color);
   color: var(--accent-text);
 }
