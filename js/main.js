@@ -1,5 +1,9 @@
 /**
  * main.js — точка входа приложения.
+ *
+ * v5.43:
+ *   • DEFAULT_TAB = 'today' — приложение открывается на вкладке «Сегодня».
+ *   • На «Сегодня» добавлена кнопка «Собрать меню на неделю» (generateMenuBtnToday).
  */
 import { STATUSES, CONSTANTS, THEMES, DEFAULT_THEME, THEME_LEGACY_MAP } from './utils/Constants.js';
 import { Utils } from './utils/Utils.js';
@@ -33,7 +37,7 @@ import {
 } from './features/ShoppingList.js';
 import { Onboarding } from './features/Onboarding.js';
 import { printWeeklyMenu } from './features/Print.js';
-import { MenuGenerator } from './features/MenuGenerator.js'; // <--- ДОБАВЛЕНО
+import { MenuGenerator } from './features/MenuGenerator.js';
 
 // ============================================================
 // ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ
@@ -53,7 +57,8 @@ import { MenuGenerator } from './features/MenuGenerator.js'; // <--- ДОБАВ�
 
   // ---------- Hash routing ----------
   const TABS = ['today', 'menu', 'recipes', 'shopping'];
-  const DEFAULT_TAB = 'menu';
+  // v5.43: приложение открывается на «Сегодня»
+  const DEFAULT_TAB = 'today';
 
   function getTabFromHash() {
     const raw = (window.location.hash || '').replace('#', '');
@@ -391,7 +396,13 @@ import { MenuGenerator } from './features/MenuGenerator.js'; // <--- ДОБАВ�
     }
   }
 
+  // v5.43: обе кнопки открывают одну и ту же модалку
   document.getElementById('generateMenuBtn').addEventListener('click', openGenerateModal);
+  const generateMenuBtnToday = document.getElementById('generateMenuBtnToday');
+  if (generateMenuBtnToday) {
+    generateMenuBtnToday.addEventListener('click', openGenerateModal);
+  }
+
   document.getElementById('generateMenuClose').addEventListener('click', closeGenerateModal);
   document.getElementById('generateMenuCancel').addEventListener('click', closeGenerateModal);
   
@@ -574,7 +585,7 @@ import { MenuGenerator } from './features/MenuGenerator.js'; // <--- ДОБАВ�
     { overlay: document.getElementById(CONSTANTS.SELECTORS.welcomeOverlay), close: hideWelcome },
     { overlay: document.getElementById(CONSTANTS.SELECTORS.recipeFormOverlay), close: closeRecipeForm },
     { overlay: themeOverlay, close: closeThemeModal },
-    { overlay: generateMenuOverlay, close: closeGenerateModal } // <-- Добавили модалку в список
+    { overlay: generateMenuOverlay, close: closeGenerateModal }
   ];
 
   modals.forEach(({ overlay, close }) => {
