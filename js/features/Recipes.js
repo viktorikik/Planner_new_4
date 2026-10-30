@@ -9,11 +9,16 @@
  *     Удаление мгновенное, с возможностью вернуть через undo-плашку.
  *
  * v5.47:
- *   • Ленивый рендер списка рецептов. Для свёрнутых категорий
- *     создаётся только заголовок, <ul> с рецептами строится
- *     при первом раскрытии и кэшируется в замыкании.
- *     Цель — убрать задержки при переключении на вкладку «Рецепты»
- *     на телефоне, когда категорий много, а раскрыта одна.
+ *   • Ленивый рендер списка рецептов (buildRecipeListUl, ulCreated).
+ *
+ * v6.1.0:
+ *   • Drill-down категорий. Аккордеон заменён на два экрана:
+ *     – сетка карточек категорий (по умолчанию);
+ *     – список рецептов выбранной категории с кнопкой «← Все категории».
+ *     Состояние хранится в recipesCategoryFilter ('all' | id категории).
+ *   • Поиск показывает плоский список по всем категориям с бейджем категории.
+ *   • buildRecipeListUl(item, showCategoryBadge) — бейдж категории
+ *     опционально выводится в плоском списке.
  */
 import { CATEGORIES, CATEGORY_LABELS, RECIPE_SOURCES, CONSTANTS, UNIT_LABELS } from '../utils/Constants.js';
 import { Utils } from '../utils/Utils.js';
@@ -39,30 +44,11 @@ const SWIPE_REVEAL_WIDTH = 92;
 const SWIPE_THRESHOLD = 40;
 
 let recipesSearchQuery = '';
-let recipesCategoryFilter = 'all';
+let recipesCategoryFilter = 'all'; // 'all' → сетка категорий; иначе — id категории
 let recipesSourceFilter = loadSourceFilter();
 let showHiddenBase = loadShowHidden();
 
 let openedFromChoice = false;
-
-let collapsedCategories = loadCollapsedState();
-
-function loadCollapsedState() {
-  try {
-    const raw = localStorage.getItem(CONSTANTS.STORAGE_KEYS.RECIPES_COLLAPSED);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw);
-    return (parsed && typeof parsed === 'object') ? parsed : {};
-  } catch (e) {
-    return {};
-  }
-}
-
-function saveCollapsedState() {
-  try {
-    localStorage.setItem(CONSTANTS.STORAGE_KEYS.RECIPES_COLLAPSED, JSON.stringify(collapsedCategories));
-  } catch (e) {}
-}
 
 function loadSourceFilter() {
   try {
@@ -83,13 +69,16 @@ function saveShowHidden() {
   try { localStorage.setItem(CONSTANTS.STORAGE_KEYS.RECIPES_SHOW_HIDDEN, showHiddenBase ? '1' : '0'); } catch (e) {}
 }
 
-function updateRecipesTitle(scopedTotal, found, isFiltered) {
+function updateRecipesTitle(scopedTotal, found, catFilterActive, hasQuery) {
   const title = document.getElementById(CONSTANTS.SELECTORS.recipesTitle);
   if (!title) return;
-  if (isFiltered) {
-    title.textContent = `📖 Рецепты (${found} из ${scopedTotal})`;
+  const catLabel = catFilterActive
+    ? ` · ${CATEGORY_LABELS[recipesCategoryFilter] || recipesCategoryFilter}`
+    : '';
+  if (hasQuery) {
+    title.textContent = `📖 Рецепты${catLabel} (${found} из ${scopedTotal})`;
   } else {
-    title.textContent = `📖 Рецепты (${scopedTotal})`;
+    title.textContent = `📖 Рецепты${catLabel} (${scopedTotal})`;
   }
 }
 
@@ -125,36 +114,8 @@ export function resetOpenedFromChoice() {
 }
 
 // ============================================================
-// v5.43: Свайп-удаление своих рецептов
+// Свайп-удаление своих рецептов
 // ============================================================
-
-function createSwipeItem(recipe, nameSpan) {
-  const li = document.createElement('li');
-  li.className = 'recipe-list-item recipe-list-item-swipe';
-  if (recipe.hidden) li.classList.add('recipe-list-item-hidden');
-
-  const deleteBtn = document.createElement('button');
-  deleteBtn.type = 'button';
-  deleteBtn.className = 'recipe-swipe-delete';
-  deleteBtn.textContent = 'Удалить';
-  deleteBtn.setAttribute('aria-label', `Удалить рецепт ${recipe.name}`);
-  deleteBtn.addEventListener('click', function() {
-    handleDeleteOrHide(recipe);
-  });
-
-  const content = document.createElement('div');
-  content.className = 'recipe-swipe-content';
-  content.appendChild(nameSpan);
-
-  const wrap = document.createElement('div');
-  wrap.className = 'recipe-swipe-wrap';
-  wrap.appendChild(deleteBtn);
-  wrap.appendChild(content);
-
-  li.appendChild(wrap);
-  attachSwipeHandlers(wrap, content);
-  return li;
-}
 
 function attachSwipeHandlers(wrap, content) {
   let startX = 0;
@@ -227,52 +188,182 @@ function attachSwipeHandlers(wrap, content) {
 }
 
 // ============================================================
-// v5.47: построение <ul> с рецептами вынесено отдельно,
-// чтобы вызывать его лениво — только при раскрытии категории.
+// v6.1.0: построение одного <li> с рецептом.
+// showCategoryBadge → рядом с названием выводится бейдж категории
+// (используется в плоском списке поиска).
 // ============================================================
 
-function buildRecipeListUl(items) {
-  const ul = document.createElement('ul');
-  ul.className = 'recipe-list';
-
-  items.forEach(recipe => {
-    const nameSpan = document.createElement('span');
-    nameSpan.textContent = recipe.name;
-    nameSpan.className = 'recipe-name-clickable';
-    nameSpan.setAttribute('tabindex', '0');
-    nameSpan.setAttribute('role', 'button');
-    nameSpan.setAttribute('aria-label', `Открыть рецепт ${recipe.name}`);
-    nameSpan.addEventListener('click', () => {
+function buildRecipeListItem(recipe, showCategoryBadge) {
+  const nameSpan = document.createElement('span');
+  nameSpan.textContent = recipe.name;
+  nameSpan.className = 'recipe-name-clickable';
+  nameSpan.setAttribute('tabindex', '0');
+  nameSpan.setAttribute('role', 'button');
+  nameSpan.setAttribute('aria-label', `Открыть рецепт ${recipe.name}`);
+  nameSpan.addEventListener('click', () => Renderer.showRecipeCard(recipe));
+  nameSpan.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
       Renderer.showRecipeCard(recipe);
-    });
-    nameSpan.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        Renderer.showRecipeCard(recipe);
-      }
-    });
-
-    if (recipe.builtIn) {
-      const li = document.createElement('li');
-      li.className = 'recipe-list-item';
-      if (recipe.hidden) li.classList.add('recipe-list-item-hidden');
-      li.appendChild(nameSpan);
-
-      const badge = document.createElement('span');
-      badge.className = 'recipe-list-badge';
-      badge.textContent = 'база';
-      badge.title = 'Рецепт из базы';
-      li.appendChild(badge);
-
-      ul.appendChild(li);
-    } else {
-      ul.appendChild(createSwipeItem(recipe, nameSpan));
     }
   });
 
+  const badges = [];
+  if (showCategoryBadge) {
+    const cat = recipe.category || Utils.guessCategory(recipe.name);
+    const catBadge = document.createElement('span');
+    catBadge.className = 'recipe-list-badge';
+    catBadge.textContent = CATEGORY_LABELS[cat] || cat;
+    badges.push(catBadge);
+  }
+  if (recipe.builtIn) {
+    const baseBadge = document.createElement('span');
+    baseBadge.className = 'recipe-list-badge';
+    baseBadge.textContent = 'база';
+    baseBadge.title = 'Рецепт из базы';
+    badges.push(baseBadge);
+  }
+
+  if (recipe.builtIn) {
+    const li = document.createElement('li');
+    li.className = 'recipe-list-item';
+    if (recipe.hidden) li.classList.add('recipe-list-item-hidden');
+    li.appendChild(nameSpan);
+    if (badges.length) {
+      const badgesWrap = document.createElement('span');
+      badgesWrap.className = 'recipe-list-badges-group';
+      badges.forEach(b => badgesWrap.appendChild(b));
+      li.appendChild(badgesWrap);
+    }
+    return li;
+  }
+
+  // Свой рецепт — свайп-удаление
+  const deleteBtn = document.createElement('button');
+  deleteBtn.type = 'button';
+  deleteBtn.className = 'recipe-swipe-delete';
+  deleteBtn.textContent = 'Удалить';
+  deleteBtn.setAttribute('aria-label', `Удалить рецепт ${recipe.name}`);
+  deleteBtn.addEventListener('click', function() {
+    handleDeleteOrHide(recipe);
+  });
+
+  const content = document.createElement('div');
+  content.className = 'recipe-swipe-content';
+  content.appendChild(nameSpan);
+  if (badges.length) {
+    const badgesWrap = document.createElement('span');
+    badgesWrap.className = 'recipe-list-badges-group';
+    badges.forEach(b => badgesWrap.appendChild(b));
+    content.appendChild(badgesWrap);
+  }
+
+  const wrap = document.createElement('div');
+  wrap.className = 'recipe-swipe-wrap';
+  wrap.appendChild(deleteBtn);
+  wrap.appendChild(content);
+
+  const li = document.createElement('li');
+  li.className = 'recipe-list-item recipe-list-item-swipe';
+  if (recipe.hidden) li.classList.add('recipe-list-item-hidden');
+  li.appendChild(wrap);
+  attachSwipeHandlers(wrap, content);
+  return li;
+}
+
+function buildRecipeListUl(items, showCategoryBadge = false) {
+  const ul = document.createElement('ul');
+  ul.className = 'recipe-list';
+  items.forEach(recipe => {
+    ul.appendChild(buildRecipeListItem(recipe, showCategoryBadge));
+  });
   return ul;
 }
 
+// ============================================================
+// v6.1.0: экраны drill-down
+// ============================================================
+
+function renderCategoryGrid(list, scopedRecipes) {
+  const grouped = {};
+  scopedRecipes.forEach(recipe => {
+    const cat = recipe.category || Utils.guessCategory(recipe.name);
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(recipe);
+  });
+
+  const sortedCategories = Object.keys(grouped).sort((a, b) => {
+    const ia = CATEGORY_ORDER.indexOf(a);
+    const ib = CATEGORY_ORDER.indexOf(b);
+    return (ia === -1 ? CATEGORY_ORDER.length : ia) - (ib === -1 ? CATEGORY_ORDER.length : ib);
+  });
+
+  const grid = document.createElement('div');
+  grid.className = 'recipe-category-grid';
+
+  sortedCategories.forEach(cat => {
+    const items = grouped[cat];
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'recipe-category-card';
+    card.dataset.cat = cat;
+    card.setAttribute('aria-label',
+      `Открыть категорию ${CATEGORY_LABELS[cat] || cat}, рецептов: ${items.length}`);
+
+    const title = document.createElement('span');
+    title.className = 'recipe-category-card-title';
+    title.textContent = CATEGORY_LABELS[cat] || cat;
+    card.appendChild(title);
+
+    const count = document.createElement('span');
+    count.className = 'recipe-category-card-count';
+    count.textContent = String(items.length);
+    card.appendChild(count);
+
+    const chevron = document.createElement('span');
+    chevron.className = 'recipe-category-card-chevron';
+    chevron.textContent = '›';
+    chevron.setAttribute('aria-hidden', 'true');
+    card.appendChild(chevron);
+
+    card.addEventListener('click', () => {
+      recipesCategoryFilter = cat;
+      const dropdown = document.getElementById(CONSTANTS.SELECTORS.recipesCategoryFilter);
+      if (dropdown) dropdown.value = cat;
+      renderRecipesList();
+      window.scrollTo(0, 0);
+    });
+
+    grid.appendChild(card);
+  });
+
+  list.appendChild(grid);
+}
+
+function renderCategoryDetail(list, category, recipes) {
+  const backBtn = document.createElement('button');
+  backBtn.type = 'button';
+  backBtn.className = 'recipes-category-back';
+  backBtn.textContent = '← Все категории';
+  backBtn.setAttribute('aria-label', 'Вернуться ко всем категориям');
+  backBtn.addEventListener('click', () => {
+    recipesCategoryFilter = 'all';
+    const dropdown = document.getElementById(CONSTANTS.SELECTORS.recipesCategoryFilter);
+    if (dropdown) dropdown.value = 'all';
+    renderRecipesList();
+    window.scrollTo(0, 0);
+  });
+  list.appendChild(backBtn);
+
+  list.appendChild(buildRecipeListUl(recipes, false));
+}
+
+function renderFlatList(list, recipes) {
+  list.appendChild(buildRecipeListUl(recipes, true));
+}
+
+// ============================================================
+// Главный рендер
 // ============================================================
 
 export function renderRecipesList() {
@@ -283,6 +374,7 @@ export function renderRecipesList() {
 
   renderSourceTabs();
 
+  // 1. Фильтр источника
   let scoped = allRecipes;
   if (recipesSourceFilter === RECIPE_SOURCES.MY) {
     scoped = scoped.filter(r => !r.builtIn);
@@ -292,19 +384,25 @@ export function renderRecipesList() {
     scoped = scoped.filter(r => !r.hidden);
   }
 
-  const query = recipesSearchQuery.trim().toLowerCase();
-  const isFiltered = query !== '' || recipesCategoryFilter !== 'all';
+  // 2. Фильтр категории
+  const catFilterActive = recipesCategoryFilter !== 'all';
+  let scopedAfterCategory = scoped;
+  if (catFilterActive) {
+    scopedAfterCategory = scoped.filter(
+      r => (r.category || Utils.guessCategory(r.name)) === recipesCategoryFilter
+    );
+  }
 
-  let recipes = scoped;
+  // 3. Поиск
+  const query = recipesSearchQuery.trim().toLowerCase();
+  let recipes = scopedAfterCategory;
   if (query) {
     recipes = recipes.filter(r => r.name.toLowerCase().includes(query));
   }
-  if (recipesCategoryFilter !== 'all') {
-    recipes = recipes.filter(r => (r.category || Utils.guessCategory(r.name)) === recipesCategoryFilter);
-  }
 
-  updateRecipesTitle(scoped.length, recipes.length, isFiltered);
+  updateRecipesTitle(scopedAfterCategory.length, recipes.length, catFilterActive, query !== '');
 
+  // Пустые состояния
   if (scoped.length === 0) {
     const empty = document.createElement('div');
     empty.className = 'modal-empty';
@@ -319,104 +417,39 @@ export function renderRecipesList() {
     return;
   }
 
-  if (recipes.length === 0) {
+  if (catFilterActive && scopedAfterCategory.length === 0) {
     const empty = document.createElement('div');
     empty.className = 'modal-empty';
-    empty.textContent = '😌 Ничего не найдено. Измените поиск или фильтр.';
+    empty.textContent = `😌 В категории «${CATEGORY_LABELS[recipesCategoryFilter] || recipesCategoryFilter}» пока нет рецептов.`;
     list.appendChild(empty);
     return;
   }
 
-  const grouped = {};
-  recipes.forEach(recipe => {
-    const cat = recipe.category || Utils.guessCategory(recipe.name);
-    if (!grouped[cat]) grouped[cat] = [];
-    grouped[cat].push(recipe);
-  });
+  if (query && recipes.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'modal-empty';
+    empty.textContent = catFilterActive
+      ? `😌 В категории «${CATEGORY_LABELS[recipesCategoryFilter] || recipesCategoryFilter}» ничего не найдено.`
+      : '😌 Ничего не найдено. Измените поиск.';
+    list.appendChild(empty);
+    return;
+  }
 
-  const sortedCategories = Object.keys(grouped).sort((a, b) => {
-    const ia = CATEGORY_ORDER.indexOf(a);
-    const ib = CATEGORY_ORDER.indexOf(b);
-    return (ia === -1 ? CATEGORY_ORDER.length : ia) - (ib === -1 ? CATEGORY_ORDER.length : ib);
-  });
-
-  const forceExpand = isFiltered;
-
-  sortedCategories.forEach(cat => {
-    const items = grouped[cat];
-    const isCollapsed = !forceExpand && collapsedCategories[cat] === true;
-
-    const section = document.createElement('div');
-    section.className = 'recipe-category-section';
-    if (isCollapsed) section.classList.add('collapsed');
-
-    const header = document.createElement('button');
-    header.type = 'button';
-    header.className = 'recipe-category-header';
-    header.setAttribute('aria-expanded', String(!isCollapsed));
-    header.setAttribute('aria-label', `Категория ${CATEGORY_LABELS[cat] || cat}, рецептов: ${items.length}`);
-
-    const arrow = document.createElement('span');
-    arrow.className = 'recipe-category-arrow';
-    arrow.textContent = '▶';
-    arrow.setAttribute('aria-hidden', 'true');
-    header.appendChild(arrow);
-
-    const titleSpan = document.createElement('span');
-    titleSpan.className = 'recipe-category-title';
-    titleSpan.textContent = CATEGORY_LABELS[cat] || cat;
-    header.appendChild(titleSpan);
-
-    const countSpan = document.createElement('span');
-    countSpan.className = 'recipe-category-count';
-    countSpan.textContent = `(${items.length})`;
-    header.appendChild(countSpan);
-
-    // v5.47: <ul> создаётся сразу только для развёрнутых категорий.
-    // Для свёрнутых — лениво, в обработчике клика, с кэшированием
-    // в замыкании через флаг ulCreated.
-    let ul = null;
-    let ulCreated = false;
-
-    if (!isCollapsed || forceExpand) {
-      ul = buildRecipeListUl(items);
-      ulCreated = true;
-    }
-
-    header.addEventListener('click', function() {
-      const wasCollapsed = section.classList.contains('collapsed');
-
-      list.querySelectorAll('.recipe-category-section').forEach(sec => {
-        sec.classList.add('collapsed');
-      });
-      list.querySelectorAll('.recipe-category-header').forEach(hdr => {
-        hdr.setAttribute('aria-expanded', 'false');
-      });
-
-      if (wasCollapsed) {
-        section.classList.remove('collapsed');
-        header.setAttribute('aria-expanded', 'true');
-
-        // Ленивое создание списка при первом раскрытии.
-        if (!ulCreated) {
-          ul = buildRecipeListUl(items);
-          section.appendChild(ul);
-          ulCreated = true;
-        }
-      }
-
-      Object.keys(collapsedCategories).forEach(k => { collapsedCategories[k] = true; });
-      if (wasCollapsed) {
-        collapsedCategories[cat] = false;
-      }
-      saveCollapsedState();
-    });
-
-    section.appendChild(header);
-    if (ul) section.appendChild(ul);
-    list.appendChild(section);
-  });
+  // Диспетчеризация
+  if (query) {
+    renderFlatList(list, recipes);
+    return;
+  }
+  if (catFilterActive) {
+    renderCategoryDetail(list, recipesCategoryFilter, scopedAfterCategory);
+    return;
+  }
+  renderCategoryGrid(list, scoped);
 }
+
+// ============================================================
+// Удаление / скрытие
+// ============================================================
 
 export function handleDeleteOrHide(recipe) {
   if (recipe.builtIn) {
@@ -433,10 +466,8 @@ export function handleDeleteOrHide(recipe) {
     return;
   }
 
-  // v5.46: для своих рецептов — мгновенное удаление с undo-плашкой.
-  // Создаём глубокую копию (снимок) для восстановления.
   const snapshot = JSON.parse(JSON.stringify(recipe));
-  
+
   DishStore.clearRecipeRefs(recipe.id);
   RecipeStore.remove(recipe.id);
   renderRecipesList();
@@ -452,6 +483,10 @@ export function handleDeleteOrHide(recipe) {
     });
   }
 }
+
+// ============================================================
+// Форма рецепта — без изменений (v5.x)
+// ============================================================
 
 function updateIngredientDatalist() {
   let datalist = document.getElementById('ingredientNamesList');
