@@ -2206,6 +2206,7 @@ button,
 
 .recipes-tab {
 }
+
 .recipes-tab-header {
   margin-bottom: var(--spacing-md);
 }
@@ -2214,43 +2215,53 @@ button,
   margin: 0;
 }
 
+/* --- Сегментированный переключатель «Все / Мои / База» --- */
 .recipes-source-tabs {
   display: flex;
-  gap: 4px;
-  background: rgba(128, 128, 140, 0.1);
+  gap: 2px;
+  background: var(--chip-bg);
   padding: 4px;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   margin-bottom: 16px;
   width: fit-content;
 }
+
 .recipe-source-tab {
   border: none;
-  background: var(--bg-app);
-  padding: 8px 16px;
-  border-radius: var(--radius-md);
+  background: transparent;
+  padding: 8px 18px;
+  border-radius: calc(var(--radius-md) - 2px);
   font-weight: 600;
-  font-size: 13px;
-  color: var(--text-secondary);
+  font-size: 14px;
+  color: var(--text-muted);
   cursor: pointer;
   transition: var(--transition-fast);
   white-space: nowrap;
   appearance: none;
   font-family: inherit;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
+
 .recipe-source-tab:hover:not(.active) {
-  background: var(--day-hover);
+  color: var(--text-primary);
 }
+
 .recipe-source-tab.active {
-  background: var(--accent-color);
-  color: var(--accent-text);
-  box-shadow: none;
+  background: var(--bg-app);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
   font-weight: 700;
 }
+
 .recipe-source-tab:focus-visible {
   outline: 2px solid var(--accent-color);
   outline-offset: 2px;
 }
 
+/* --- Тоггл «Показать скрытые» --- */
 .recipes-show-hidden-toggle {
   display: flex;
   align-items: center;
@@ -2283,6 +2294,7 @@ button,
   display: none;
 }
 
+/* --- Кнопка «Назад» (для drill-down) --- */
 .recipes-back-btn {
   display: inline-block;
   padding: 6px 14px;
@@ -2310,9 +2322,11 @@ button,
   display: none;
 }
 
+/* --- Тулбар с кнопкой «Добавить» --- */
 .recipes-toolbar {
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-end; /* Прижимаем кнопку вправо */
   gap: 8px;
   margin-bottom: 16px;
   padding-bottom: 16px;
@@ -2320,10 +2334,9 @@ button,
 }
 
 .recipes-toolbar > button {
-  flex: 1 1 0;
-  min-width: 0;
-  height: 54px;
-  padding: 0 16px;
+  flex: 0 0 auto; /* Убираем растягивание */
+  height: 44px;
+  padding: 0 20px;
   border-radius: var(--radius-md);
   font-size: 14px;
   font-weight: 600;
@@ -2339,23 +2352,22 @@ button,
   appearance: none;
 }
 
+/* Кнопка «Добавить» — теперь плоская и аккуратная */
 .recipes-toolbar > .btn-done {
-  background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+  background: var(--accent-color);
   color: var(--accent-text);
   border: none;
-  box-shadow: 0 4px 14px var(--accent-shadow);
+  box-shadow: none;
 }
 .recipes-toolbar > .btn-done:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px var(--accent-shadow);
   filter: brightness(1.05);
+  transform: translateY(-1px);
 }
 .recipes-toolbar > .btn-done:active {
-  transform: scale(0.97) translateY(0);
-  filter: brightness(0.9);
-  box-shadow: 0 2px 8px var(--accent-shadow);
+  transform: scale(0.97);
 }
 
+/* Вторичная кнопка (Экспорт/Импорт) */
 .recipes-toolbar > .btn-secondary {
   background: var(--card-bg);
   color: var(--text-primary);
@@ -2365,23 +2377,18 @@ button,
   background: var(--card-hover-bg);
   border-color: var(--accent-color);
   color: var(--accent-color);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
 }
 .recipes-toolbar > .btn-secondary:active {
-  transform: translateY(0);
+  transform: scale(0.97);
 }
 
+/* Темная тема для тулбара */
 [data-theme="dark"] .recipes-toolbar > button {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
-}
-[data-theme="dark"] .recipes-toolbar > .btn-done {
-  box-shadow: 0 4px 12px var(--accent-shadow);
-}
-[data-theme="dark"] .recipes-toolbar > .btn-secondary:hover {
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
+  box-shadow: none; /* Убрали старые тени */
 }
 
+/* --- Поиск и фильтры --- */
 .recipes-filters {
   display: flex;
   flex-wrap: wrap;
@@ -2418,6 +2425,7 @@ button,
   box-shadow: 0 0 0 3px var(--accent-light);
 }
 
+/* --- Список рецептов (внутри категории) --- */
 .recipe-list {
   list-style: none;
   padding: 0;
@@ -2499,7 +2507,6 @@ button,
   transform: none;
   color: var(--accent-color);
 }
-
 /* ============================================================
    РАЗДЕЛ 21 · Таб «Покупки»
    ============================================================ */
@@ -4079,14 +4086,17 @@ button,
     font-size: 13px;
   }
 
+    .recipes-toolbar {
+    justify-content: stretch; /* Выравниваем по всей ширине */
+  }
   .recipes-toolbar > button {
-    flex: 1 1 calc(50% - 4px);
-    font-size: 13px;
+    flex: 1 1 calc(50% - 4px); /* Вторичные кнопки — по 50% (две в ряд) */
+    font-size: 14px;
     padding: 0 10px;
     height: 50px;
   }
   .recipes-toolbar > .btn-done {
-    flex: 1 1 100%;
+    flex: 1 1 100%; /* Главная кнопка «Добавить» — на всю ширину */
   }
 
   .recipes-filters input:not([type="checkbox"]),
@@ -5193,50 +5203,48 @@ body:has(.onboarding-overlay.active) {
    ============================================================ */
 
 .recipe-category-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--spacing-sm);
-  margin-top: var(--spacing-xs);
-}
-
-@media (min-width: 500px) {
-  .recipe-category-grid {
-    grid-template-columns: 1fr 1fr;
-  }
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-app);
+  border: 1px solid var(--cell-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-top: var(--spacing-sm);
 }
 
 .recipe-category-card {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px 20px;
-  min-height: 64px;
-  background: var(--bg-app);
-  border: 1px solid var(--cell-border);
-  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  min-height: 56px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--cell-border);
+  border-radius: 0;
   color: var(--text-primary);
   font-family: inherit;
   font-size: 16px;
   font-weight: 600;
   text-align: left;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  transition: background 0.15s ease;
   appearance: none;
   -webkit-tap-highlight-color: transparent;
+  width: 100%;
+}
+
+.recipe-category-card:last-child {
+  border-bottom: none;
 }
 
 .recipe-category-card:hover {
   background: var(--card-hover-bg);
-  border-color: var(--accent-color);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
 }
 
 .recipe-category-card:active {
-  transform: scale(0.97);
-  box-shadow: none;
+  background: var(--chip-bg);
 }
-
 .recipe-category-card:focus-visible {
   outline: 2px solid var(--accent-color);
   outline-offset: 2px;
