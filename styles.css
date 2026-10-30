@@ -210,6 +210,10 @@ body {
   padding: var(--spacing-md);
   padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
   transition: background var(--transition-normal), color var(--transition-normal);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 :focus {
@@ -267,8 +271,9 @@ button,
 .recipes-tab-header h2,
 .shopping-tab-title,
 .today-date {
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.25;
   letter-spacing: -0.2px;
 }
 
@@ -291,7 +296,8 @@ button,
 
 .logo h1 {
   font-size: 28px;
-  font-weight: 700;
+  font-weight: 800;
+  line-height: 1.15;
   letter-spacing: -0.5px;
   color: var(--text-primary);
   margin: 0;
@@ -960,7 +966,7 @@ button,
 }
 
 .modal-header h3 {
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 700;
   color: var(--modal-text);
   line-height: 1.3;
@@ -968,6 +974,7 @@ button,
   align-items: center;
   gap: 8px;
   margin: 0;
+  letter-spacing: -0.2px;
 }
 
 .modal-close {
@@ -3572,7 +3579,8 @@ button,
 .today-date {
   color: var(--text-primary);
   font-size: 20px;
-  font-weight: 600;
+  font-weight: 700;
+  line-height: 1.25;
   letter-spacing: -0.2px;
 }
 
