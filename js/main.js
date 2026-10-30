@@ -4,6 +4,14 @@
  * v5.43:
  *   • DEFAULT_TAB = 'today' — приложение открывается на вкладке «Сегодня».
  *   • На «Сегодня» добавлена кнопка «Собрать меню на неделю» (generateMenuBtnToday).
+ *
+ * v5.44.1:
+ *   • Escape теперь закрывает и динамические модалки (карточка рецепта).
+ *     Если активная модалка не найдена в списке `modals`, вызывается
+ *     closeTopActiveModal() — он умеет работать с `overlay._closeFn`.
+ *   • closeTopActiveModal при равных z-index берёт последнюю в DOM
+ *     (визуально верхнюю), а не первую — иначе Escape закрывал бы
+ *     модалку под карточкой рецепта.
  */
 import { STATUSES, CONSTANTS, THEMES, DEFAULT_THEME, THEME_LEGACY_MAP } from './utils/Constants.js';
 import { Utils } from './utils/Utils.js';
@@ -651,11 +659,15 @@ import { MenuGenerator } from './features/MenuGenerator.js';
     );
     if (overlays.length === 0) return;
 
+    // v5.44.1: при равных z-index берём последнюю в DOM (визуально сверху).
+    // Иначе карточка рецепта (создаётся позже, z-index такой же, как у
+    // обычных модалок) не закрывалась бы по Escape — закрывалась бы
+    // модалка дня под ней.
     let top = overlays[0];
     let topZ = parseInt(getComputedStyle(top).zIndex, 10) || 0;
     for (let i = 1; i < overlays.length; i++) {
       const z = parseInt(getComputedStyle(overlays[i]).zIndex, 10) || 0;
-      if (z > topZ) { top = overlays[i]; topZ = z; }
+      if (z >= topZ) { top = overlays[i]; topZ = z; }
     }
 
     const entry = modals.find(m => m.overlay === top);
@@ -692,7 +704,13 @@ import { MenuGenerator } from './features/MenuGenerator.js';
       return;
     }
     const found = modals.find(m => m.overlay === activeModal);
-    if (found) found.close();
+    if (found) {
+      found.close();
+      return;
+    }
+    // v5.44.1: fallback для динамических модалок (карточка рецепта).
+    // closeTopActiveModal умеет работать с overlay._closeFn.
+    closeTopActiveModal();
   });
 
   // ---------- Кнопки закрытия статических модалок ----------
