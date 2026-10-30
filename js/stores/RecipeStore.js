@@ -4,17 +4,8 @@
  * Автоматическая миграция из v1 при загрузке.
  * Зависит от: Constants, Utils, EventBus, notifications.
  *
- * v5.40:
- *   • Добавлена поддержка тегов (tags) для умного подбора меню.
- *   • Добавлен автоопределитель тегов (autoDetectTags) на основе названия и ингредиентов.
- *   • В nutrition добавлено поле fiber (клетчатка).
- *   • Все рецепты (включая старые) при загрузке нормализуются и получают блок tags.
- *
- * v5.44.2:
- *   • Одноразовая миграция категорий: рецепты с category === 'other'
- *     прогоняются через Utils.guessCategory(name). Если guessCategory
- *     возвращает другую категорию — обновляем. Флаг в localStorage,
- *     чтобы не перезаписывать осознанно выбранное «Другое» каждый раз.
+ * v5.46:
+ *   • Добавлен метод restore(snapshot) для восстановления удалённого рецепта.
  */
 import { CONSTANTS } from '../utils/Constants.js';
 import { Utils } from '../utils/Utils.js';
@@ -131,7 +122,6 @@ export const RecipeStore = (function() {
     return [];
   }
 
-  // v5.40: добавлено поле fiber
   function normalizeNutrition(n) {
     const base = { kcal: null, protein: null, fat: null, carbs: null, fiber: null };
     if (!n || typeof n !== 'object') return base;
@@ -145,21 +135,19 @@ export const RecipeStore = (function() {
   // АВТООПРЕДЕЛЕНИЕ ТЕГОВ (v5.40)
   // ============================================================
   function autoDetectTags(recipe) {
-    // Собираем весь текст рецепта для анализа
     const text = (
       (recipe.name || '') + ' ' + 
       (recipe.ingredients || []).map(i => i.name).join(' ')
     ).toLowerCase().replace(/ё/g, 'е');
 
     let tags = {
-      proteinSource: 'vegetarian', // По умолчанию без мяса
+      proteinSource: 'vegetarian',
       proteinForm: 'none',
-      cookingMethod: 'bake',       // По умолчанию запекание
+      cookingMethod: 'bake',
       baseType: 'none',
       nutritionProfile: 'balanced'
     };
 
-    // 1. Тип белка (Protein Source)
     if (/куриц|куриное|цыплен|индейк|утк/.test(text)) tags.proteinSource = 'chicken';
     else if (/говяд|телятин|баранин/.test(text)) tags.proteinSource = 'beef';
     else if (/свинин|бекон|карбонад|ветчин/.test(text)) tags.proteinSource = 'pork';
@@ -167,19 +155,16 @@ export const RecipeStore = (function() {
     else if (/креветк|кальмар|краб|морепродукт|моллюск/.test(text)) tags.proteinSource = 'seafood';
     else if (/фарш/.test(text) && tags.proteinSource === 'vegetarian') tags.proteinSource = 'mixed';
 
-    // 2. Форма белка (Protein Form)
     if (/фарш|котлет|тефтел|фрикадел/.test(text)) tags.proteinForm = 'minced';
     else if (/колбас|сосиск|сардельк/.test(text)) tags.proteinForm = 'processed';
     else if (tags.proteinSource !== 'vegetarian') tags.proteinForm = 'whole';
 
-    // 3. Способ готовки (Cooking Method)
     if (recipe.category === 'salad' || /сырой|свеж/.test(text)) tags.cookingMethod = 'raw';
     else if (/запек|духовк|запекан/.test(text)) tags.cookingMethod = 'bake';
     else if (/туш|рагу|бигус|бигос|плов/.test(text)) tags.cookingMethod = 'stew';
     else if (/жар|обжар|сковород|шницель|блин/.test(text)) tags.cookingMethod = 'fry';
     else if (/вар|суп|бульон|паров/.test(text)) tags.cookingMethod = 'boil';
 
-    // 4. Основа/Гарнир (Base Type)
     if (/картоф|пюре/.test(text)) tags.baseType = 'potato';
     else if (/рис/.test(text)) tags.baseType = 'rice';
     else if (/макарон|паст|спагетти|лапш/.test(text)) tags.baseType = 'pasta';
@@ -187,13 +172,12 @@ export const RecipeStore = (function() {
     else if (/фасол|горох|чечевиц|нут/.test(text)) tags.baseType = 'legumes';
     else if (/овощ|капуст|кабач|брокколи|салат/.test(text)) tags.baseType = 'vegetables';
 
-    // 5. Пищевой профиль (Nutrition Profile)
     if (recipe.category === 'salad' || tags.baseType === 'vegetables' || tags.baseType === 'legumes') {
-      tags.nutritionProfile = 'high_fiber'; // Много клетчатки
+      tags.nutritionProfile = 'high_fiber';
     } else if (tags.proteinSource !== 'vegetarian' && tags.baseType === 'none') {
-      tags.nutritionProfile = 'high_protein'; // Много белка
+      tags.nutritionProfile = 'high_protein';
     } else if (recipe.category === 'soup') {
-      tags.nutritionProfile = 'light'; // Легкое
+      tags.nutritionProfile = 'light';
     }
 
     return tags;
@@ -206,17 +190,14 @@ export const RecipeStore = (function() {
     const normalized = normalizeRussianKeys(r || {});
     const safe = normalized;
     
-    // Сначала нормализуем ингредиенты, чтобы передать их в автоопределитель
     const normIngredients = normalizeIngredients(safe.ingredients);
     
-    // Генерируем базовые теги
     const defaultTags = autoDetectTags({ 
       name: safe.name || '', 
       ingredients: normIngredients,
       category: safe.category || '' 
     });
 
-    // Если в рецепте уже есть теги (например, выставленные вручную), они перекрывают автоопределение
     const finalTags = {
       ...defaultTags,
       ...(safe.tags || {}) 
@@ -237,7 +218,7 @@ export const RecipeStore = (function() {
       cuisine: safe.cuisine || null,
       allergens: Array.isArray(safe.allergens) ? safe.allergens.slice() : [],
       mealTypes: Array.isArray(safe.mealTypes) ? safe.mealTypes.slice() : [],
-      tags: finalTags, // <--- НОВОЕ ПОЛЕ
+      tags: finalTags,
       liked: !!safe.liked,
       disliked: !!safe.disliked,
       builtIn: !!safe.builtIn,
@@ -294,12 +275,6 @@ export const RecipeStore = (function() {
     return false;
   }
 
-  // ============================================================
-  // v5.44.2: ОДНОРАЗОВАЯ МИГРАЦИЯ КАТЕГОРИЙ
-  // Рецепты с category === 'other' прогоняются через guessCategory.
-  // Флаг в localStorage, чтобы не перезаписывать осознанно выбранное
-  // «Другое» при каждой загрузке.
-  // ============================================================
   function migrateCategoriesOnce() {
     try {
       if (localStorage.getItem(CATEGORY_MIGRATION_KEY) === '1') return;
@@ -318,20 +293,13 @@ export const RecipeStore = (function() {
       if (changed) {
         try {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(recipes));
-          console.log(`Миграция категорий: обновлено ${recipes.filter(r => r.category !== 'other').length} рецептов.`);
-        } catch (e) {
-          console.warn('Не удалось сохранить миграцию категорий:', e);
-        }
+        } catch (e) {}
       }
 
       try {
         localStorage.setItem(CATEGORY_MIGRATION_KEY, '1');
-      } catch (e) {
-        /* молча: если localStorage недоступен, миграция повторится при следующем запуске */
-      }
-    } catch (e) {
-      console.warn('Ошибка миграции категорий:', e);
-    }
+      } catch (e) {}
+    } catch (e) {}
   }
 
   function save() {
@@ -355,13 +323,9 @@ export const RecipeStore = (function() {
       const current = JSON.stringify(recipes);
       if (stored !== current) {
         localStorage.setItem(STORAGE_KEY, current);
-        console.log('Рецепты нормализованы при загрузке.');
       }
-    } catch(e) {
-      console.warn('Не удалось сохранить нормализованные рецепты', e);
-    }
+    } catch(e) {}
 
-    // v5.44.2: одноразовая миграция категорий
     migrateCategoriesOnce();
 
     EventBus.emit(CONSTANTS.EVENTS.RECIPES_CHANGED);
@@ -397,10 +361,8 @@ export const RecipeStore = (function() {
       const userRecipes = localRecipes.filter(r => !r.builtIn);
       replaceAll([...userRecipes, ...normalizedServerRecipes]);
 
-      console.log(`✅ База рецептов синхронизирована. Загружено: ${serverRecipes.length}`);
       return true;
     } catch (error) {
-      console.warn('⚠️ Не удалось загрузить базовые рецепты с сервера:', error);
       return false;
     }
   }
@@ -480,6 +442,24 @@ export const RecipeStore = (function() {
     return true;
   }
 
+  // v5.46: восстановление удалённого рецепта
+  function restore(snapshot) {
+    if (!snapshot || !snapshot.name) return false;
+    
+    // Проверяем, нет ли уже рецепта с таким ID
+    const existing = getById(snapshot.id);
+    const newId = existing ? generateId() : snapshot.id;
+    
+    const copy = normalizeRecipe({
+      ...snapshot,
+      id: newId
+    });
+    
+    recipes.push(copy);
+    save();
+    return true;
+  }
+
   function toggleHidden(id) {
     const recipe = getById(id);
     if (!recipe) return false;
@@ -555,6 +535,7 @@ export const RecipeStore = (function() {
     add,
     update,
     remove,
+    restore,
     toggleThumbUp,
     toggleThumbDown,
     toggleHidden,
