@@ -25,12 +25,12 @@
   /* Поверхности */
   --bg-primary: #F6F4ED;
   --bg-app: #FFFFFF;
-  --bg-app-border: #E8E6DC;
+  --bg-app-border: #D1CEBF;
 
-  /* Текст */
+  /* Текст — контраст ≥ 4.5:1 на молочном фоне */
   --text-primary: #292B25;
-  --text-secondary: #4A4C44;
-  --text-muted: #77786E;
+  --text-secondary: #3A3C34;
+  --text-muted: #63655C;
 
   /* Акцент — единый лайм в обеих темах */
   --accent-color: #D5E84A;
@@ -41,10 +41,10 @@
 
   /* Ячейки и поля */
   --cell-bg: #FFFFFF;
-  --cell-border: #E8E6DC;
+  --cell-border: #D1CEBF;
   --input-bg: #FFFFFF;
   --search-bg: #FFFFFF;
-  --search-border: #E8E6DC;
+  --search-border: #D1CEBF;
   --chip-bg: #EFEDE4;
   --menu-item-bg: #F6F4ED;
   --week-row-bg: rgba(255, 255, 255, 0.85);
@@ -54,7 +54,7 @@
   --rec-item-bg: #F6F4ED;
   --tag-bg: #FFFFFF;
   --badge-bg: rgba(41, 43, 37, 0.06);
-  --empty-border: #E8E6DC;
+  --empty-border: #D1CEBF;
   --day-hover: rgba(41, 43, 37, 0.04);
 
   /* Нейтральные кнопки */
@@ -66,26 +66,26 @@
   --modal-bg: #FFFFFF;
   --modal-text: #292B25;
 
-  /* Статусы */
-  --planned-color: #D8A65A;
-  --done-color: #789879;
-  --liked-color: #D4776D;
-  --planned-bg: rgba(216, 166, 90, 0.14);
-  --done-bg: rgba(120, 152, 121, 0.15);
+  /* Статусы — затемнены для читаемости */
+  --planned-color: #B88438;
+  --done-color: #5E7A5F;
+  --liked-color: #C5665C;
+  --planned-bg: rgba(184, 132, 56, 0.14);
+  --done-bg: rgba(94, 122, 95, 0.15);
 
   /* Семантические */
-  --color-success: #789879;
-  --color-warning: #D8A65A;
-  --color-error: #D4776D;
-  --color-info: #78A8C2;
+  --color-success: #5E7A5F;
+  --color-warning: #B88438;
+  --color-error: #C5665C;
+  --color-info: #5A8CA8;
 
   /* Категории */
-  --color-soup: #B8873D;
-  --color-salad: #789879;
-  --color-main: #C47066;
-  --color-appetizer: #6A98A8;
-  --color-bakery: #B8924A;
-  --color-dessert: #B07090;
+  --color-soup: #9A6E28;
+  --color-salad: #5E7A5F;
+  --color-main: #B45A50;
+  --color-appetizer: #4F7B8A;
+  --color-bakery: #9A7A32;
+  --color-dessert: #965A78;
 
   /* Тени */
   --shadow: 0 12px 34px rgba(39, 39, 31, 0.07);
@@ -113,12 +113,12 @@
   /* Поверхности */
   --bg-primary: #201F1C;
   --bg-app: #2B2925;
-  --bg-app-border: #403D36;
+  --bg-app-border: #4D4A41;
 
-  /* Текст */
+  /* Текст — контраст ≥ 4.5:1 на графите */
   --text-primary: #F1EEE5;
   --text-secondary: #D4D0C4;
-  --text-muted: #AAA49A;
+  --text-muted: #BBB5AA;
 
   /* Акцент — тот же лайм, тёмный текст на нём */
   --accent-color: #D5E84A;
@@ -129,10 +129,10 @@
 
   /* Ячейки и поля */
   --cell-bg: #363430;
-  --cell-border: #403D36;
+  --cell-border: #4D4A41;
   --input-bg: #363430;
   --search-bg: #363430;
-  --search-border: #403D36;
+  --search-border: #4D4A41;
   --chip-bg: #363430;
   --menu-item-bg: #26241F;
   --week-row-bg: rgba(43, 41, 37, 0.6);
@@ -142,7 +142,7 @@
   --rec-item-bg: #363430;
   --tag-bg: #363430;
   --badge-bg: rgba(241, 238, 229, 0.06);
-  --empty-border: #403D36;
+  --empty-border: #4D4A41;
   --day-hover: rgba(241, 238, 229, 0.05);
 
   /* Нейтральные кнопки */
@@ -155,25 +155,25 @@
   --modal-text: #F1EEE5;
 
   /* Статусы */
-  --planned-color: #D8A65A;
-  --done-color: #8FA88F;
-  --liked-color: #E08A80;
-  --planned-bg: rgba(216, 166, 90, 0.14);
-  --done-bg: rgba(143, 168, 143, 0.15);
+  --planned-color: #E0B575;
+  --done-color: #A8C0A8;
+  --liked-color: #E8A198;
+  --planned-bg: rgba(224, 181, 117, 0.14);
+  --done-bg: rgba(168, 192, 168, 0.15);
 
   /* Семантические */
-  --color-success: #8FA88F;
-  --color-warning: #D8A65A;
-  --color-error: #E08A80;
-  --color-info: #9ABBD0;
+  --color-success: #A8C0A8;
+  --color-warning: #E0B575;
+  --color-error: #E8A198;
+  --color-info: #A8C9DE;
 
   /* Категории */
-  --color-soup: #D8A65A;
-  --color-salad: #8FA88F;
-  --color-main: #E08A80;
-  --color-appetizer: #9ABBD0;
-  --color-bakery: #D8A65A;
-  --color-dessert: #D0A0B8;
+  --color-soup: #E0B575;
+  --color-salad: #A8C0A8;
+  --color-main: #E8A198;
+  --color-appetizer: #A8C9DE;
+  --color-bakery: #E0B575;
+  --color-dessert: #D8B0C8;
 
   /* Тени */
   --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75);
@@ -213,7 +213,7 @@ body {
 }
 
 :focus {
-  outline: 2px solid var(--accent-color);
+  outline: 2px solid var(--text-primary);
   outline-offset: 2px;
 }
 
@@ -221,10 +221,14 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid var(--accent-color);
+  outline: 2px solid var(--text-primary);
   outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--accent-light);
 }
-
+::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
 .sr-only {
   position: absolute;
   width: 1px;
@@ -4810,6 +4814,7 @@ button,
   font-size: 12px;
   font-weight: 700;
   line-height: 1;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
 }
 
 .theme-option-label {
