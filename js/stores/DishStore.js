@@ -141,6 +141,30 @@ export const DishStore = (function() {
     return true;
   }
 
+  function addMultipleDishes(dishesArray) {
+    if (!Array.isArray(dishesArray) || dishesArray.length === 0) return false;
+    
+    dishesArray.forEach(d => {
+      if (!d.name || !d.date) return;
+      const id = generateId();
+      dishes.push({
+        id,
+        name: d.name,
+        status: STATUSES.PLANNED,
+        date: d.date,
+        category: d.category || Utils.guessCategory(d.name),
+        liked: false,
+        disliked: false,
+        note: '',
+        recipeId: d.recipeId || null,
+        mealTypes: Array.isArray(d.mealTypes) ? d.mealTypes : []
+      });
+    });
+    
+    save();
+    return true;
+  }
+
   function restoreDish(snapshot) {
     if (!snapshot || !snapshot.name || !snapshot.status || !snapshot.date || !snapshot.category) {
       return false;
@@ -265,6 +289,7 @@ export const DishStore = (function() {
   }
 
   function getFavorites() { return dishes.filter(d => d.liked); }
+  
   function replaceAll(newDishes) {
     dishes = newDishes.map(normalizeDish);
     save();
@@ -306,7 +331,7 @@ export const DishStore = (function() {
   }
 
   return {
-    init, getAll, getForDate, addDish, removeDish,
+    init, getAll, getForDate, addDish, addMultipleDishes, removeDish,
     restoreDish,
     toggleStatus, toggleLike, toggleThumbUp, toggleThumbDown,
     isDishNameDisliked,
