@@ -3,6 +3,11 @@
  * Зависит от: Constants, Utils, EventBus, DishStore, RecipeStore,
  *             RecommendationEngine, notifications, focusTrap, Recipes.
  *
+ * v6.1.0:
+ *   • shiftTodayViewDate теперь локальная функция внутри IIFE.
+ *     Раньше она была только методом возвращаемого объекта,
+ *     из-за чего в renderToday падало ReferenceError.
+ *
  * v5.45:
  *   • «Сегодня»: стрелки ‹ › в шапке для листания дней (для ПК).
  *   • «Сегодня»: три кнопки в порядке Собрать (акцент) → Что приготовить
@@ -1562,6 +1567,13 @@ export const Renderer = (function() {
     }
   }
 
+  function shiftTodayViewDate(days) {
+    const d = new Date(todayViewDate);
+    d.setDate(d.getDate() + days);
+    todayViewDate = d;
+    renderToday();
+  }
+
   function openModal(dateStr) {
     currentModalDate = dateStr;
     const d = new Date(dateStr);
@@ -2429,12 +2441,7 @@ export const Renderer = (function() {
     setCurrentView: (v) => { currentView = v; },
     getTodayViewDate: () => todayViewDate,
     setTodayViewDate: (d) => { todayViewDate = d; },
-    shiftTodayViewDate: (days) => {
-      const d = new Date(todayViewDate);
-      d.setDate(d.getDate() + days);
-      todayViewDate = d;
-      renderToday();
-    },
+    shiftTodayViewDate,
     resetTodayViewDate: () => {
       todayViewDate = new Date();
       renderToday();
