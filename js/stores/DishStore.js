@@ -1,3 +1,10 @@
+/**
+ * DishStore — хранилище запланированных блюд.
+ * 
+ * v6.3.0:
+ *   • Добавлена поддержка mealRole (роль блюда в композиции).
+ *   • Пакетное сохранение для addMultipleDishes.
+ */
 import { STATUSES, CATEGORIES, CONSTANTS } from '../utils/Constants.js';
 import { Utils } from '../utils/Utils.js';
 import { EventBus } from '../utils/EventBus.js';
@@ -48,6 +55,7 @@ export const DishStore = (function() {
     if (dish.disliked === undefined) dish.disliked = false;
     if (!dish.id) dish.id = generateId();
     if (dish.recipeId === undefined) dish.recipeId = null;
+    if (dish.mealRole === undefined) dish.mealRole = null; // новое поле
 
     if (dish.mealTypes === undefined) {
       if (dish.mealType) {
@@ -93,7 +101,7 @@ export const DishStore = (function() {
 
   function init() {
     if (!load()) {
-      const result = DEFAULT_DISHES.map((d, i) => ({ ...d, id: generateId() + i, liked: false, disliked: false, recipeId: null, mealTypes: [] }));
+      const result = DEFAULT_DISHES.map((d, i) => ({ ...d, id: generateId() + i, liked: false, disliked: false, recipeId: null, mealRole: null, mealTypes: [] }));
       const noDate = [
         { name: 'Салат с морской капустой и крабовым мясом', category: CATEGORIES.SALAD, note: '' },
         { name: 'Гречка и салат из свежей капусты как в столовой', category: CATEGORIES.MAIN, note: '' },
@@ -113,6 +121,7 @@ export const DishStore = (function() {
           disliked: false,
           note: item.note || '',
           recipeId: null,
+          mealRole: null,
           mealTypes: []
         });
       });
@@ -126,7 +135,7 @@ export const DishStore = (function() {
   function getAll() { return dishes.slice(); }
   function getForDate(dateStr) { return dishes.filter(d => d.date === dateStr); }
 
-  function addDish(name, status, date, category, liked = false, note = '', recipeId = null, mealTypes = [], disliked = false) {
+  function addDish(name, status, date, category, liked = false, note = '', recipeId = null, mealTypes = [], disliked = false, mealRole = null) {
     if (!name || !status || !date || !category) return false;
     const id = generateId();
     const normalized = normalizeMealTypes(mealTypes);
@@ -135,7 +144,7 @@ export const DishStore = (function() {
       id, name, status, date, category,
       liked: finalLiked,
       disliked: !!disliked,
-      note, recipeId, mealTypes: normalized
+      note, recipeId, mealRole, mealTypes: normalized
     });
     save();
     return true;
@@ -157,6 +166,7 @@ export const DishStore = (function() {
         disliked: false,
         note: '',
         recipeId: d.recipeId || null,
+        mealRole: d.mealRole || null,
         mealTypes: Array.isArray(d.mealTypes) ? d.mealTypes : []
       });
     });
@@ -179,6 +189,7 @@ export const DishStore = (function() {
       disliked: !!snapshot.disliked,
       note: snapshot.note || '',
       recipeId: snapshot.recipeId || null,
+      mealRole: snapshot.mealRole || null,
       mealTypes: Array.isArray(snapshot.mealTypes) ? snapshot.mealTypes.slice() : []
     };
     const normalized = normalizeDish(copy);
@@ -323,6 +334,7 @@ export const DishStore = (function() {
     if (fields.category !== undefined) dish.category = fields.category;
     if (fields.note !== undefined) dish.note = String(fields.note).trim();
     if (fields.recipeId !== undefined) dish.recipeId = fields.recipeId;
+    if (fields.mealRole !== undefined) dish.mealRole = fields.mealRole;
     if (fields.liked !== undefined) dish.liked = fields.liked;
     if (fields.disliked !== undefined) dish.disliked = fields.disliked;
     if (fields.mealTypes !== undefined) dish.mealTypes = normalizeMealTypes(fields.mealTypes);
