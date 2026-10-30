@@ -5393,3 +5393,60 @@ body:has(.onboarding-overlay.active) {
   overflow-y: auto;
   padding-bottom: 24px;
 }
+
+/* ============================================================
+   50. Сегментированный выбор периода в автосборщике (v6.2.7)
+   ============================================================ */
+
+.generate-days-segment {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--bg-primary);
+  border: 1px solid var(--cell-border);
+  border-radius: var(--radius-md);
+}
+
+.generate-days-btn {
+  flex: 1;
+  min-height: 46px;
+  padding: 8px 4px;
+  border: none;
+  background: transparent;
+  border-radius: calc(var(--radius-md) - 4px);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.generate-days-btn:hover {
+  color: var(--text-primary);
+}
+
+.generate-days-btn:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 1px;
+}
+
+.generate-days-btn.active {
+  background: var(--accent-color);
+  color: var(--accent-text);
+  box-shadow: 0 2px 8px var(--accent-shadow);
+}
+
+[data-theme="dark"] .generate-days-btn.active {
+  background: var(--accent-color);
+  color: var(--accent-text);
+  box-shadow: 0 2px 10px rgba(213, 232, 74, 0.25);
+}
+
+/* Уважение к prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .generate-days-btn {
+    transition: none;
+  }
+}
