@@ -3,10 +3,10 @@
   Меню и рецепты · index.html
 
   v6.2.7:
-  - Автосборщик: сегментированный выбор периода (3/5/7/14) вместо <select>.
-    HTML: #generateDaysGroup + скрытый #generateDaysCount.
-    CSS: раздел 50 в styles.css (добавляется отдельно).
-  - styles.css?v=7.0.13 (cache-bust под новый раздел 50).
+  - Автосборщик: добавлена стартовая дата (#generateStartDate).
+  - Автосборщик: сегментированный выбор периода (3/5/7/14).
+  - Автосборщик: блок разрешения конфликтов (#generateConflictBlock).
+  - styles.css?v=7.0.14 (cache-bust под новый раздел 50).
 
   v6.0.0:
   - Новая дизайн-система: две темы (light/dark), шрифт Manrope,
@@ -35,7 +35,7 @@
   <meta name="apple-mobile-web-app-title" content="Меню и рецепты">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
-  <link rel="stylesheet" href="styles.css?v=7.0.13">
+  <link rel="stylesheet" href="styles.css?v=7.0.14">
 
   <script>
     (function() {
@@ -787,47 +787,63 @@
       <button class="modal-close" id="generateMenuClose" aria-label="Закрыть">✕</button>
     </div>
 
-    <p class="modal-desc">Мы подберем блюда так, чтобы они не повторялись по составу и способу приготовления.</p>
+    <div id="generateFormContent">
+      <p class="modal-desc">Мы подберем блюда так, чтобы они не повторялись по составу и способу приготовления.</p>
 
-    <div class="form-group">
-      <label>На сколько дней собрать?</label>
-      <div class="generate-days-segment" id="generateDaysGroup" role="group" aria-label="Количество дней для меню">
-        <button type="button" class="generate-days-btn" data-days="3" aria-pressed="false">3 дня</button>
-        <button type="button" class="generate-days-btn" data-days="5" aria-pressed="false">5 дней</button>
-        <button type="button" class="generate-days-btn active" data-days="7" aria-pressed="true">7 дней</button>
-        <button type="button" class="generate-days-btn" data-days="14" aria-pressed="false">14 дней</button>
+      <div class="form-group">
+        <label for="generateStartDate">С какой даты начать?</label>
+        <input type="date" id="generateStartDate">
       </div>
-      <input type="hidden" id="generateDaysCount" value="7">
-    </div>
 
-    <div class="form-group">
-      <label>Какие приемы пищи включить?</label>
-      <div class="meal-types-group">
-        <label class="meal-type-checkbox"><input type="checkbox" data-gen-meal="breakfast"><span>Завтрак</span></label>
-        <label class="meal-type-checkbox"><input type="checkbox" data-gen-meal="lunch" checked><span>Обед</span></label>
-        <label class="meal-type-checkbox"><input type="checkbox" data-gen-meal="dinner" checked><span>Ужин</span></label>
+      <div class="form-group">
+        <label>На сколько дней собрать?</label>
+        <div class="generate-days-segment" id="generateDaysGroup" role="group" aria-label="Количество дней для меню">
+          <button type="button" class="generate-days-btn" data-days="3" aria-pressed="false">3 дня</button>
+          <button type="button" class="generate-days-btn" data-days="5" aria-pressed="false">5 дней</button>
+          <button type="button" class="generate-days-btn active" data-days="7" aria-pressed="true">7 дней</button>
+          <button type="button" class="generate-days-btn" data-days="14" aria-pressed="false">14 дней</button>
+        </div>
+        <input type="hidden" id="generateDaysCount" value="7">
+      </div>
+
+      <div class="form-group">
+        <label>Какие приемы пищи включить?</label>
+        <div class="meal-types-group">
+          <label class="meal-type-checkbox"><input type="checkbox" data-gen-meal="breakfast"><span>Завтрак</span></label>
+          <label class="meal-type-checkbox"><input type="checkbox" data-gen-meal="lunch" checked><span>Обед</span></label>
+          <label class="meal-type-checkbox"><input type="checkbox" data-gen-meal="dinner" checked><span>Ужин</span></label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="generateMaxTime">Макс. время готовки в будни (мин)</label>
+        <input type="number" id="generateMaxTime" value="40" min="10" max="180" step="5">
+      </div>
+
+      <div class="form-group" style="background: var(--badge-bg); padding: 12px; border-radius: var(--radius-md);">
+        <label class="meal-type-checkbox" style="border: none; background: transparent; padding: 0; margin-bottom: 8px;">
+          <input type="checkbox" id="generateFridgeMode">
+          <span>🧊 Режим «Холодильник»</span>
+        </label>
+        <div id="fridgeIngredientsWrap" hidden>
+          <input type="text" id="generateFridgeInput" placeholder="Что есть? (курица, рис, сливки...)" style="margin-bottom: 4px;">
+          <small style="color: var(--text-muted); font-size: 11px;">Введите продукты через запятую. Блюда с ними получат приоритет.</small>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-secondary" id="generateMenuCancel">Отмена</button>
+        <button class="btn-primary" id="generateMenuSave">Собрать</button>
       </div>
     </div>
 
-    <div class="form-group">
-      <label for="generateMaxTime">Макс. время готовки в будни (мин)</label>
-      <input type="number" id="generateMaxTime" value="40" min="10" max="180" step="5">
-    </div>
-
-    <div class="form-group" style="background: var(--badge-bg); padding: 12px; border-radius: var(--radius-md);">
-      <label class="meal-type-checkbox" style="border: none; background: transparent; padding: 0; margin-bottom: 8px;">
-        <input type="checkbox" id="generateFridgeMode">
-        <span>🧊 Режим «Холодильник»</span>
-      </label>
-      <div id="fridgeIngredientsWrap" hidden>
-        <input type="text" id="generateFridgeInput" placeholder="Что есть? (курица, рис, сливки...)" style="margin-bottom: 4px;">
-        <small style="color: var(--text-muted); font-size: 11px;">Введите продукты через запятую. Блюда с ними получат приоритет.</small>
+    <!-- Блок разрешения конфликтов -->
+    <div id="generateConflictBlock" class="generate-conflict-block" hidden>
+      <p class="generate-conflict-text">На выбранные даты уже есть запланированные блюда. Как поступить?</p>
+      <div class="generate-conflict-actions">
+        <button type="button" class="btn-secondary" id="generateConflictReplace">Заменить</button>
+        <button type="button" class="btn-primary" id="generateConflictAdd">Добавить</button>
       </div>
-    </div>
-
-    <div class="form-actions">
-      <button class="btn-secondary" id="generateMenuCancel">Отмена</button>
-      <button class="btn-primary" id="generateMenuSave">Собрать</button>
     </div>
   </div>
 </div>
