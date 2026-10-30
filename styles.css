@@ -493,33 +493,40 @@ button,
 
 .view-toggle {
   display: flex;
-  gap: 3px;
-  background: rgba(128, 128, 140, 0.1);
-  padding: var(--spacing-xs);
-  border-radius: var(--radius-lg);
+  gap: 2px;
+  background: var(--chip-bg);
+  padding: 4px;
+  border-radius: var(--radius-md);
   flex-shrink: 0;
   order: 1;
 }
+
 .view-toggle button {
   border: none;
-  background: var(--bg-app);
-  padding: 6px 12px;
-  border-radius: var(--radius-md);
+  background: transparent;
+  padding: 8px 18px;
+  border-radius: calc(var(--radius-md) - 2px);
   font-weight: 600;
-  font-size: 13px;
-  color: var(--text-secondary);
+  font-size: 14px;
+  color: var(--text-muted);
   cursor: pointer;
   transition: var(--transition-fast);
   white-space: nowrap;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
-.view-toggle button.active {
-  background: var(--accent-color);
-  color: var(--accent-text);
-  box-shadow: none;
-  font-weight: 700;
-}
+
 .view-toggle button:hover:not(.active) {
-  background: var(--day-hover);
+  color: var(--text-primary);
+}
+
+.view-toggle button.active {
+  background: var(--bg-app);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+  font-weight: 700;
 }
 
 .month-nav-wrapper {
@@ -572,28 +579,33 @@ button,
 
 .today-btn {
   background: var(--bg-app);
-  border: 1.5px solid var(--text-muted);
+  border: 1px solid var(--cell-border);
   border-radius: var(--radius-md);
-  padding: 14px 24px;
-  font-size: 15px;
+  padding: 8px 18px;
+  font-size: 14px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-secondary);
   cursor: pointer;
   transition: var(--transition-fast);
   line-height: 1.2;
-  min-height: 50px;
+  min-height: 44px; /* 4px отступ сверху + 36px высота + 4px снизу = 44px, как у переключателя */
   white-space: nowrap;
   flex-shrink: 0;
   appearance: none;
-  order: 2; /* <--- ДОБАВЛЕНА ТОЛЬКО ЭТА СТРОКА */
+  order: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
+
 .today-btn:hover {
-  background: var(--cell-bg);
-  border-color: var(--text-primary);
-  transform: translateY(-2px);
+  background: var(--card-hover-bg);
+  color: var(--text-primary);
+  border-color: var(--text-muted);
 }
+
 .today-btn:active {
-  transform: translateY(0);
+  transform: scale(0.97);
 }
 
 .weekdays {
@@ -3948,19 +3960,30 @@ button,
     height: 22px;
   }
 
-  .calendar-header {
+    .calendar-header {
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: space-between;
     gap: 10px;
   }
-  .view-toggle { order: 1; }
-  .month-nav-wrapper { order: 3; flex: 1 1 100%; gap: 8px; }
-  .today-btn { order: 2; }
+  .view-toggle { 
+    order: 1; 
+    flex: 1 1 100%; /* На мобилке переключатель растянется на всю ширину */
+  }
+  .view-toggle button {
+    flex: 1; /* Кнопки внутри разделятся 50/50 */
+  }
+  .today-btn { 
+    order: 2; 
+    flex: 1 1 100%; /* Кнопка «Сегодня» тоже растянется */
+  }
+  .month-nav-wrapper { 
+    order: 3; 
+    flex: 1 1 100%; 
+    gap: 8px; 
+  }
   
   #monthTitle { font-size: 18px; }
   .month-nav-btn { min-height: 32px; min-width: 32px; font-size: 18px; }
-  .today-btn { padding: 12px 16px; min-height: 46px; font-size: 13px; }
-
   .day-cell {
     min-height: 44px;
     padding: 4px var(--spacing-xs);
