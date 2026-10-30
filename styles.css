@@ -5,6 +5,7 @@
      • Кнопки 50–54px, поля 50px, нижняя навигация 72px.
      • Токены --radius-sm/md/lg обновлены.
      • Базовые --input-padding и --btn-padding увеличены.
+     • Drill-down категорий в «Рецептах» (раздел 49).
    ============================================================ */
 
 /* ============================================================
@@ -91,7 +92,7 @@
   --shadow-sm: 0 2px 8px rgba(39, 39, 31, 0.05);
   --shadow-md: 0 8px 24px -8px rgba(39, 39, 31, 0.12);
 
-  /* Отступы, радиусы, анимации (не меняются между темами) */
+  /* Отступы, радиусы, анимации */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
   --spacing-md: 16px;
@@ -182,6 +183,10 @@
   color-scheme: dark;
 }
 
+/* ============================================================
+   РАЗДЕЛ 2 · База
+   ============================================================ */
+
 * {
   margin: 0;
   padding: 0;
@@ -263,6 +268,10 @@ button,
   letter-spacing: -0.2px;
 }
 
+/* ============================================================
+   РАЗДЕЛ 3 · Шапка
+   ============================================================ */
+
 .app-header {
   display: flex;
   align-items: center;
@@ -294,6 +303,10 @@ button,
   background: var(--accent-color);
   border-radius: 3px;
 }
+
+/* ============================================================
+   РАЗДЕЛ 4 · Кнопки действий
+   ============================================================ */
 
 .actions {
   display: flex;
@@ -361,6 +374,10 @@ button,
 .import-hidden {
   display: none;
 }
+
+/* ============================================================
+   РАЗДЕЛ 5 · Группа чекбоксов
+   ============================================================ */
 
 .meal-types-group {
   display: grid;
@@ -441,6 +458,10 @@ button,
 .meal-type-checkbox span {
   line-height: 1.3;
 }
+
+/* ============================================================
+   РАЗДЕЛ 6 · Календарь
+   ============================================================ */
 
 .calendar-wrap {
   background: rgba(128, 128, 140, 0.04);
@@ -651,6 +672,10 @@ button,
   font-weight: 700;
 }
 
+/* ============================================================
+   РАЗДЕЛ 7 · Недельный список
+   ============================================================ */
+
 .week-list {
   display: flex;
   flex-direction: column;
@@ -763,6 +788,10 @@ button,
   font-style: italic;
 }
 
+/* ============================================================
+   РАЗДЕЛ 8 · Поиск и фильтры
+   ============================================================ */
+
 .search-filter-wrap {
   display: flex;
   flex-wrap: wrap;
@@ -791,6 +820,10 @@ button,
   border-color: var(--accent-color);
   box-shadow: 0 0 0 3px var(--accent-light);
 }
+
+/* ============================================================
+   РАЗДЕЛ 9 · Блок «Меню»
+   ============================================================ */
 
 .menu-list {
   margin-top: 16px;
@@ -864,6 +897,10 @@ button,
   padding: var(--spacing-lg) 0;
   font-size: 14px;
 }
+
+/* ============================================================
+   РАЗДЕЛ 10 · Модалки — база
+   ============================================================ */
 
 .modal-overlay {
   display: none;
@@ -961,6 +998,10 @@ button,
   padding: var(--spacing-lg) 0;
   font-size: 15px;
 }
+
+/* ============================================================
+   РАЗДЕЛ 11 · Модалка дня
+   ============================================================ */
 
 .day-meals-section {
   margin-bottom: var(--spacing-lg);
@@ -1150,6 +1191,10 @@ button,
   grid-column: 1 / -1;
 }
 
+/* ============================================================
+   РАЗДЕЛ 12 · Редактирование блюда
+   ============================================================ */
+
 .edit-input {
   width: 100%;
   padding: 2px 6px;
@@ -1185,6 +1230,10 @@ button,
   font-size: 12px;
   opacity: 0.8;
 }
+
+/* ============================================================
+   РАЗДЕЛ 13 · Модалка добавления блюда
+   ============================================================ */
 
 .modal-add-section {
   margin-top: var(--spacing-sm);
@@ -1315,6 +1364,10 @@ button,
   margin-top: 12px;
 }
 
+/* ============================================================
+   РАЗДЕЛ 15 · Формы добавления
+   ============================================================ */
+
 .add-modal .modal {
   max-width: 400px;
 }
@@ -1407,6 +1460,10 @@ button,
   box-shadow: 0 0 0 3px var(--accent-light);
 }
 
+/* ============================================================
+   РАЗДЕЛ 16 · Модалки экспорта
+   ============================================================ */
+
 .export-modal .modal {
   max-width: 400px;
 }
@@ -1471,6 +1528,10 @@ button,
 #recipeExportOverlay {
   z-index: 1100;
 }
+
+/* ============================================================
+   РАЗДЕЛ 17 · Экран «Что приготовить?»
+   ============================================================ */
 
 .choice-overlay {
   display: none;
@@ -1809,6 +1870,10 @@ button,
   color: var(--text-primary);
 }
 
+/* ============================================================
+   РАЗДЕЛ 18 · Приветственная модалка
+   ============================================================ */
+
 .welcome-overlay {
   display: none;
   position: fixed;
@@ -1913,6 +1978,10 @@ button,
 .welcome-modal .welcome-btn:active {
   transform: scale(0.96);
 }
+
+/* ============================================================
+   РАЗДЕЛ 19 · Карточка рецепта
+   ============================================================ */
 
 .recipe-view-modal {
   max-width: 520px;
@@ -2103,6 +2172,10 @@ button,
   transform: translateY(-2px);
 }
 
+/* ============================================================
+   РАЗДЕЛ 20 · Таб «Рецепты»
+   ============================================================ */
+
 .recipes-tab {
 }
 .recipes-tab-header {
@@ -2280,34 +2353,6 @@ button,
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
 }
 
-.bottom-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px solid var(--cell-border);
-  justify-content: center;
-}
-.bottom-actions button {
-  flex: 1;
-  max-width: 220px;
-  padding: 10px 16px;
-  font-size: 13px;
-  border-radius: var(--radius-md);
-  background: var(--bg-app);
-  border: 1px solid var(--cell-border);
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: var(--transition-fast);
-  appearance: none;
-  font-family: inherit;
-}
-.bottom-actions button:hover {
-  border-color: var(--accent-color);
-  color: var(--accent-color);
-  transform: translateY(-2px);
-}
-
 .recipes-filters {
   display: flex;
   flex-wrap: wrap;
@@ -2342,92 +2387,6 @@ button,
 .recipes-filters select:focus {
   border-color: var(--accent-color);
   box-shadow: 0 0 0 3px var(--accent-light);
-}
-
-.recipe-category-section {
-  margin-bottom: 8px; 
-}
-
-.recipe-category-header,
-.recipe-category-header:active,
-.recipe-category-header:focus {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  text-align: left;
-  font-family: inherit;
-  font-size: 18px; 
-  font-weight: 700; 
-  color: var(--text-primary);
-  padding: 12px 14px;
-  background: var(--bg-app) !important; 
-  background-color: var(--bg-app) !important;
-  border: 1px solid transparent; 
-  border-radius: var(--radius-sm);
-  margin-bottom: 4px;
-  cursor: pointer;
-  transition: var(--transition-fast);
-  -webkit-appearance: none !important;
-  appearance: none !important;
-  box-sizing: border-box;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent !important;
-  outline: none !important;
-}
-
-@media (hover: hover) {
-  .recipe-category-header:hover {
-    background: var(--card-hover-bg) !important;
-  }
-}
-
-.recipe-category-section:not(.collapsed) .recipe-category-header,
-.recipe-category-section:not(.collapsed) .recipe-category-header:active,
-.recipe-category-section:not(.collapsed) .recipe-category-header:focus {
-  background: var(--accent-light) !important;
-  background-color: var(--accent-light) !important;
-  border-color: var(--accent-color) !important;
-  color: var(--accent-color) !important;
-  outline: none !important;
-}
-
-.recipe-category-section:not(.collapsed) .recipe-category-arrow,
-.recipe-category-section:not(.collapsed) .recipe-category-count {
-  color: var(--accent-color) !important;
-  opacity: 0.8;
-}
-
-.recipe-category-arrow {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  line-height: 1;
-  color: var(--text-muted);
-  flex-shrink: 0;
-  transition: transform var(--transition-fast);
-  transform: rotate(90deg);
-}
-.recipe-category-section.collapsed .recipe-category-arrow {
-  transform: rotate(0deg);
-}
-
-.recipe-category-title {
-  flex: 1;
-  min-width: 0;
-  word-break: break-word;
-}
-
-.recipe-category-count {
-  font-size: 13px;
-  font-weight: 400;
-  color: var(--text-muted);
-  flex-shrink: 0;
-}
-
-.recipe-category-section.collapsed .recipe-list {
-  display: none;
 }
 
 .recipe-list {
@@ -2511,6 +2470,10 @@ button,
   transform: none;
   color: var(--accent-color);
 }
+
+/* ============================================================
+   РАЗДЕЛ 21 · Таб «Покупки»
+   ============================================================ */
 
 .shopping-tab {
 }
@@ -2838,6 +2801,42 @@ button,
   color: var(--text-primary);
 }
 
+/* ============================================================
+   РАЗДЕЛ 22 · Блок экспорта/импорта
+   ============================================================ */
+
+.bottom-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--cell-border);
+  justify-content: center;
+}
+.bottom-actions button {
+  flex: 1;
+  max-width: 220px;
+  padding: 10px 16px;
+  font-size: 13px;
+  border-radius: var(--radius-md);
+  background: var(--bg-app);
+  border: 1px solid var(--cell-border);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  appearance: none;
+  font-family: inherit;
+}
+.bottom-actions button:hover {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+  transform: translateY(-2px);
+}
+
+/* ============================================================
+   РАЗДЕЛ 23 · Свайп блюда
+   ============================================================ */
+
 .dish-swipe-wrap {
   position: relative;
   overflow: hidden;
@@ -2891,6 +2890,10 @@ button,
   pointer-events: auto;
 }
 
+/* ============================================================
+   РАЗДЕЛ 24 · Undo-плашка
+   ============================================================ */
+
 .undo-snackbar {
   position: fixed;
   left: 12px;
@@ -2942,6 +2945,10 @@ button,
 .undo-snackbar-btn:active {
   opacity: 0.7;
 }
+
+/* ============================================================
+   РАЗДЕЛ 25 · Подсказки «Сегодня»
+   ============================================================ */
 
 .today-hints {
   margin: 16px 0 0;
@@ -3027,6 +3034,10 @@ button,
   line-height: 1;
 }
 
+/* ============================================================
+   РАЗДЕЛ 26 · Повторить меню
+   ============================================================ */
+
 .repeat-menu-btn {
   display: block;
   width: 100%;
@@ -3053,6 +3064,10 @@ button,
   outline: 2px solid var(--accent-color);
   outline-offset: 2px;
 }
+
+/* ============================================================
+   РАЗДЕЛ 27 · Онбординг
+   ============================================================ */
 
 .onboarding-overlay {
   display: none;
@@ -3272,6 +3287,10 @@ button,
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
 }
 
+/* ============================================================
+   РАЗДЕЛ 28 · Гамбургер-меню
+   ============================================================ */
+
 .more-menu-wrap {
   position: relative;
   display: inline-block;
@@ -3390,6 +3409,10 @@ button,
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
 }
 
+/* ============================================================
+   РАЗДЕЛ 29 · Нижняя навигация
+   ============================================================ */
+
 .bottom-nav {
   position: fixed;
   left: 0;
@@ -3455,6 +3478,10 @@ button,
   box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.4);
 }
 
+/* ============================================================
+   РАЗДЕЛ 30 · Переключение табов
+   ============================================================ */
+
 .tab-view {
   display: none;
 }
@@ -3464,6 +3491,10 @@ button,
 .app[data-active-tab="shopping"] .tab-view[data-tab-view="shopping"] {
   display: block;
 }
+
+/* ============================================================
+   РАЗДЕЛ 32 · Экран «Сегодня»
+   ============================================================ */
 
 .today-header {
   display: flex;
@@ -3644,6 +3675,10 @@ button,
   transform: translateY(0);
 }
 
+/* ============================================================
+   РАЗДЕЛ 33–34 · Печать
+   ============================================================ */
+
 #printArea {
   display: none;
 }
@@ -3750,6 +3785,10 @@ button,
   }
 }
 
+/* ============================================================
+   РАЗДЕЛ 35 · prefers-reduced-motion
+   ============================================================ */
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -3760,6 +3799,10 @@ button,
     scroll-behavior: auto !important;
   }
 }
+
+/* ============================================================
+   РАЗДЕЛ 36–39 · Адаптивность
+   ============================================================ */
 
 @media (max-width: 480px) {
   .meal-types-group {
@@ -4150,6 +4193,10 @@ button,
   }
 }
 
+/* ============================================================
+   РАЗДЕЛ 40 · Форма рецепта v2
+   ============================================================ */
+
 .add-modal .recipe-form-modal .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -4374,6 +4421,10 @@ button,
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* ============================================================
+   РАЗДЕЛ 41 · Карточка рецепта v2
+   ============================================================ */
 
 .recipe-view-modal .recipe-servings-row {
   display: flex;
@@ -4677,6 +4728,10 @@ button,
   }
 }
 
+/* ============================================================
+   РАЗДЕЛ 42 · Модалка «Оформление»
+   ============================================================ */
+
 .theme-modal .modal {
   max-width: 480px;
 }
@@ -4706,6 +4761,7 @@ button,
   appearance: none;
   transition: var(--transition-fast);
 }
+
 .theme-option:hover {
   border-color: var(--accent-color);
   background: var(--card-hover-bg);
@@ -4801,6 +4857,10 @@ button,
   }
 }
 
+/* ============================================================
+   РАЗДЕЛ 43 · Аккордеон карточки
+   ============================================================ */
+
 .recipe-view-modal .recipe-accordion > summary.recipe-section-title,
 .recipe-view-modal .recipe-accordion > summary.recipe-section-title:active,
 .recipe-view-modal .recipe-accordion > summary.recipe-section-title:focus {
@@ -4867,6 +4927,10 @@ button,
   color: var(--accent-text) !important;
 }
 
+/* ============================================================
+   РАЗДЕЛ 44 · Заметка в карточке
+   ============================================================ */
+
 .recipe-view-modal .recipe-comments {
   margin: 16px 0;
   padding: 12px 16px;
@@ -4897,12 +4961,20 @@ button,
   color: var(--accent-hover);
 }
 
+/* ============================================================
+   РАЗДЕЛ 45 · Блокировка body
+   ============================================================ */
+
 body:has(.modal-overlay.active),
 body:has(.choice-overlay.active),
 body:has(.welcome-overlay.active),
 body:has(.onboarding-overlay.active) {
   overflow: hidden;
 }
+
+/* ============================================================
+   РАЗДЕЛ 46 · Фикс тёмных тем
+   ============================================================ */
 
 [data-theme="dark"] * {
   -webkit-tap-highlight-color: transparent;
@@ -4924,6 +4996,10 @@ body:has(.onboarding-overlay.active) {
   background: var(--accent-color);
   color: var(--accent-text);
 }
+
+/* ============================================================
+   РАЗДЕЛ 47 · Кнопка «Собрать»
+   ============================================================ */
 
 .generate-menu-btn {
   background: var(--bg-app);
@@ -4968,6 +5044,10 @@ body:has(.onboarding-overlay.active) {
   width: 100%;
   max-width: 340px;
 }
+
+/* ============================================================
+   РАЗДЕЛ 48 · Свайп рецепта
+   ============================================================ */
 
 .recipe-list-item-swipe {
   display: block;
@@ -5034,4 +5114,135 @@ body:has(.onboarding-overlay.active) {
 .recipe-swipe-wrap.is-shifted .recipe-swipe-delete {
   opacity: 1;
   pointer-events: auto;
+}
+
+/* ============================================================
+   РАЗДЕЛ 49 · Drill-down категорий в «Рецептах» (v6.1.0)
+   ============================================================ */
+
+.recipe-category-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+@media (min-width: 500px) {
+  .recipe-category-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.recipe-category-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  min-height: 64px;
+  background: var(--bg-app);
+  border: 1px solid var(--cell-border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.recipe-category-card:hover {
+  background: var(--card-hover-bg);
+  border-color: var(--accent-color);
+  transform: translateY(-1px);
+}
+
+.recipe-category-card:active {
+  transform: scale(0.98);
+}
+
+.recipe-category-card:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.recipe-category-card-title {
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.recipe-category-card[data-cat="soup"] .recipe-category-card-title      { color: var(--color-soup); }
+.recipe-category-card[data-cat="salad"] .recipe-category-card-title     { color: var(--color-salad); }
+.recipe-category-card[data-cat="main"] .recipe-category-card-title      { color: var(--color-main); }
+.recipe-category-card[data-cat="appetizer"] .recipe-category-card-title { color: var(--color-appetizer); }
+.recipe-category-card[data-cat="bakery"] .recipe-category-card-title    { color: var(--color-bakery); }
+.recipe-category-card[data-cat="dessert"] .recipe-category-card-title   { color: var(--color-dessert); }
+
+.recipe-category-card-count {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: var(--badge-bg);
+  padding: 3px 10px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.recipe-category-card-chevron {
+  font-size: 22px;
+  line-height: 1;
+  color: var(--text-muted);
+  font-weight: 400;
+  flex-shrink: 0;
+}
+
+.recipes-category-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 14px;
+  margin-bottom: 12px;
+  background: var(--bg-app);
+  border: 1.5px solid var(--text-muted);
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  appearance: none;
+}
+.recipes-category-back:hover {
+  background: var(--cell-bg);
+  border-color: var(--text-primary);
+}
+.recipes-category-back:active {
+  transform: scale(0.98);
+}
+.recipes-category-back:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+/* Плоский список (поиск): бейджи категорий в одну строку */
+.recipe-list-badges-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .recipe-category-card {
+    padding: 14px 16px;
+    min-height: 58px;
+    font-size: 15px;
+  }
+  .recipe-category-card-chevron {
+    font-size: 20px;
+  }
 }
