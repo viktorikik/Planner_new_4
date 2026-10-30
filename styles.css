@@ -1053,13 +1053,12 @@ button,
 .day-group:last-child {
   margin-bottom: 0;
 }
-
 .day-group-title {
-  font-size: 15px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
-  color: var(--accent-color);
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
   margin-bottom: 4px;
 }
 
@@ -3695,7 +3694,8 @@ button,
 .today-action-generate {
   background: var(--accent-color);
   color: var(--accent-text);
-  box-shadow: 0 2px 8px var(--accent-shadow);
+  box-shadow: none; /* Убираем жесткую тень, пульсация и так привлекает внимание */
+  font-weight: 700;
   animation: pulseGlow 2.5s infinite;
 }
 .today-action-generate:hover {
@@ -3722,13 +3722,13 @@ button,
 }
 
 .today-action-suggest {
-  background: var(--bg-app);
-  border: 1.5px solid var(--text-muted);
+  background: var(--chip-bg);
+  border: none;
   color: var(--text-primary);
+  font-weight: 600;
 }
 .today-action-suggest:hover {
-  background: var(--cell-bg);
-  border-color: var(--text-primary);
+  background: var(--badge-bg);
   transform: translateY(-2px);
 }
 .today-action-suggest:active {
