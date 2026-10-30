@@ -478,7 +478,7 @@ button,
   align-items: center;
   justify-content: space-between;
   padding: 0 4px 12px;
-  gap: 8px;
+  gap: 12px;
 }
 
 .view-toggle {
@@ -488,6 +488,7 @@ button,
   padding: var(--spacing-xs);
   border-radius: var(--radius-lg);
   flex-shrink: 0;
+  order: 1;
 }
 .view-toggle button {
   border: none;
@@ -502,9 +503,9 @@ button,
   white-space: nowrap;
 }
 .view-toggle button.active {
-  background: var(--accent-color) !important; /* Сплошной лайм */
-  color: var(--accent-text) !important;       /* Тёмный текст */
-  box-shadow: none !important;
+  background: var(--accent-color);
+  color: var(--accent-text);
+  box-shadow: none;
   font-weight: 700;
 }
 .view-toggle button:hover:not(.active) {
@@ -516,8 +517,10 @@ button,
   align-items: center;
   justify-content: center;
   gap: 12px;
-  flex: 1 1 auto;
+  flex: 1 1 100%;
   min-width: 0;
+  order: 3;
+  margin-top: 4px;
 }
 
 .month-nav-btn {
@@ -572,6 +575,7 @@ button,
   white-space: nowrap;
   flex-shrink: 0;
   appearance: none;
+  order: 2; /* <--- ДОБАВЛЕНА ТОЛЬКО ЭТА СТРОКА */
 }
 .today-btn:hover {
   background: var(--cell-bg);
