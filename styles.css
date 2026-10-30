@@ -1,30 +1,11 @@
 /* ============================================================
    Меню и рецепты · styles.css
-/* ============================================================
-   Меню и рецепты · styles.css
    v5.6.2 (Экран «Сегодня» + унификация Экспорт/Импорт):
-     • .today-nav-wrap и .today-nav-btn — стрелки листания дней (для ПК).
-     • .today-action-add → .today-action-generate (главная кнопка).
-     • .recipes-bottom-actions → .bottom-actions (общий класс).
-       Используется на «Меню» и «Рецептах».
-     • .backup-row удалён, вместо него .bottom-actions.
-     • .btn-row .btn-export / .btn-import удалены (не используются).
-   v5.5.5 (Фикс белой заливки в тёмных темах):
-     ...
-   ============================================================ */
-   v5.5.5 (Фикс белой заливки в тёмных темах):
-     • brand-dark: добавлена --card-hover-bg (наследовалась светлая из :root).
-     • classic-dark: --card-hover-bg приглушена (0.05 → 0.04).
-     • Глобальные фиксы: tap-highlight, фон input/select/textarea/option, ::selection.
-   v5.5.4 (Блок 7 · UX-полировка, v5.34):
-     • ГЛОБАЛЬНЫЙ ФИКС iOS: убраны все background: transparent у кнопок и summary.
-       Вместо них используется var(--bg-app) или var(--bg-primary), чтобы iOS
-       не заливал элементы белым цветом при нажатии/фокусе.
-     • ФИКС SCROLL CHAINING: добавлен overscroll-behavior: contain во все модалки.
-     • ФИКС БЕЛОЙ СТРОКИ АККОРДЕОНА: фон summary изменён на var(--bg-primary).
-     • ШАПКА КАЛЕНДАРЯ: переключатель, стрелки и кнопка "Сегодня" в одну строку.
-
-   1. ПЕРЕМЕННЫЕ — ТЕМЫ ОФОРМЛЕНИЯ (v5.15, Блок 4 · 4.1–4.3)
+     • .today-nav-wrap и .today-nav-btn — стрелки листания дней.
+     • .today-action-add → .today-action-generate.
+     • .recipes-bottom-actions → .bottom-actions.
+     • .backup-row удалён.
+     • .btn-row .btn-export / .btn-import удалены.
    ============================================================ */
 :root,
 [data-theme="classic-light"] {
@@ -130,7 +111,7 @@
   --search-bg: rgba(50, 42, 35, 0.6);
   --search-border: rgba(255, 240, 220, 0.1);
   --card-bg: rgba(45, 38, 32, 0.7);
-  --card-hover-bg: rgba(255, 240, 220, 0.04); /* v5.5.5: менее заметный hover */
+  --card-hover-bg: rgba(255, 240, 220, 0.04);
   --accent-color: #d8785a;
   --accent-hover: #e58a6d;
   --accent-light: rgba(216, 120, 90, 0.18);
@@ -138,9 +119,6 @@
   --accent-shadow: rgba(216, 120, 90, 0.35);
 }
 
-/* ============================================================
-   1b. БРЕНД-ПАЛИТРА (Блок 4 · подэтап 4.2)
-   ============================================================ */
 [data-theme="brand-light"] {
   --bg-primary: #F4EBDD;
   --bg-app: #FFFAF1;
@@ -205,7 +183,7 @@
   --input-bg: rgba(60, 56, 50, 0.6);
   --modal-bg: #221F1C;
   --card-bg: rgba(60, 56, 50, 0.65);
-  --card-hover-bg: rgba(244, 235, 221, 0.06); /* v5.5.5: фикс белой заливки при hover */
+  --card-hover-bg: rgba(244, 235, 221, 0.06);
   --search-bg: rgba(60, 56, 50, 0.6);
   --search-border: rgba(244, 235, 221, 0.1);
   --chip-bg: rgba(60, 56, 50, 0.7);
@@ -255,9 +233,6 @@
   color-scheme: dark;
 }
 
-/* ============================================================
-   2. БАЗА
-   ============================================================ */
 * {
   margin: 0;
   padding: 0;
@@ -337,9 +312,6 @@ button,
   -webkit-tap-highlight-color: transparent;
 }
 
-/* ============================================================
-   ТИПОГРАФИКА — УМЕНЬШАЕМ ГРАДИЕНТ
-   ============================================================ */
 .recipes-tab-header h2,
 .shopping-tab-title,
 .today-date {
@@ -348,9 +320,6 @@ button,
   letter-spacing: -0.2px;
 }
 
-/* ============================================================
-   3. ШАПКА
-   ============================================================ */
 .app-header {
   display: flex;
   align-items: center;
@@ -383,9 +352,6 @@ button,
   border-radius: 3px;
 }
 
-/* ============================================================
-   4. КНОПКИ ДЕЙСТВИЙ
-   ============================================================ */
 .actions {
   display: flex;
   flex-direction: column;
@@ -439,7 +405,7 @@ button,
 }
 
 .btn-row .btn-secondary {
-  background: var(--bg-app); /* Фикс */
+  background: var(--bg-app);
   border: 1.5px solid var(--text-muted);
   color: var(--text-primary);
 }
@@ -449,15 +415,10 @@ button,
   transform: translateY(-2px);
 }
 
-
-
 .import-hidden {
   display: none;
 }
 
-/* ============================================================
-   5. ГРУППА ЧЕКБОКСОВ «ПРИЁМ ПИЩИ»
-   ============================================================ */
 .meal-types-group {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -538,9 +499,6 @@ button,
   line-height: 1.3;
 }
 
-/* ============================================================
-   6. КАЛЕНДАРЬ (неделя / месяц) — v5.5.4
-   ============================================================ */
 .calendar-wrap {
   background: rgba(128, 128, 140, 0.04);
   border-radius: var(--radius-md);
@@ -750,9 +708,6 @@ button,
   font-weight: 700;
 }
 
-/* ============================================================
-   7. НЕДЕЛЬНЫЙ СПИСОК
-   ============================================================ */
 .week-list {
   display: flex;
   flex-direction: column;
@@ -865,9 +820,6 @@ button,
   font-style: italic;
 }
 
-/* ============================================================
-   8. ПОИСК И ФИЛЬТРЫ
-   ============================================================ */
 .search-filter-wrap {
   display: flex;
   flex-wrap: wrap;
@@ -896,9 +848,6 @@ button,
   box-shadow: 0 0 0 3px var(--accent-light);
 }
 
-/* ============================================================
-   9. БЛОК «МЕНЮ»
-   ============================================================ */
 .menu-list {
   margin-top: 16px;
   background: rgba(128, 128, 140, 0.04);
@@ -972,9 +921,6 @@ button,
   font-size: 14px;
 }
 
-/* ============================================================
-   10. МОДАЛКИ — БАЗА
-   ============================================================ */
 .modal-overlay {
   display: none;
   position: fixed;
@@ -1072,9 +1018,6 @@ button,
   font-size: 15px;
 }
 
-/* ============================================================
-   11. МОДАЛКА ДНЯ — ГРУППЫ И КАРТОЧКА БЛЮДА
-   ============================================================ */
 .day-meals-section {
   margin-bottom: var(--spacing-lg);
   border-bottom: 2px solid var(--cell-border);
@@ -1263,9 +1206,6 @@ button,
   grid-column: 1 / -1;
 }
 
-/* ============================================================
-   12. РЕДАКТИРОВАНИЕ БЛЮДА (inline)
-   ============================================================ */
 .edit-input {
   width: 100%;
   padding: 2px 6px;
@@ -1302,9 +1242,6 @@ button,
   opacity: 0.8;
 }
 
-/* ============================================================
-   13. МОДАЛКА ДНЯ — БЛОК ДОБАВЛЕНИЯ БЛЮДА
-   ============================================================ */
 .modal-add-section {
   margin-top: var(--spacing-sm);
   padding-top: 16px;
@@ -1433,9 +1370,6 @@ button,
   margin-top: 12px;
 }
 
-/* ============================================================
-   15. МОДАЛКИ ДОБАВЛЕНИЯ / РЕДАКТИРОВАНИЯ — ФОРМА
-   ============================================================ */
 .add-modal .modal {
   max-width: 400px;
 }
@@ -1498,7 +1432,7 @@ button,
   transform: translateY(-2px);
 }
 .add-modal .form-actions .btn-secondary {
-  background: var(--bg-app); /* Фикс */
+  background: var(--bg-app);
   border: 1px solid var(--text-muted);
   color: var(--text-primary);
 }
@@ -1525,9 +1459,6 @@ button,
   box-shadow: 0 0 0 3px var(--accent-light);
 }
 
-/* ============================================================
-   16. МОДАЛКИ ЭКСПОРТА
-   ============================================================ */
 .export-modal .modal {
   max-width: 400px;
 }
@@ -1593,9 +1524,6 @@ button,
   z-index: 1100;
 }
 
-/* ============================================================
-   17. ЭКРАН «ЧТО ПРИГОТОВИТЬ?»
-   ============================================================ */
 .choice-overlay {
   display: none;
   position: fixed;
@@ -1901,7 +1829,7 @@ button,
 }
 
 .choice-action-recipes {
-  background: var(--bg-app); /* Фикс */
+  background: var(--bg-app);
   border: 1.5px solid var(--text-muted);
   color: var(--text-primary);
 }
@@ -1931,9 +1859,6 @@ button,
   color: var(--text-primary);
 }
 
-/* ============================================================
-   18. ПРИВЕТСТВЕННАЯ МОДАЛКА
-   ============================================================ */
 .welcome-overlay {
   display: none;
   position: fixed;
@@ -2038,9 +1963,6 @@ button,
   transform: scale(0.96);
 }
 
-/* ============================================================
-   19. КАРТОЧКА РЕЦЕПТА (просмотр)
-   ============================================================ */
 .recipe-view-modal {
   max-width: 520px;
 }
@@ -2220,7 +2142,7 @@ button,
 }
 
 .recipe-view-modal .recipe-card-buttons .btn-secondary {
-  background: var(--bg-app); /* Фикс */
+  background: var(--bg-app);
   border: 1.5px solid var(--text-muted);
   color: var(--text-primary);
 }
@@ -2230,9 +2152,6 @@ button,
   transform: translateY(-2px);
 }
 
-/* ============================================================
-   20. ТАБ «РЕЦЕПТЫ» — ПАНЕЛЬ, ФИЛЬТРЫ, СПИСОК (v5.5.4)
-   ============================================================ */
 .recipes-tab {
 }
 .recipes-tab-header {
@@ -2254,7 +2173,7 @@ button,
 }
 .recipe-source-tab {
   border: none;
-  background: var(--bg-app); /* Фикс */
+  background: var(--bg-app);
   padding: 8px 16px;
   border-radius: var(--radius-md);
   font-weight: 600;
@@ -2319,7 +2238,7 @@ button,
   font-weight: 500;
   margin-bottom: 12px;
   cursor: pointer;
-  background: var(--bg-app); /* Фикс */
+  background: var(--bg-app);
   border: 1.5px solid var(--text-muted);
   color: var(--text-primary);
   transition: var(--transition-fast);
@@ -2410,7 +2329,7 @@ button,
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
 }
 
-/* v5.6.2: общий блок для Экспорт/Импорт — используется на «Меню» и «Рецептах» */
+/* v5.6.2: Общий блок для Экспорт/Импорт (Меню и Рецепты) */
 .bottom-actions {
   display: flex;
   gap: 8px;
@@ -2642,9 +2561,6 @@ button,
   color: var(--accent-color);
 }
 
-/* ============================================================
-   21. ТАБ «ПОКУПКИ»
-   ============================================================ */
 .shopping-tab {
 }
 .shopping-tab-title {
@@ -2749,7 +2665,7 @@ button,
   font-size: 13px;
   margin-bottom: 12px;
   cursor: pointer;
-  background: var(--bg-app); /* Фикс */
+  background: var(--bg-app);
   border: 1.5px solid var(--text-muted);
   color: var(--text-primary);
   transition: var(--transition-fast);
@@ -2854,6 +2770,7 @@ button,
   color: var(--text-secondary);
   word-break: break-word;
 }
+
 .shopping-list-view .shopping-items li::before {
   content: '';
   position: absolute;
@@ -2953,9 +2870,6 @@ button,
   color: var(--text-primary);
 }
 
-/* ============================================================
-   22. БЛОК ЭКСПОРТА/ИМПОРТА (на главной)
-   ============================================================ */
 .backup-section {
   margin-top: 24px;
   text-align: center;
@@ -2970,9 +2884,6 @@ button,
   color: var(--text-primary);
 }
 
-/* ============================================================
-   23. СВАЙП-УДАЛЕНИЕ КАРТОЧКИ БЛЮДА
-   ============================================================ */
 .dish-swipe-wrap {
   position: relative;
   overflow: hidden;
@@ -3026,9 +2937,6 @@ button,
   pointer-events: auto;
 }
 
-/* ============================================================
-   24. ПЛАШКА «ВЕРНУТЬ УДАЛЁННОЕ»
-   ============================================================ */
 .undo-snackbar {
   position: fixed;
   left: 12px;
@@ -3081,9 +2989,6 @@ button,
   opacity: 0.7;
 }
 
-/* ============================================================
-   25. ПОДСКАЗКИ НА ЭКРАНЕ «СЕГОДНЯ»
-   ============================================================ */
 .today-hints {
   margin: 16px 0 0;
   padding: 0;
@@ -3168,9 +3073,6 @@ button,
   line-height: 1;
 }
 
-/* ============================================================
-   26. КНОПКА «ПОВТОРИТЬ МЕНЮ»
-   ============================================================ */
 .repeat-menu-btn {
   display: block;
   width: 100%;
@@ -3198,9 +3100,6 @@ button,
   outline-offset: 2px;
 }
 
-/* ============================================================
-   27. ОБУЧАЮЩИЙ ТУР (ONBOARDING)
-   ============================================================ */
 .onboarding-overlay {
   display: none;
   position: fixed;
@@ -3381,7 +3280,7 @@ button,
 }
 
 .onboarding-btn-secondary {
-  background: var(--bg-app); /* Фикс */
+  background: var(--bg-app);
   border: 1.5px solid var(--text-muted);
   color: var(--text-primary);
 }
@@ -3418,9 +3317,6 @@ button,
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
 }
 
-/* ============================================================
-   28. КНОПКА-ГАМБУРГЕР И ВЫПАДАЮЩЕЕ МЕНЮ В ШАПКЕ
-   ============================================================ */
 .more-menu-wrap {
   position: relative;
   display: inline-block;
@@ -3507,7 +3403,7 @@ button,
   padding: 10px 12px;
   border: none;
   border-radius: var(--radius-sm);
-  background: var(--bg-app); /* Фикс */
+  background: var(--bg-app);
   color: var(--text-primary);
   font-size: 14px;
   font-weight: 500;
@@ -3539,9 +3435,6 @@ button,
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
 }
 
-/* ============================================================
-   29. НИЖНЯЯ НАВИГАЦИЯ (BOTTOM NAV)
-   ============================================================ */
 .bottom-nav {
   position: fixed;
   left: 0;
@@ -3605,9 +3498,6 @@ button,
   box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.4);
 }
 
-/* ============================================================
-   30. ПЕРЕКЛЮЧЕНИЕ КОНТЕНТА ПО ТАБАМ
-   ============================================================ */
 .tab-view {
   display: none;
 }
@@ -3618,9 +3508,6 @@ button,
   display: block;
 }
 
-/* ============================================================
-   32. ЭКРАН «СЕГОДНЯ»
-   ============================================================ */
 .today-header {
   display: flex;
   align-items: center;
@@ -3632,7 +3519,6 @@ button,
   border-bottom: 2px solid var(--cell-border);
 }
 
-/* v5.6.2: обёртка «стрелка — дата — стрелка» для листания дней */
 .today-nav-wrap {
   display: flex;
   align-items: center;
@@ -3693,7 +3579,7 @@ button,
   margin-bottom: 16px;
   padding: 6px 14px;
   border-radius: 999px;
-  background: var(--bg-app); /* Фикс */
+  background: var(--bg-app);
   border: 1.5px solid var(--text-muted);
   color: var(--text-primary);
   font-size: 13px;
@@ -3772,7 +3658,6 @@ button,
   outline-offset: 2px;
 }
 
-/* v5.6.2: главная кнопка «Собрать меню на неделю» — акцентная */
 .today-action-generate {
   background: var(--accent-color);
   color: var(--accent-text);
@@ -3787,7 +3672,6 @@ button,
   transform: translateY(0);
 }
 
-/* v5.6.2: вторичные кнопки «Что приготовить» и «Добавить блюдо» */
 .today-action-suggest {
   background: var(--bg-app);
   border: 1.5px solid var(--text-muted);
@@ -3801,16 +3685,11 @@ button,
 .today-action-suggest:active {
   transform: translateY(0);
 }
-/* ============================================================
-   33. ПЕЧАТНАЯ ОБЛАСТЬ
-   ============================================================ */
+
 #printArea {
   display: none;
 }
 
-/* ============================================================
-   34. СТИЛИ ДЛЯ ПЕЧАТИ
-   ============================================================ */
 @media print {
   body > *:not(#printArea) {
     display: none !important;
@@ -3913,9 +3792,6 @@ button,
   }
 }
 
-/* ============================================================
-   35. УВАЖЕНИЕ К НАСТРОЙКЕ «УМЕНЬШИТЬ ДВИЖЕНИЕ»
-   ============================================================ */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -3927,9 +3803,6 @@ button,
   }
 }
 
-/* ============================================================
-   36. АДАПТИВНОСТЬ — МОБИЛЬНЫЙ (до 480px)
-   ============================================================ */
 @media (max-width: 480px) {
   .meal-types-group {
     gap: 6px;
@@ -3984,7 +3857,7 @@ button,
     padding: 10px 12px;
   }
 
-  .backup-row .btn {
+  .bottom-actions button {
     min-width: 120px;
     max-width: 160px;
     font-size: 13px;
@@ -4200,27 +4073,17 @@ button,
     padding: 9px 10px;
   }
 
-  .tab-placeholder {
-    padding: 32px 16px;
-  }
-  .tab-placeholder-icon {
-    font-size: 48px;
-  }
-  .tab-placeholder-title {
+  .today-date {
     font-size: 18px;
   }
-
-.today-date {
-  font-size: 18px;
-}
-.today-nav-btn {
-  min-width: 28px;
-  min-height: 28px;
-  font-size: 16px;
-}
-.today-nav-wrap {
-  gap: 6px;
-}
+  .today-nav-btn {
+    min-width: 28px;
+    min-height: 28px;
+    font-size: 16px;
+  }
+  .today-nav-wrap {
+    gap: 6px;
+  }
   .today-empty {
     padding: 24px 12px;
   }
@@ -4233,9 +4096,6 @@ button,
   }
 }
 
-/* ============================================================
-   37. АДАПТИВНОСТЬ — ПЛАНШЕТ (от 480px)
-   ============================================================ */
 @media (min-width: 480px) {
   .modal-field-input,
   .modal-field-select {
@@ -4250,9 +4110,6 @@ button,
   }
 }
 
-/* ============================================================
-   38. АДАПТИВНОСТЬ — ДЕСКТОП (от 700px)
-   ============================================================ */
 @media (min-width: 700px) {
   .app {
     padding: var(--spacing-xl) var(--spacing-xl);
@@ -4314,9 +4171,6 @@ button,
   }
 }
 
-/* ============================================================
-   39. АДАПТИВНОСТЬ — БОЛЬШОЙ ДЕСКТОП (от 1000px)
-   ============================================================ */
 @media (min-width: 1000px) {
   .day-cell {
     min-height: 80px;
@@ -4331,9 +4185,6 @@ button,
   }
 }
 
-/* ============================================================
-   40. ФОРМА РЕЦЕПТА v2
-   ============================================================ */
 .add-modal .recipe-form-modal .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -4556,9 +4407,6 @@ button,
   }
 }
 
-/* ============================================================
-   41. КАРТОЧКА РЕЦЕПТА v2
-   ============================================================ */
 .recipe-view-modal .recipe-servings-row {
   display: flex;
   align-items: center;
@@ -4861,9 +4709,6 @@ button,
   }
 }
 
-/* ============================================================
-   42. МОДАЛКА «ОФОРМЛЕНИЕ» (Блок 4 · подэтап 4.3)
-   ============================================================ */
 .theme-modal .modal {
   max-width: 480px;
 }
@@ -4988,10 +4833,6 @@ button,
   }
 }
 
-/* ============================================================
-   43. АККОРДЕОН В КАРТОЧКЕ РЕЦЕПТА (v5.5.4 - фикс iOS)
-   ============================================================ */
-
 .recipe-view-modal .recipe-accordion > summary.recipe-section-title,
 .recipe-view-modal .recipe-accordion > summary.recipe-section-title:active,
 .recipe-view-modal .recipe-accordion > summary.recipe-section-title:focus {
@@ -5058,9 +4899,6 @@ button,
   color: var(--accent-text) !important;
 }
 
-/* ============================================================
-   44. БЛОК «ЗАМЕТКА» В КАРТОЧКЕ РЕЦЕПТА
-   ============================================================ */
 .recipe-view-modal .recipe-comments {
   margin: 16px 0;
   padding: 12px 16px;
@@ -5091,9 +4929,6 @@ button,
   color: var(--accent-hover);
 }
 
-/* ============================================================
-   45. v5.5.4 · Блокировка прокрутки body под открытой модалкой
-   ============================================================ */
 body:has(.modal-overlay.active),
 body:has(.choice-overlay.active),
 body:has(.welcome-overlay.active),
@@ -5101,18 +4936,11 @@ body:has(.onboarding-overlay.active) {
   overflow: hidden;
 }
 
-/* ============================================================
-   46. v5.5.5 · ФИКС БЕЛЫХ ПОДСВЕТОК БРАУЗЕРА В ТЁМНЫХ ТЕМАХ
-   ============================================================ */
-
-/* Системная подсветка тапа/клика — во всех тёмных темах */
 [data-theme="classic-dark"] *,
 [data-theme="brand-dark"] * {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Поля ввода, селекты и textarea — принудительно тёмный фон.
-   Без этого браузер рисует белый фон поверх input/select/textarea. */
 [data-theme="classic-dark"] input:not([type="checkbox"]):not([type="radio"]),
 [data-theme="classic-dark"] select,
 [data-theme="classic-dark"] textarea,
@@ -5123,28 +4951,18 @@ body:has(.onboarding-overlay.active) {
   color: var(--text-primary);
 }
 
-/* Опции выпадающих списков — в некоторых браузерах белые по умолчанию */
 [data-theme="classic-dark"] option,
 [data-theme="brand-dark"] option {
   background-color: var(--modal-bg);
   color: var(--text-primary);
 }
 
-/* Выделение текста — чтобы не было белого */
 [data-theme="classic-dark"] ::selection,
 [data-theme="brand-dark"] ::selection {
   background: var(--accent-color);
   color: var(--accent-text);
 }
 
-
-/* ============================================================
-   v5.6.0 · ФИКС КНОПКИ АВТОСБОРЩИКА (в стиле проекта)
-   ============================================================ */
-/* ============================================================
-   v5.6.1 · Кнопка «Собрать» в стиле остальных кнопок
-   (вторичная, как «Сегодня» — без лаймового фона)
-   ============================================================ */
 .generate-menu-btn {
   background: var(--bg-app);
   color: var(--text-primary);
@@ -5178,7 +4996,6 @@ body:has(.onboarding-overlay.active) {
   transform: translateY(0);
 }
 
-/* v5.43: блок с кнопкой на «Сегодня» */
 .today-generate-section {
   margin-top: var(--spacing-lg);
   padding-top: var(--spacing-md);
@@ -5190,10 +5007,6 @@ body:has(.onboarding-overlay.active) {
   max-width: 340px;
 }
 
-
-/* ============================================================
-   47. v5.43 · Свайп-удаление своих рецептов в списке «Рецепты»
-   ============================================================ */
 .recipe-list-item-swipe {
   display: block;
   padding: 0;
