@@ -1,6 +1,10 @@
 /**
  * main.js — точка входа приложения.
  *
+ * v6.4.4:
+ *   • Исправлен переход к меню из модалки успеха (использование pendingTabAfterModalClose).
+ *   • Добавлено правильное склонение количества дней (день/дня/дней).
+ *
  * v6.4.3:
  *   • Исправлен переход к меню из модалки успеха (закрытие модалки перед сменой хэша).
  *   • Исправлен скролл к первому дню (селектор .week-row вместо .day-cell).
@@ -89,6 +93,9 @@ const DEFAULT_THEME = THEMES.LIGHT;
     });
   }
 
+  // v6.4.4: Переменная для отложенного скролла к дате
+  let pendingScrollDate = null;
+
   function setActiveTab(tab) {
     highlightBottomNav(tab);
     const app = document.querySelector('.app');
@@ -102,6 +109,18 @@ const DEFAULT_THEME = THEMES.LIGHT;
       initShoppingTab();
     } else {
       resetOpenedFromChoice();
+    }
+
+    // v6.4.4: Скролл к дате после перехода на меню
+    if (tab === 'menu' && pendingScrollDate) {
+      const d = pendingScrollDate;
+      pendingScrollDate = null;
+      setTimeout(() => {
+        const firstDayEl = document.querySelector(`.week-row[data-date="${d}"]`);
+        if (firstDayEl) {
+          firstDayEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 150);
     }
   }
 
@@ -488,7 +507,7 @@ const DEFAULT_THEME = THEMES.LIGHT;
     generateFormContent.hidden = false;
     generateConflictBlock.hidden = true;
     generateStartDate.value = Utils.formatDateLocal(new Date());
-    loadUserPreferencesUI(); // v6.4.0: Обновляем UI перед открытием
+    loadUserPreferencesUI();
     generateMenuOverlay.classList.add('active');
     trapFocus(generateMenuOverlay, closeGenerateModal);
   }
@@ -504,42 +523,47 @@ const DEFAULT_THEME = THEMES.LIGHT;
     }
   }
 
-  // v6.4.3: Функция показа модалки успеха (ИСПРАВЛЕН ПЕРЕХОД)
+  // v6.4.4: Функция склонения дней
+  function pluralDays(n) {
+    const mod10 = n % 10;
+    const mod100 = n % 100;
+    if (mod10 === 1 && mod100 !== 11) return `${n} день`;
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return `${n} дня`;
+    return `${n} дней`;
+  }
+
+  // v6.4.4: Функция показа модалки успеха (ИСПРАВЛЕН ПЕРЕХОД)
   function showSuccessModal(options) {
     if (!successModalOverlay) return;
     
     const textEl = document.getElementById('successModalText');
     const warningEl = document.getElementById('successModalWarning');
     
+    const daysStr = pluralDays(options.days);
+
     if (options.isLowRecipes) {
       warningEl.style.display = 'block';
-      textEl.textContent = `Собрано меню на ${options.days} дней.`;
+      textEl.textContent = `Собрано меню на ${daysStr}.`;
     } else {
       warningEl.style.display = 'none';
-      textEl.textContent = `Собрано отличное меню на ${options.days} дней!`;
+      textEl.textContent = `Собрано отличное меню на ${daysStr}!`;
     }
 
     successModalOverlay.style.display = 'flex';
     successModalOverlay.classList.add('active');
 
     document.getElementById('goToMenuBtn').onclick = () => {
-      // 1. Закрываем модалку, чтобы History API корректно отработал
-      closeSuccessModal();
+      pendingScrollDate = options.startDate;
       
-      // 2. Ждем тик, чтобы History API понял, что модалка закрыта
-      setTimeout(() => {
-        // 3. Переключаем таб на "Меню"
+      if (historyEntryPushed) {
+        // Если модалка перехватила историю, используем механизм отложенного перехода
+        pendingTabAfterModalClose = 'menu';
+        closeSuccessModal();
+      } else {
+        // Иначе просто меняем хэш
+        closeSuccessModal();
         window.location.hash = 'menu';
-        
-        // 4. Ждем отрисовки календаря и скроллим
-        setTimeout(() => {
-          // v6.4.3: Ищем строку недели (в вашем HTML это .week-row)
-          const firstDayEl = document.querySelector(`.week-row[data-date="${options.startDate}"]`);
-          if (firstDayEl) {
-            firstDayEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        }, 300);
-      }, 50);
+      }
     };
 
     document.getElementById('closeSuccessModalBtn').onclick = () => {
