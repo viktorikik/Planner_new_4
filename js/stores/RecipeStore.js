@@ -2,11 +2,14 @@
  * RecipeStore — хранилище рецептов (схема v2).
  * Ключ localStorage: CONSTANTS.STORAGE_KEYS.RECIPES ('smartMenuRecipes_v2').
  * 
+ * v6.3.5:
+ *   • Исправлен баг дублирования ID при Undo (restore всегда генерирует новый ID).
+ *   • Добавлена дедупликация ID при загрузке (load) и полной замене (replaceAll).
+ *   • Защита от дубликатов в массиве recipes.
+ * 
  * v6.3.0:
  *   • Интеграция с RecipeFeatureEngine: обогащение рецептов mealRole,
  *     flavorProfile, texture, isHeavy, isQuick.
- *   • autoDetectTags перенесен в RecipeFeatureEngine.
- *   • Удален мёртвый код.
  */
 import { CONSTANTS } from '../utils/Constants.js';
 import { Utils } from '../utils/Utils.js';
@@ -193,7 +196,13 @@ export const RecipeStore = (function() {
       if (savedV2) {
         const parsed = JSON.parse(savedV2);
         if (Array.isArray(parsed)) {
-          recipes = parsed.map(normalizeRecipe);
+          // Дедупликация: гарантируем уникальность ID при загрузке
+          const seenIds = new Set();
+          recipes = parsed.map(normalizeRecipe).filter(r => {
+            if (seenIds.has(r.id)) return false;
+            seenIds.add(r.id);
+            return true;
+          });
           return true;
         }
       }
@@ -394,8 +403,8 @@ export const RecipeStore = (function() {
 
   function restore(snapshot) {
     if (!snapshot || !snapshot.name) return false;
-    const existing = getById(snapshot.id);
-    const newId = existing ? generateId() : snapshot.id;
+    // Всегда генерируем новый ID, чтобы избежать коллизий при повторном Undo
+    const newId = String(generateId());
     const copy = normalizeRecipe({ ...snapshot, id: newId });
     recipes.push(copy);
     save();
@@ -464,7 +473,18 @@ export const RecipeStore = (function() {
 
   function replaceAll(newRecipes) {
     if (!Array.isArray(newRecipes)) return false;
-    recipes = newRecipes.map(normalizeRecipe);
+    const seenIds = new Set();
+    // Дедупликация ID при полной перезаписи
+    const sanitized = newRecipes.map(r => {
+      const normalized = normalizeRecipe(r);
+      if (!normalized.id || seenIds.has(normalized.id)) {
+        normalized.id = String(generateId());
+      }
+      seenIds.add(normalized.id);
+      return normalized;
+    });
+    
+    recipes = sanitized;
     save();
     return true;
   }
