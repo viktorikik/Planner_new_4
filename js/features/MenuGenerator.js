@@ -6,6 +6,12 @@
  * 
  * v3.3 (v6.4.2):
  *   • Расширен список VEGETARIAN_STOP_WORDS (корни слов: фарш, бедр, кальмар и т.д.).
+ * 
+ * v3.2 (v6.4.1):
+ *   • Добавлен глубокий текстовый фильтр на мясо/рыбу/молочку для вегетарианцев.
+ * 
+ * v3.1 (v6.4.0):
+ *   • Фильтрация рецептов по UserPreferences.
  */
 import { RecipeStore } from '../stores/RecipeStore.js';
 import { UserPreferences } from '../stores/UserPreferences.js';
@@ -19,7 +25,7 @@ export const MenuGenerator = (function() {
     return Utils.formatDateLocal(date);
   }
 
-  // v6.4.2: Уточненный список
+  // v6.4.2: Уточненный список корней для жесткого отсева
   const VEGETARIAN_STOP_WORDS = [
     'мяс', 'фарш', 'куриц', 'курин', 'бедр', 'голен', 'окорочк', 'цыплен',
     'говяд', 'свин', 'телятин', 'баранин', 'индейк', 'кролик', 'утка', 'гусь',
@@ -36,15 +42,25 @@ export const MenuGenerator = (function() {
     'сметан', 'кефир', 'йогурт', 'ряженка', 'маргарин', 'сгущёнка'
   ];
 
+  // v6.4.1: Проверка рецепта на соответствие жестким ограничениям
   function isRecipeAllowed(recipe, prefs) {
+    // 1. Аллергены
     if (prefs.allergens && prefs.allergens.length > 0) {
       const hasAllergen = recipe.allergens && recipe.allergens.some(a => prefs.allergens.includes(a));
       if (hasAllergen) return false;
     }
 
-    if (recipe.spiciness && recipe.spiciness > prefs.maxSpiciness) return false;
-    if (recipe.difficulty && recipe.difficulty > prefs.maxDifficulty) return false;
+    // 2. Острота
+    if (recipe.spiciness && recipe.spiciness > prefs.maxSpiciness) {
+      return false;
+    }
 
+    // 3. Сложность
+    if (recipe.difficulty && recipe.difficulty > prefs.maxDifficulty) {
+      return false;
+    }
+
+    // 4. Стоп-ингредиенты
     if (prefs.stopIngredients && prefs.stopIngredients.length > 0) {
       const nameLower = recipe.name.toLowerCase();
       if (prefs.stopIngredients.some(stop => nameLower.includes(stop.toLowerCase()))) return false;
@@ -58,12 +74,15 @@ export const MenuGenerator = (function() {
       }
     }
 
+    // 5. Диета (v6.4.1: Глубокий текстовый фильтр)
     if (prefs.diet === DIET_TYPES.VEGETARIAN || prefs.diet === DIET_TYPES.VEGAN) {
       const nameLower = recipe.name.toLowerCase();
       
+      // Проверка названия
       if (VEGETARIAN_STOP_WORDS.some(w => nameLower.includes(w))) return false;
       if (prefs.diet === DIET_TYPES.VEGAN && VEGAN_EXTRA_STOP_WORDS.some(w => nameLower.includes(w))) return false;
 
+      // Проверка ингредиентов
       if (recipe.ingredients) {
         for (const ing of recipe.ingredients) {
           const ingName = ing.name.toLowerCase();
@@ -72,6 +91,7 @@ export const MenuGenerator = (function() {
         }
       }
       
+      // Проверка тегов на всякий случай
       if (recipe.tags && recipe.tags.proteinSource) {
         const src = recipe.tags.proteinSource;
         if (['meat', 'fish', 'poultry', 'seafood'].includes(src)) return false;
@@ -93,15 +113,18 @@ export const MenuGenerator = (function() {
     const prefs = UserPreferences.get();
 
     let allRecipes = RecipeStore.getAll().filter(r => !r.hidden && !r.disliked);
+    
+    // v6.4.0: Применяем глобальные ограничения
     allRecipes = allRecipes.filter(r => isRecipeAllowed(r, prefs));
 
     if (allRecipes.length === 0) {
       return { 
         success: false, 
-        message: 'Все рецепты отсеяны вашими ограничениями. Попробуйте ослабить фильтры.' 
+        message: 'Все рецепты отсеяны вашими ограничениями. Попробуйте ослабить фильтры (аллергены, стоп-ингредиенты, диета).' 
       };
     }
 
+    // Запускаем оптимизатор
     const result = MenuOptimizer.generateOptimizedMenu(options, allRecipes);
     
     return {
@@ -111,9 +134,13 @@ export const MenuGenerator = (function() {
     };
   }
 
+  // ============================================================
+  // ЗАМЕНА ОДНОГО БЛЮДА (Reroll)
+  // ============================================================
   function getReplacement(currentRecipeId, targetDate, mealType, currentMenu, options) {
     const prefs = UserPreferences.get();
     
+    // Отфильтровываем по ограничениям
     let allRecipes = RecipeStore.getAll()
       .filter(r => !r.hidden && !r.disliked && String(r.id) !== String(currentRecipeId))
       .filter(r => isRecipeAllowed(r, prefs));
