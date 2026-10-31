@@ -1,11 +1,11 @@
 /**
  * MenuGenerator — точка входа и оркестратор генерации.
  * 
- * v3.1 (v6.4.0):
- *   • Фильтрация рецептов по UserPreferences (аллергены, острота, диета, стоп-ингредиенты).
+ * v3.2 (v6.4.1):
+ *   • Добавлен глубокий текстовый фильтр на мясо/рыбу/молочку для вегетарианцев.
  * 
- * v3.0 (v6.3.2):
- *   • Вызов MenuOptimizer.generateOptimizedMenu.
+ * v3.1 (v6.4.0):
+ *   • Фильтрация рецептов по UserPreferences.
  */
 import { RecipeStore } from '../stores/RecipeStore.js';
 import { UserPreferences } from '../stores/UserPreferences.js';
@@ -19,7 +19,22 @@ export const MenuGenerator = (function() {
     return Utils.formatDateLocal(date);
   }
 
-  // v6.4.0: Проверка рецепта на соответствие жестким ограничениям
+  const VEGETARIAN_STOP_WORDS = [
+    'мясо', 'фарш', 'курица', 'куриный', 'говядина', 'свинина', 'баранина', 
+    'рыба', 'лосось', 'форель', 'треска', 'креветк', 'бекон', 'колбас', 
+    'сосиск', 'окорок', 'ветчин', 'индейк', 'кролик', 'утка', 'гусь', 
+    'печень', 'сердце', 'почки', 'тунец', 'горбуша', 'сёмга', 'кета', 'кижуч',
+    'пикша', 'окунь', 'судак', 'щука', 'сом', 'налим', 'осётр', 'пангасиус', 
+    'тилапия', 'дорада', 'сибас', 'ставрида', 'скумбрия', 'макрель', 'сельдь', 
+    'шпроты', 'килька', 'мидии', 'кальмары', 'краб', 'бульон'
+  ];
+
+  const VEGAN_EXTRA_STOP_WORDS = [
+    'молоко', 'сливк', 'сыр', 'творог', 'яйц', 'масло сливочн', 'мед', 'мёд', 
+    'сметан', 'кефир', 'йогурт', 'ряженка', 'маргарин', 'сгущёнка'
+  ];
+
+  // v6.4.1: Проверка рецепта на соответствие жестким ограничениям
   function isRecipeAllowed(recipe, prefs) {
     // 1. Аллергены
     if (prefs.allergens && prefs.allergens.length > 0) {
@@ -38,29 +53,41 @@ export const MenuGenerator = (function() {
     }
 
     // 4. Стоп-ингредиенты
-    if (prefs.stopIngredients && prefs.stopIngredients.length > 0 && recipe.ingredients) {
-      const hasStopIngredient = recipe.ingredients.some(ing => {
-        const name = ing.name.toLowerCase();
-        return prefs.stopIngredients.some(stop => name.includes(stop.toLowerCase()));
-      });
-      if (hasStopIngredient) return false;
+    if (prefs.stopIngredients && prefs.stopIngredients.length > 0) {
+      const nameLower = recipe.name.toLowerCase();
+      if (prefs.stopIngredients.some(stop => nameLower.includes(stop))) return false;
+      
+      if (recipe.ingredients) {
+        const hasStopIngredient = recipe.ingredients.some(ing => {
+          const name = ing.name.toLowerCase();
+          return prefs.stopIngredients.some(stop => name.includes(stop));
+        });
+        if (hasStopIngredient) return false;
+      }
     }
 
-    // 5. Диета
-    if (prefs.diet === DIET_TYPES.VEGETARIAN) {
-      const meatSources = ['meat', 'fish', 'poultry', 'seafood'];
-      if (recipe.tags && meatSources.includes(recipe.tags.proteinSource)) return false;
-    } else if (prefs.diet === DIET_TYPES.VEGAN) {
-      const animalSources = ['meat', 'fish', 'poultry', 'seafood', 'dairy', 'eggs'];
-      if (recipe.tags && animalSources.includes(recipe.tags.proteinSource)) return false;
-      // Дополнительная проверка по ингредиентам для веганов
+    // 5. Диета (v6.4.1: Глубокий текстовый фильтр)
+    if (prefs.diet === DIET_TYPES.VEGETARIAN || prefs.diet === DIET_TYPES.VEGAN) {
+      const nameLower = recipe.name.toLowerCase();
+      
+      // Проверка названия
+      if (VEGETARIAN_STOP_WORDS.some(w => nameLower.includes(w))) return false;
+      if (prefs.diet === DIET_TYPES.VEGAN && VEGAN_EXTRA_STOP_WORDS.some(w => nameLower.includes(w))) return false;
+
+      // Проверка ингредиентов
       if (recipe.ingredients) {
-        const animalWords = ['молоко', 'сливк', 'сыр', 'творог', 'сметан', 'яйц', 'мяс', 'куриц', 'рыб', 'масло сливочн', 'мед', 'мёд'];
-        const hasAnimalWord = recipe.ingredients.some(ing => {
-          const name = ing.name.toLowerCase();
-          return animalWords.some(w => name.includes(w));
-        });
-        if (hasAnimalWord) return false;
+        for (const ing of recipe.ingredients) {
+          const ingName = ing.name.toLowerCase();
+          if (VEGETARIAN_STOP_WORDS.some(w => ingName.includes(w))) return false;
+          if (prefs.diet === DIET_TYPES.VEGAN && VEGAN_EXTRA_STOP_WORDS.some(w => ingName.includes(w))) return false;
+        }
+      }
+      
+      // Проверка тегов на всякий случай
+      if (recipe.tags && recipe.tags.proteinSource) {
+        const src = recipe.tags.proteinSource;
+        if (['meat', 'fish', 'poultry', 'seafood'].includes(src)) return false;
+        if (prefs.diet === DIET_TYPES.VEGAN && ['dairy', 'eggs'].includes(src)) return false;
       }
     }
 
@@ -85,7 +112,7 @@ export const MenuGenerator = (function() {
     if (allRecipes.length === 0) {
       return { 
         success: false, 
-        message: 'Все рецепты отсеяны вашими ограничениями. Попробуйте ослабить фильтры (аллергены, стоп-ингредиенты).' 
+        message: 'Все рецепты отсеяны вашими ограничениями. Попробуйте ослабить фильтры (аллергены, стоп-ингредиенты, диета).' 
       };
     }
 
@@ -145,6 +172,6 @@ export const MenuGenerator = (function() {
   return {
     generateMenu,
     getReplacement,
-    isRecipeAllowed // экспортируем для MenuValidator в будущем
+    isRecipeAllowed
   };
 })();
