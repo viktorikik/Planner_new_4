@@ -1,6 +1,10 @@
 /**
  * MealComposer — сборщик композиций для одного приема пищи.
  * 
+ * v1.6 (v6.4.3):
+ *   • Если main требует гарнира (requiresSide), он забирает салат, если гарнира нет.
+ *   • Запрет на два main в одном приеме.
+ * 
  * v1.5 (v6.4.3):
  *   • Защита от выбора main, если requiresSide=true, но гарниров нет.
  * 
@@ -122,22 +126,24 @@ export const MealComposer = (function() {
         if (main) {
           const items = [main];
           
-          // v6.4.3: Проверяем requiresSide
+          // v6.4.3: Если блюдо требует гарнира
           if (main.requiresSide === true) {
             if (sides.length > 0) {
+              // 1. Ищем гарнир
               const side = pickRandom(sides.filter(s => s.id !== main.id));
               if (side) items.push(side);
-            } else {
-              // Если гарнира нет, не берем это блюдо в качестве единственного main
-              // (пропускаем добавление композиции с ним, чтобы избежать "голого" мяса)
-              // Но для страховки все равно добавим, если других вариантов нет
+            } else if (salads.length > 0) {
+              // 2. Если гарниров нет, берем салат (чтобы не было "голого" мяса)
+              const salad = pickRandom(salads.filter(s => s.id !== main.id));
+              if (salad) items.push(salad);
             }
           }
           
           compositions.push({ items: [...items], type: 'main_with_side' });
           
-          if (salads.length > 0) {
-            const salad = pickRandom(salads.filter(s => s.id !== main.id));
+          // Добавляем салат, если его еще нет в items
+          if (salads.length > 0 && !items.includes(salads[0])) {
+            const salad = pickRandom(salads.filter(s => s.id !== main.id && !items.find(i => i.id === s.id)));
             if (salad) compositions.push({ items: [...items, salad], type: 'full' });
           }
           if (soups.length > 0) {
