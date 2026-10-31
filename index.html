@@ -2,6 +2,10 @@
 <!--
   Меню и рецепты · index.html
 
+  v6.4.2:
+  - Добавлена модалка успешной сборки меню (#successModalOverlay).
+  - styles.css?v=6.4.2.
+
   v6.4.0:
   - Автосборщик: добавлен блок ограничений (диета, аллергены, стоп-ингредиенты).
   - styles.css?v=6.4.0.
@@ -38,7 +42,7 @@
   <meta name="apple-mobile-web-app-title" content="Меню и рецепты">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
-  <link rel="stylesheet" href="styles.css?v=6.4.1">
+  <link rel="stylesheet" href="styles.css?v=6.4.2">
 
   <script>
     (function() {
@@ -914,6 +918,24 @@
   </div>
 </div>
 
+<!-- МОДАЛКА: УСПЕШНАЯ СБОРКА МЕНЮ (v6.4.2) -->
+<div class="modal-overlay" id="successModalOverlay" style="display: none;">
+  <div class="modal success-modal">
+    <div class="success-icon">✨</div>
+    <h2>Меню готово!</h2>
+    <p id="successModalText">Ваше меню успешно собрано и добавлено в календарь.</p>
+    
+    <div class="success-warning" id="successModalWarning" style="display: none;">
+      <strong>⚠️ Внимание:</strong> <span id="successWarningText">В базе мало блюд, подходящих под ваши ограничения. Некоторые блюда могут повторяться.</span>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-primary" id="goToMenuBtn">Перейти к меню</button>
+      <button class="btn-secondary" id="closeSuccessModalBtn">Закрыть</button>
+    </div>
+  </div>
+</div>
+
 <div id="liveRegion" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 <div id="printArea" aria-hidden="true"></div>
 
@@ -953,22 +975,5 @@
 </nav>
 
 <script type="module" src="js/main.js"></script>
-  <!-- Модалка успешной сборки меню (v6.4.2) -->
-<div class="modal-overlay" id="successModalOverlay" style="display: none;">
-  <div class="modal success-modal">
-    <div class="success-icon">✨</div>
-    <h2>Меню готово!</h2>
-    <p id="successModalText">Ваше меню успешно собрано и добавлено в календарь.</p>
-    
-    <div class="success-warning" id="successModalWarning" style="display: none;">
-      <strong>⚠️ Внимание:</strong> <span id="successWarningText">В базе мало блюд, подходящих под ваши ограничения. Некоторые блюда могут повторяться.</span>
-    </div>
-
-    <div class="modal-actions">
-      <button class="btn-primary" id="goToMenuBtn">Перейти к меню</button>
-      <button class="btn-secondary" id="closeSuccessModalBtn">Закрыть</button>
-    </div>
-  </div>
-</div>
 </body>
 </html>
