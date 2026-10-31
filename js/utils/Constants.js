@@ -1,186 +1,82 @@
 /**
  * Constants.js — центральные константы приложения.
- *
- * v6.2.7: удалён мёртвый код тем (THEMES, DEFAULT_THEME, THEME_LEGACY_MAP).
- *   С v6.0.0 темы light/dark описаны локально в main.js.
+ * 
+ * v6.4.0: Добавлены DIET_TYPES и ключ STORAGE_KEYS.USER_PREFERENCES.
  */
+export const STATUSES = { DONE: 'done', PLANNED: 'planned' };
 
-// Статусы
-export const STATUSES = {
-  DONE: 'done',
-  PLANNED: 'planned'
-};
-
-// Категории
 export const CATEGORIES = {
-  SOUP: 'soup',
-  SALAD: 'salad',
-  MAIN: 'main',
-  SIDE_DISH: 'side_dish', // Гарниры (v5.34)
-  APPETIZER: 'appetizer', // Закуска (v5.25, Блок 6)
-  BAKERY: 'bakery',
-  DESSERT: 'dessert',     // Десерт (v5.25, Блок 6)
-  OTHER: 'other'
+  SOUP: 'soup', SALAD: 'salad', MAIN: 'main', SIDE_DISH: 'side_dish',
+  APPETIZER: 'appetizer', BAKERY: 'bakery', DESSERT: 'dessert', OTHER: 'other'
 };
 
 export const CATEGORY_LABELS = {
-  [CATEGORIES.SOUP]:      '🍲 Супы',
-  [CATEGORIES.SALAD]:     '🥗 Салаты',
-  [CATEGORIES.MAIN]:      '🍖 Основные блюда',
-  [CATEGORIES.SIDE_DISH]: '🥔 Гарниры', // v5.34
-  [CATEGORIES.APPETIZER]: '🥪 Закуски',
-  [CATEGORIES.BAKERY]:    '🥐 Выпечка',
-  [CATEGORIES.DESSERT]:   '🍰 Десерты',
-  [CATEGORIES.OTHER]:     '🍽️ Другое'
+  [CATEGORIES.SOUP]: '🍲 Супы', [CATEGORIES.SALAD]: '🥗 Салаты',
+  [CATEGORIES.MAIN]: '🍖 Основные блюда', [CATEGORIES.SIDE_DISH]: '🥔 Гарниры',
+  [CATEGORIES.APPETIZER]: '🥪 Закуски', [CATEGORIES.BAKERY]: '🥐 Выпечка',
+  [CATEGORIES.DESSERT]: '🍰 Десерты', [CATEGORIES.OTHER]: '🍽️ Другое'
 };
 
-// Источник рецептов (v5.26, Блок 6): «Все» / «Мои» / «База».
-// Используется в табе «Рецепты» и в фильтре экрана «Что приготовить?».
-// Базовые рецепты приходят из recipes.json с builtIn: true,
-// пользовательские — builtIn: false.
-export const RECIPE_SOURCES = {
-  ALL: 'all',
-  MY: 'my',
-  BASE: 'base'
-};
-
-// Приёмы пищи (v4.0)
-export const MEAL_TYPES = {
-  BREAKFAST: 'breakfast',
-  LUNCH: 'lunch',
-  DINNER: 'dinner',
-  SNACK: 'snack'
-};
+export const RECIPE_SOURCES = { ALL: 'all', MY: 'my', BASE: 'base' };
+export const MEAL_TYPES = { BREAKFAST: 'breakfast', LUNCH: 'lunch', DINNER: 'dinner', SNACK: 'snack' };
 
 export const MEAL_TYPE_LABELS = {
-  [MEAL_TYPES.BREAKFAST]: 'Завтрак',
-  [MEAL_TYPES.LUNCH]:     'Обед',
-  [MEAL_TYPES.DINNER]:    'Ужин',
-  [MEAL_TYPES.SNACK]:     'Перекус'
+  [MEAL_TYPES.BREAKFAST]: 'Завтрак', [MEAL_TYPES.LUNCH]: 'Обед',
+  [MEAL_TYPES.DINNER]: 'Ужин', [MEAL_TYPES.SNACK]: 'Перекус'
 };
 
-// Кухни
 export const CUISINES = {
-  RUSSIAN: 'russian',
-  UKRAINIAN: 'ukrainian',
-  CAUCASIAN: 'caucasian',
-  ITALIAN: 'italian',
-  FRENCH: 'french',
-  MEDITERRANEAN: 'mediterranean',
-  GREEK: 'greek',
-  AMERICAN: 'american',
-  MEXICAN: 'mexican',
-  CHINESE: 'chinese',
-  JAPANESE: 'japanese',
-  KOREAN: 'korean',
-  INDIAN: 'indian',
-  ASIAN: 'asian',
-  INTERNATIONAL: 'international'
+  RUSSIAN: 'russian', UKRAINIAN: 'ukrainian', CAUCASIAN: 'caucasian', ITALIAN: 'italian',
+  FRENCH: 'french', MEDITERRANEAN: 'mediterranean', GREEK: 'greek', AMERICAN: 'american',
+  MEXICAN: 'mexican', CHINESE: 'chinese', JAPANESE: 'japanese', KOREAN: 'korean',
+  INDIAN: 'indian', ASIAN: 'asian', INTERNATIONAL: 'international'
 };
 
 export const CUISINE_LABELS = {
-  [CUISINES.RUSSIAN]:       'Русская',
-  [CUISINES.UKRAINIAN]:     'Украинская',
-  [CUISINES.CAUCASIAN]:     'Кавказская',
-  [CUISINES.ITALIAN]:       'Итальянская',
-  [CUISINES.FRENCH]:        'Французская',
-  [CUISINES.MEDITERRANEAN]: 'Средиземноморская',
-  [CUISINES.GREEK]:         'Греческая',
-  [CUISINES.AMERICAN]:      'Американская',
-  [CUISINES.MEXICAN]:       'Мексиканская',
-  [CUISINES.CHINESE]:       'Китайская',
-  [CUISINES.JAPANESE]:      'Японская',
-  [CUISINES.KOREAN]:        'Корейская',
-  [CUISINES.INDIAN]:        'Индийская',
-  [CUISINES.ASIAN]:         'Азиатская',
-  [CUISINES.INTERNATIONAL]: 'Международная'
+  [CUISINES.RUSSIAN]: 'Русская', [CUISINES.UKRAINIAN]: 'Украинская', [CUISINES.CAUCASIAN]: 'Кавказская',
+  [CUISINES.ITALIAN]: 'Итальянская', [CUISINES.FRENCH]: 'Французская', [CUISINES.MEDITERRANEAN]: 'Средиземноморская',
+  [CUISINES.GREEK]: 'Греческая', [CUISINES.AMERICAN]: 'Американская', [CUISINES.MEXICAN]: 'Мексиканская',
+  [CUISINES.CHINESE]: 'Китайская', [CUISINES.JAPANESE]: 'Японская', [CUISINES.KOREAN]: 'Корейская',
+  [CUISINES.INDIAN]: 'Индийская', [CUISINES.ASIAN]: 'Азиатская', [CUISINES.INTERNATIONAL]: 'Международная'
 };
 
-// Аллергены
 export const ALLERGENS = {
-  NUTS: 'nuts',
-  EGGS: 'eggs',
-  GLUTEN: 'gluten',
-  FISH: 'fish',
-  MILK: 'milk',
-  PEANUT: 'peanut',
-  ADDITIVES: 'additives',
-  MUSTARD: 'mustard',
-  SESAME: 'sesame',
-  MOLLUSCS: 'molluscs',
-  CRUSTACEANS: 'crustaceans',
-  STRAWBERRY: 'strawberry',
-  SOY: 'soy',
-  CELERY: 'celery',
-  LUPIN: 'lupin'
+  NUTS: 'nuts', EGGS: 'eggs', GLUTEN: 'gluten', FISH: 'fish', MILK: 'milk',
+  PEANUT: 'peanut', ADDITIVES: 'additives', MUSTARD: 'mustard', SESAME: 'sesame',
+  MOLLUSCS: 'molluscs', CRUSTACEANS: 'crustaceans', STRAWBERRY: 'strawberry',
+  SOY: 'soy', CELERY: 'celery', LUPIN: 'lupin'
 };
 
 export const ALLERGEN_LABELS = {
-  [ALLERGENS.NUTS]:        'Орехи',
-  [ALLERGENS.EGGS]:        'Яйцо',
-  [ALLERGENS.GLUTEN]:      'Злаки, содержащие глютен',
-  [ALLERGENS.FISH]:        'Рыба',
-  [ALLERGENS.MILK]:        'Белок коровьего молока',
-  [ALLERGENS.PEANUT]:      'Арахис',
-  [ALLERGENS.ADDITIVES]:   'Пищевые добавки',
-  [ALLERGENS.MUSTARD]:     'Горчица',
-  [ALLERGENS.SESAME]:      'Кунжут',
-  [ALLERGENS.MOLLUSCS]:    'Моллюски',
-  [ALLERGENS.CRUSTACEANS]: 'Ракообразные',
-  [ALLERGENS.STRAWBERRY]:  'Клубника',
-  [ALLERGENS.SOY]:         'Соя',
-  [ALLERGENS.CELERY]:      'Сельдерей',
-  [ALLERGENS.LUPIN]:       'Люпин и продукты его переработки'
+  [ALLERGENS.NUTS]: 'Орехи', [ALLERGENS.EGGS]: 'Яйцо', [ALLERGENS.GLUTEN]: 'Глютен',
+  [ALLERGENS.FISH]: 'Рыба', [ALLERGENS.MILK]: 'Молоко', [ALLERGENS.PEANUT]: 'Арахис',
+  [ALLERGENS.ADDITIVES]: 'Добавки', [ALLERGENS.MUSTARD]: 'Горчица', [ALLERGENS.SESAME]: 'Кунжут',
+  [ALLERGENS.MOLLUSCS]: 'Моллюски', [ALLERGENS.CRUSTACEANS]: 'Ракообразные', [ALLERGENS.STRAWBERRY]: 'Клубника',
+  [ALLERGENS.SOY]: 'Соя', [ALLERGENS.CELERY]: 'Сельдерей', [ALLERGENS.LUPIN]: 'Люпин'
 };
 
-// Единицы измерения
+export const DIET_TYPES = {
+  ALL: 'all',
+  VEGETARIAN: 'vegetarian',
+  VEGAN: 'vegan'
+};
+
 export const UNITS = {
-  G: 'g',
-  KG: 'kg',
-  ML: 'ml',
-  L: 'l',
-  PCS: 'pcs',
-  TBSP: 'tbsp',
-  TSP: 'tsp',
-  PINCH: 'pinch',
-  CLOVE: 'clove',
-  BUNCH: 'bunch'
+  G: 'g', KG: 'kg', ML: 'ml', L: 'l', PCS: 'pcs', TBSP: 'tbsp', TSP: 'tsp',
+  PINCH: 'pinch', CLOVE: 'clove', BUNCH: 'bunch'
 };
 
 export const UNIT_LABELS = {
-  [UNITS.G]:     'г',
-  [UNITS.KG]:    'кг',
-  [UNITS.ML]:    'мл',
-  [UNITS.L]:     'л',
-  [UNITS.PCS]:   'шт',
-  [UNITS.TBSP]:  'ст.л.',
-  [UNITS.TSP]:   'ч.л.',
-  [UNITS.PINCH]: 'щепотка',
-  [UNITS.CLOVE]: 'зубчик',
-  [UNITS.BUNCH]: 'пучок'
+  [UNITS.G]: 'г', [UNITS.KG]: 'кг', [UNITS.ML]: 'мл', [UNITS.L]: 'л',
+  [UNITS.PCS]: 'шт', [UNITS.TBSP]: 'ст.л.', [UNITS.TSP]: 'ч.л.',
+  [UNITS.PINCH]: 'щепотка', [UNITS.CLOVE]: 'зубчик', [UNITS.BUNCH]: 'пучок'
 };
 
-export const NON_SCALABLE_UNITS = [
-  UNITS.PCS, UNITS.TBSP, UNITS.TSP, UNITS.PINCH, UNITS.CLOVE, UNITS.BUNCH
-];
+export const NON_SCALABLE_UNITS = [UNITS.PCS, UNITS.TBSP, UNITS.TSP, UNITS.PINCH, UNITS.CLOVE, UNITS.BUNCH];
 
-export const DIFFICULTY_LABELS = {
-  1: 'Очень просто',
-  2: 'Просто',
-  3: 'Средне',
-  4: 'Сложно',
-  5: 'Очень сложно'
-};
+export const DIFFICULTY_LABELS = { 1: 'Очень просто', 2: 'Просто', 3: 'Средне', 4: 'Сложно', 5: 'Очень сложно' };
+export const SPICINESS_LABELS = { 1: 'Не остро', 2: 'Слегка остро', 3: 'Средне остро', 4: 'Остро', 5: 'Очень остро' };
 
-export const SPICINESS_LABELS = {
-  1: 'Не остро',
-  2: 'Слегка остро',
-  3: 'Средне остро',
-  4: 'Остро',
-  5: 'Очень остро'
-};
-
-// Список продуктов для распознавания ингредиентов (без изменений)
 export const PRODUCT_WORDS = [
   'лук', 'морковь', 'картофель', 'капуста', 'свекла', 'редис', 'репа',
   'огурец', 'помидор', 'перец', 'баклажан', 'кабачок', 'тыква',
@@ -228,151 +124,57 @@ export const CONSTANTS = {
     THEME: 'mealPlannerTheme',
     ONBOARDING_SHOWN: 'smartMenuOnboardingShown_v1',
     RECIPES_COLLAPSED: 'smartMenuRecipesCollapsed_v1',
-    // v5.26: таб «Все · Мои · База» и чекбокс «Показать скрытые».
-    // Запоминаем выбор, чтобы после перезагрузки вернуться туда же.
     RECIPES_SOURCE_FILTER: 'smartMenuRecipesSourceFilter_v1',
-    RECIPES_SHOW_HIDDEN: 'smartMenuRecipesShowHidden_v1'
+    RECIPES_SHOW_HIDDEN: 'smartMenuRecipesShowHidden_v1',
+    USER_PREFERENCES: 'smartMenuUserPreferences_v1' // v6.4.0: Глобальные настройки
   },
-  EVENTS: {
-    DISHES_CHANGED: 'dishes:changed',
-    RECIPES_CHANGED: 'recipes:changed'
-  },
-  CHOICE: {
-    EXCLUDE_DAYS: 5
-  },
+  EVENTS: { DISHES_CHANGED: 'dishes:changed', RECIPES_CHANGED: 'recipes:changed' },
+  CHOICE: { EXCLUDE_DAYS: 5 },
   SELECTORS: {
-    monthTitle: 'monthTitle',
-    calendarContent: 'calendarContent',
-    menuContent: 'menuContent',
-    menuPeriod: 'menuPeriod',
-    modalOverlay: 'modalOverlay',
-    modalTitle: 'modalTitle',
-    modalContent: 'modalContent',
-    themeToggle: 'themeToggle',
-    searchInput: 'searchInput',
-    statusFilter: 'statusFilter',
-    categoryFilter: 'categoryFilter',
-    viewToggle: 'viewToggle',
-    modalClose: 'modalClose',
-    addModalOverlay: 'addModalOverlay',
-    addModalClose: 'addModalClose',
-    addModalCancel: 'addModalCancel',
-    newDishName: 'newDishName',
-    newDishNote: 'newDishNote',
-    newDishDate: 'newDishDate',
-    newDishStatus: 'newDishStatus',
-    newDishCategory: 'newDishCategory',
-    newDishMealTypesGroup: 'newDishMealTypesGroup',
-    newDishRecipe: 'newDishRecipe',
-    addModalSave: 'addModalSave',
-    editDishOverlay: 'editDishOverlay',
-    editDishClose: 'editDishClose',
-    editDishId: 'editDishId',
-    editDishName: 'editDishName',
-    editDishNote: 'editDishNote',
-    editDishStatus: 'editDishStatus',
-    editDishCategory: 'editDishCategory',
-    editDishMealTypesGroup: 'editDishMealTypesGroup',
-    editDishRecipe: 'editDishRecipe',
-    editDishCancel: 'editDishCancel',
-    editDishSave: 'editDishSave',
-    repeatMenuOverlay: 'repeatMenuOverlay',
-    repeatMenuClose: 'repeatMenuClose',
-    repeatMenuDate: 'repeatMenuDate',
-    repeatMenuSourceDate: 'repeatMenuSourceDate',
-    repeatMenuCancel: 'repeatMenuCancel',
-    repeatMenuSave: 'repeatMenuSave',
-    exportModalOverlay: 'exportModalOverlay',
-    exportModalClose: 'exportModalClose',
-    choiceOverlay: 'choiceOverlay',
-    choiceClose: 'choiceClose',
-    choiceSourceGroup: 'choiceSourceGroup',
-    welcomeOverlay: 'welcomeOverlay',
-    welcomeStartBtn: 'welcomeStartBtn',
-    todayContent: 'todayContent',
-    recipesTitle: 'recipesTitle',
-    recipesBackBtn: 'recipesBackBtn',
-    recipesList: 'recipesList',
-    // v5.26: табы источника рецептов + чекбокс «Показать скрытые»
-    recipeSourceTabs: '.recipe-source-tab',
-    recipesShowHiddenToggle: 'recipesShowHiddenToggle',
-    recipesShowHiddenToggleLabel: 'recipesShowHiddenToggleLabel',
-    addRecipeBtn: 'addRecipeBtn',
-    exportRecipesBtn: 'exportRecipesBtn',
-    importRecipesBtn: 'importRecipesBtn',
-    importRecipesFileInput: 'importRecipesFileInput',
-    recipesSearchInput: 'recipesSearchInput',
-    recipesCategoryFilter: 'recipesCategoryFilter',
-    recipeExportOverlay: 'recipeExportOverlay',
-    recipeExportClose: 'recipeExportClose',
-    recipeExportOptions: '.recipe-export-option',
-    recipeFormOverlay: 'recipeFormOverlay',
-    recipeFormClose: 'recipeFormClose',
-    recipeFormTitle: 'recipeFormTitle',
-    recipeFormId: 'recipeFormId',
-    recipeFormCancel: 'recipeFormCancel',
-    recipeFormSave: 'recipeFormSave',
-    recipeName: 'recipeName',
-    recipeCategory: 'recipeCategory',
-    recipeCuisine: 'recipeCuisine',
-    recipeServings: 'recipeServings',
-    recipeCookTime: 'recipeCookTime',
-    recipeActiveTime: 'recipeActiveTime',
-    recipeDifficulty: 'recipeDifficulty',
-    recipeSpiciness: 'recipeSpiciness',
-    recipeIngredientsList: 'recipeIngredientsList',
-    recipeAddIngredientBtn: 'recipeAddIngredientBtn',
-    recipeParseBtn: 'recipeParseBtn',
-    recipeMealTypesGroup: 'recipeMealTypesGroup',
-    recipeAllergensGroup: 'recipeAllergensGroup',
-    recipeNutritionKcal: 'recipeNutritionKcal',
-    recipeNutritionProtein: 'recipeNutritionProtein',
-    recipeNutritionFat: 'recipeNutritionFat',
-    recipeNutritionCarbs: 'recipeNutritionCarbs',
-    recipeInstructions: 'recipeInstructions',
-    recipeComments: 'recipeComments',
-    recipeParserOverlay: 'recipeParserOverlay',
-    recipeParserClose: 'recipeParserClose',
-    recipeParserTextarea: 'recipeParserTextarea',
-    recipeParserCancel: 'recipeParserCancel',
-    recipeParserApply: 'recipeParserApply',
-    shoppingDateFrom: 'shoppingDateFrom',
-    shoppingDateTo: 'shoppingDateTo',
-    generateShoppingListBtn: 'generateShoppingListBtn',
-    savedListsContainer: 'savedListsContainer',
-    savedListsList: 'savedListsList',
-    shoppingListDisplay: 'shoppingListDisplay',
-    shoppingListResult: 'shoppingListResult',
-    saveCurrentListBtn: 'saveCurrentListBtn',
-    deleteCurrentListBtn: 'deleteCurrentListBtn',
-    backToSavedListsBtn: 'backToSavedListsBtn',
-    exportShoppingListTxtBtn: 'exportShoppingListTxtBtn',
-    shoppingListView: 'shoppingListView',
-    shoppingListEditBtn: 'shoppingListEditBtn',
-    importFileInput: 'importFileInput',
-    importBtn: 'importBtn',
-    exportBtn: 'exportBtn',
-    prevMonth: 'prevMonth',
-    nextMonth: 'nextMonth',
-    todayBtn: 'todayBtn',
-    calendarWrap: 'calendarWrap',
-    viewToggleButtons: '#viewToggle button',
-    exportOptions: '.export-option',
-    bottomNav: 'bottomNav',
-    bottomNavButtons: '.bottom-nav-btn',
-    themeOverlay: 'themeOverlay',
-    themeClose: 'themeClose',
-    themeGrid: 'themeGrid',
-    onboardingHelpBtn: 'onboardingHelpBtn',
-    onboardingOverlay: 'onboardingOverlay',
-    onboardingSlides: 'onboardingSlides',
-    onboardingDots: 'onboardingDots',
-    onboardingPrev: 'onboardingPrev',
-    onboardingNext: 'onboardingNext',
-    onboardingSkip: 'onboardingSkip',
-    onboardingClose: 'onboardingClose',
-    // v5.26: источник рецептов в «Что приготовить?»
-    choiceRecipesSourceWrap: 'choiceRecipesSourceWrap',
-    choiceRecipesSourceChips: 'choiceRecipesSourceChips'
+    monthTitle: 'monthTitle', calendarContent: 'calendarContent', menuContent: 'menuContent', menuPeriod: 'menuPeriod',
+    modalOverlay: 'modalOverlay', modalTitle: 'modalTitle', modalContent: 'modalContent', themeToggle: 'themeToggle',
+    searchInput: 'searchInput', statusFilter: 'statusFilter', categoryFilter: 'categoryFilter', viewToggle: 'viewToggle',
+    modalClose: 'modalClose', addModalOverlay: 'addModalOverlay', addModalClose: 'addModalClose', addModalCancel: 'addModalCancel',
+    newDishName: 'newDishName', newDishNote: 'newDishNote', newDishDate: 'newDishDate', newDishStatus: 'newDishStatus',
+    newDishCategory: 'newDishCategory', newDishMealTypesGroup: 'newDishMealTypesGroup', newDishRecipe: 'newDishRecipe',
+    addModalSave: 'addModalSave', editDishOverlay: 'editDishOverlay', editDishClose: 'editDishClose', editDishId: 'editDishId',
+    editDishName: 'editDishName', editDishNote: 'editDishNote', editDishStatus: 'editDishStatus', editDishCategory: 'editDishCategory',
+    editDishMealTypesGroup: 'editDishMealTypesGroup', editDishRecipe: 'editDishRecipe', editDishCancel: 'editDishCancel',
+    editDishSave: 'editDishSave', repeatMenuOverlay: 'repeatMenuOverlay', repeatMenuClose: 'repeatMenuClose', repeatMenuDate: 'repeatMenuDate',
+    repeatMenuSourceDate: 'repeatMenuSourceDate', repeatMenuCancel: 'repeatMenuCancel', repeatMenuSave: 'repeatMenuSave',
+    exportModalOverlay: 'exportModalOverlay', exportModalClose: 'exportModalClose', choiceOverlay: 'choiceOverlay', choiceClose: 'choiceClose',
+    choiceSourceGroup: 'choiceSourceGroup', welcomeOverlay: 'welcomeOverlay', welcomeStartBtn: 'welcomeStartBtn',
+    todayContent: 'todayContent', recipesTitle: 'recipesTitle', recipesBackBtn: 'recipesBackBtn', recipesList: 'recipesList',
+    recipeSourceTabs: '.recipe-source-tab', recipesShowHiddenToggle: 'recipesShowHiddenToggle', recipesShowHiddenToggleLabel: 'recipesShowHiddenToggleLabel',
+    addRecipeBtn: 'addRecipeBtn', exportRecipesBtn: 'exportRecipesBtn', importRecipesBtn: 'importRecipesBtn',
+    importRecipesFileInput: 'importRecipesFileInput', recipesSearchInput: 'recipesSearchInput', recipesCategoryFilter: 'recipesCategoryFilter',
+    recipeExportOverlay: 'recipeExportOverlay', recipeExportClose: 'recipeExportClose', recipeExportOptions: '.recipe-export-option',
+    recipeFormOverlay: 'recipeFormOverlay', recipeFormClose: 'recipeFormClose', recipeFormTitle: 'recipeFormTitle', recipeFormId: 'recipeFormId',
+    recipeFormCancel: 'recipeFormCancel', recipeFormSave: 'recipeFormSave', recipeName: 'recipeName', recipeCategory: 'recipeCategory',
+    recipeCuisine: 'recipeCuisine', recipeServings: 'recipeServings', recipeCookTime: 'recipeCookTime', recipeActiveTime: 'recipeActiveTime',
+    recipeDifficulty: 'recipeDifficulty', recipeSpiciness: 'recipeSpiciness', recipeIngredientsList: 'recipeIngredientsList',
+    recipeAddIngredientBtn: 'recipeAddIngredientBtn', recipeParseBtn: 'recipeParseBtn', recipeMealTypesGroup: 'recipeMealTypesGroup',
+    recipeAllergensGroup: 'recipeAllergensGroup', recipeNutritionKcal: 'recipeNutritionKcal', recipeNutritionProtein: 'recipeNutritionProtein',
+    recipeNutritionFat: 'recipeNutritionFat', recipeNutritionCarbs: 'recipeNutritionCarbs', recipeInstructions: 'recipeInstructions',
+    recipeComments: 'recipeComments', recipeParserOverlay: 'recipeParserOverlay', recipeParserClose: 'recipeParserClose',
+    recipeParserTextarea: 'recipeParserTextarea', recipeParserCancel: 'recipeParserCancel', recipeParserApply: 'recipeParserApply',
+    shoppingDateFrom: 'shoppingDateFrom', shoppingDateTo: 'shoppingDateTo', generateShoppingListBtn: 'generateShoppingListBtn',
+    savedListsContainer: 'savedListsContainer', savedListsList: 'savedListsList', shoppingListDisplay: 'shoppingListDisplay',
+    shoppingListResult: 'shoppingListResult', saveCurrentListBtn: 'saveCurrentListBtn', deleteCurrentListBtn: 'deleteCurrentListBtn',
+    backToSavedListsBtn: 'backToSavedListsBtn', exportShoppingListTxtBtn: 'exportShoppingListTxtBtn', shoppingListView: 'shoppingListView',
+    shoppingListEditBtn: 'shoppingListEditBtn', importFileInput: 'importFileInput', importBtn: 'importBtn', exportBtn: 'exportBtn',
+    prevMonth: 'prevMonth', nextMonth: 'nextMonth', todayBtn: 'todayBtn', calendarWrap: 'calendarWrap',
+    viewToggleButtons: '#viewToggle button', exportOptions: '.export-option', bottomNav: 'bottomNav',
+    bottomNavButtons: '.bottom-nav-btn', themeOverlay: 'themeOverlay', themeClose: 'themeClose', themeGrid: 'themeGrid',
+    onboardingHelpBtn: 'onboardingHelpBtn', onboardingOverlay: 'onboardingOverlay', onboardingSlides: 'onboardingSlides',
+    onboardingDots: 'onboardingDots', onboardingPrev: 'onboardingPrev', onboardingNext: 'onboardingNext',
+    onboardingSkip: 'onboardingSkip', onboardingClose: 'onboardingClose', choiceRecipesSourceWrap: 'choiceRecipesSourceWrap',
+    choiceRecipesSourceChips: 'choiceRecipesSourceChips',
+    // Новые селекторы для ограничений v6.4.0
+    generateDietType: 'generateDietType',
+    generateMaxDifficulty: 'generateMaxDifficulty',
+    generateSpiciness: 'generateSpiciness',
+    generateStopIngredients: 'generateStopIngredients',
+    generateAllergensGroup: 'generateAllergensGroup'
   }
 };
