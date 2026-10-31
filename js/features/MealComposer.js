@@ -1,6 +1,10 @@
 /**
  * MealComposer — сборщик композиций для одного приема пищи.
  * 
+ * v1.3 (v6.4.2):
+ *   • Поддержка поля requiresSide (гарнир добавляется только если true).
+ *   • Усиленная защита от дублей внутри дня.
+ * 
  * v1.2 (v6.3.4):
  *   • Учет recentRecipeIds (история 10 дней).
  *   • Гарнир (side) теперь обязателен, если есть второе (main).
@@ -61,7 +65,7 @@ export const MealComposer = (function() {
     let validCandidates = candidates.filter(c => isCompatible(c, mealType, context));
     if (validCandidates.length === 0) validCandidates = candidates; // fallback
 
-    // 2. Исключаем недавние (история) и уже использованные
+    // 2. Исключаем недавние (история) и уже использованные (включая текущий день)
     const usedIds = context.usedRecipeIds || new Set();
     const recentIds = context.recentRecipeIds || new Set();
     
@@ -101,22 +105,27 @@ export const MealComposer = (function() {
       const salads = grouped.salad;
 
       if (mains.length > 0) {
-        if (sides.length > 0) {
-          // ПРАВИЛО: Если есть гарнир, второе ВСЕГДА идет с ним
-          const main = pickRandom(mains);
-          const side = pickRandom(sides);
+        const main = pickRandom(mains);
+        
+        if (main) {
+          const items = [main];
           
-          compositions.push({ items: [main, side], type: 'main_with_side' });
+          // v6.4.2: Проверяем requiresSide
+          if (main.requiresSide === true && sides.length > 0) {
+            const side = pickRandom(sides.filter(s => s.id !== main.id));
+            if (side) items.push(side);
+          }
+          
+          compositions.push({ items: [...items], type: 'main_with_side' });
           
           if (salads.length > 0) {
-            compositions.push({ items: [main, side, pickRandom(salads)], type: 'full' });
+            const salad = pickRandom(salads.filter(s => s.id !== main.id));
+            if (salad) compositions.push({ items: [...items, salad], type: 'full' });
           }
           if (soups.length > 0) {
-            compositions.push({ items: [pickRandom(soups), main, side], type: 'full_lunch' });
+            const soup = pickRandom(soups.filter(s => s.id !== main.id));
+            if (soup) compositions.push({ items: [soup, ...items], type: 'full_lunch' });
           }
-        } else {
-          // Только если гарниров вообще нет в базе, даем просто второе
-          compositions.push({ items: [pickRandom(mains)], type: 'simple_main' });
         }
       }
 
