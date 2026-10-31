@@ -1,6 +1,9 @@
 /**
  * MealComposer — сборщик композиций для одного приема пищи.
  * 
+ * v1.4 (v6.4.2):
+ *   • Если нет основных блюд (main), гарниры (side) и салаты (salad) повышаются до main.
+ * 
  * v1.3 (v6.4.2):
  *   • Поддержка поля requiresSide (гарнир добавляется только если true).
  *   • Усиленная защита от дублей внутри дня.
@@ -100,9 +103,15 @@ export const MealComposer = (function() {
     // --- Обед / Ужин ---
     if (mealType === 'lunch' || mealType === 'dinner') {
       const soups = grouped.first_course;
-      const mains = grouped.main;
+      let mains = grouped.main;
       const sides = grouped.side;
       const salads = grouped.salad;
+
+      // v6.4.2: Если нет вторых блюд (например, у вегетарианцев), 
+      // повышаем гарниры и салаты до статуса основного блюда.
+      if (mains.length === 0) {
+        mains = [...sides, ...salads];
+      }
 
       if (mains.length > 0) {
         const main = pickRandom(mains);
