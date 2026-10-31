@@ -1,6 +1,9 @@
 /**
  * MenuGenerator — точка входа и оркестратор генерации.
  * 
+ * v3.3 (v6.4.2):
+ *   • Расширен список VEGETARIAN_STOP_WORDS (корни слов: фарш, бедр, кальмар и т.д.).
+ * 
  * v3.2 (v6.4.1):
  *   • Добавлен глубокий текстовый фильтр на мясо/рыбу/молочку для вегетарианцев.
  * 
@@ -19,18 +22,20 @@ export const MenuGenerator = (function() {
     return Utils.formatDateLocal(date);
   }
 
+  // v6.4.2: Расширенный список корней для жесткого отсева
   const VEGETARIAN_STOP_WORDS = [
-    'мясо', 'фарш', 'курица', 'куриный', 'говядина', 'свинина', 'баранина', 
-    'рыба', 'лосось', 'форель', 'треска', 'креветк', 'бекон', 'колбас', 
-    'сосиск', 'окорок', 'ветчин', 'индейк', 'кролик', 'утка', 'гусь', 
-    'печень', 'сердце', 'почки', 'тунец', 'горбуша', 'сёмга', 'кета', 'кижуч',
-    'пикша', 'окунь', 'судак', 'щука', 'сом', 'налим', 'осётр', 'пангасиус', 
-    'тилапия', 'дорада', 'сибас', 'ставрида', 'скумбрия', 'макрель', 'сельдь', 
-    'шпроты', 'килька', 'мидии', 'кальмары', 'краб', 'бульон'
+    'мяс', 'фарш', 'куриц', 'курин', 'бедр', 'голен', 'окорочк', 'цыплен',
+    'говяд', 'свин', 'телятин', 'баранин', 'индейк', 'кролик', 'утка', 'гусь',
+    'рыб', 'лосос', 'форел', 'треск', 'кревет', 'кальмар', 'миди', 'краб',
+    'сельд', 'тунец', 'горбуш', 'семг', 'сёмг', 'кета', 'кижуч', 'пикша',
+    'окунь', 'судак', 'щука', 'сом', 'налим', 'осётр', 'пангасиус', 'тилапия',
+    'дорада', 'сибас', 'ставрида', 'скумбрия', 'макрель', 'шпроты', 'килька',
+    'бекон', 'колбас', 'сосиск', 'сардельк', 'окорок', 'ветчин', 'сало', 
+    'печень', 'сердце', 'почки', 'бульон мясн', 'бульон курин'
   ];
 
   const VEGAN_EXTRA_STOP_WORDS = [
-    'молоко', 'сливк', 'сыр', 'творог', 'яйц', 'масло сливочн', 'мед', 'мёд', 
+    'молок', 'сливк', 'сыр', 'творог', 'яйц', 'масло сливочн', 'мед', 'мёд', 
     'сметан', 'кефир', 'йогурт', 'ряженка', 'маргарин', 'сгущёнка'
   ];
 
@@ -55,12 +60,12 @@ export const MenuGenerator = (function() {
     // 4. Стоп-ингредиенты
     if (prefs.stopIngredients && prefs.stopIngredients.length > 0) {
       const nameLower = recipe.name.toLowerCase();
-      if (prefs.stopIngredients.some(stop => nameLower.includes(stop))) return false;
+      if (prefs.stopIngredients.some(stop => nameLower.includes(stop.toLowerCase()))) return false;
       
       if (recipe.ingredients) {
         const hasStopIngredient = recipe.ingredients.some(ing => {
           const name = ing.name.toLowerCase();
-          return prefs.stopIngredients.some(stop => name.includes(stop));
+          return prefs.stopIngredients.some(stop => name.includes(stop.toLowerCase()));
         });
         if (hasStopIngredient) return false;
       }
@@ -165,7 +170,8 @@ export const MenuGenerator = (function() {
       id: best.id,
       name: best.name,
       category: best.category,
-      mealRole: best.mealRole
+      mealRole: best.mealRole,
+      requiresSide: best.requiresSide
     };
   }
 
