@@ -1,6 +1,9 @@
 /**
  * MenuScoring — система оценки сгенерированного меню.
  * 
+ * v1.5 (v6.4.5):
+ *   • Жесткий запрет (-1000) на два супа в один день.
+ * 
  * v1.4 (v6.4.3):
  *   • Огромный штраф (-1000) за два основных блюда (main) в одном приеме пищи.
  * 
@@ -94,13 +97,22 @@ export const MenuScoring = (function() {
     days.forEach(date => {
       const dayItems = Object.values(menu[date]).flatMap(m => m.items || []);
       const daySet = new Set(dayItems.map(i => String(i.id)));
+      
       if (daySet.size !== dayItems.length) {
         diversityPenalty += 1000; // Оптимизатор никогда не выберет этот вариант
       }
-    });
 
-    // v6.4.3: Проверка композиций (нельзя два main в одном приеме)
-    days.forEach(date => {
+      // v6.4.5: Жесткий запрет на два супа в один день
+      const daySoups = dayItems.filter(i => 
+        i.category === 'soup' || 
+        i.mealRole === 'first_course' || 
+        (i.category && i.category.toLowerCase() === 'суп')
+      );
+      if (daySoups.length > 1) {
+        diversityPenalty += 1000;
+      }
+
+      // v6.4.3: Проверка композиций (нельзя два main в одном приеме)
       Object.values(menu[date]).forEach(meal => {
         if (!meal.items) return;
         const roles = meal.items.map(i => i.mealRole);
@@ -163,7 +175,7 @@ export const MenuScoring = (function() {
         
         // Категорически нельзя два вторых в один прием
         if (mainsCount > 1) mealHarmony -= 100; 
-        if (soupsCount > 1) mealHarmony -= 50;
+        if (soupsCount > 1) mealHarmony -= 50; // Оставляем локальный штраф, глобальный уже есть
         
         // Штраф за мясо/рыбу без гарнира (только если requiresSide = true)
         if (mainsCount > 0 && sidesCount === 0) {
