@@ -1,11 +1,14 @@
 /**
  * main.js — точка входа приложения.
  *
+ * v6.3.4:
+ *   • executeGeneration: передача истории 10 дней (recentRecipeIds) в оптимизатор.
+ *   • executeGeneration: исправлен вывод оценки (показывается после закрытия модалки).
+ *
  * v6.3.3:
  *   • executeGeneration: атомарное сохранение через DishStore.replaceRangeAtomically.
  *   • Проверка результата сохранения (saveOk) — при ошибке меню не применяется.
  *   • Сохранение заметок и DONE-записей при «Заменить».
- *   • Отображение оценки (score) от MenuOptimizer.
  *
  * v6.3.2:
  *   • Адаптация executeGeneration под новый формат { items: [] }.
@@ -460,12 +463,26 @@ const DEFAULT_THEME = THEMES.LIGHT;
     if (!pendingGenerationData) return;
     const { days, mealTypes, fridgeIngredients, maxTime, startDate } = pendingGenerationData;
 
+    // 1. Собираем историю за последние 10 дней ДО начала генерации
+    const startObj = new Date(startDate);
+    const historyStart = new Date(startObj);
+    historyStart.setDate(historyStart.getDate() - 10);
+    const historyStartString = Utils.formatDateLocal(historyStart);
+    const historyEndString = Utils.formatDateLocal(new Date(startObj.getTime() - 86400000)); // день до старта
+
+    const recentDishes = DishStore.getAll().filter(d => 
+      d.date >= historyStartString && d.date <= historyEndString && d.recipeId
+    );
+    // Передаем Set строковых ID недавних блюд
+    const recentRecipeIds = new Set(recentDishes.map(d => String(d.recipeId)));
+
     const result = MenuGenerator.generateMenu({
       startDate,
       days,
       mealTypes,
       fridgeIngredients,
-      maxWeekdayTime: maxTime
+      maxWeekdayTime: maxTime,
+      recentRecipeIds // <--- ПЕРЕДАЕМ ИСТОРИЮ В ОПТИМИЗАТОР
     });
 
     if (!result.success) {
@@ -475,7 +492,7 @@ const DEFAULT_THEME = THEMES.LIGHT;
       return;
     }
 
-    // 1. Разворачиваем items в плоский массив
+    // 2. Разворачиваем items в плоский массив
     const dishesToSave = [];
     Object.keys(result.menu).forEach(dateStr => {
       Object.keys(result.menu[dateStr]).forEach(mealType => {
@@ -502,11 +519,10 @@ const DEFAULT_THEME = THEMES.LIGHT;
       return;
     }
 
-    // 2. Сохраняем: атомарно, с защитой данных
+    // 3. Сохраняем: атомарно, с защитой данных
     let saveOk = false;
 
     if (replaceExisting) {
-      const startObj = new Date(startDate);
       const endObj = new Date(startDate);
       endObj.setDate(endObj.getDate() + days - 1);
       const startString = Utils.formatDateLocal(startObj);
@@ -530,12 +546,19 @@ const DEFAULT_THEME = THEMES.LIGHT;
       return;
     }
 
-    // 3. Успех
-    const scoreText = result.score ? ` (Оценка: ${Math.round(result.score)}/100)` : '';
-    showMessage(`✨ Меню на ${days} дней собрано!${scoreText}`);
+    // 4. Успех
     closeGenerateModal();
     Renderer.renderCalendar(Renderer.getCurrentView(), Renderer.getCurrentDate());
     pendingGenerationData = null;
+
+    // Проверяем, есть ли оценка (score = 0 - валидное значение)
+    const scoreValue = (result.score !== undefined && result.score !== null) ? Math.round(result.score) : null;
+    const scoreText = scoreValue !== null ? ` (Оценка: ${scoreValue}/100)` : '';
+
+    // Небольшая задержка, чтобы DOM успел перестроиться после закрытия модалки
+    setTimeout(() => {
+      showMessage(`✨ Меню на ${days} дней собрано!${scoreText}`);
+    }, 150);
   }
 
   document.getElementById('generateMenuSave').addEventListener('click', function() {
