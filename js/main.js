@@ -1,6 +1,11 @@
 /**
  * main.js — точка входа приложения.
  *
+ * v6.4.2:
+ *   • Добавлена модалка успешной сборки меню ("Меню готово!").
+ *   • Кнопка "Перейти к меню" с прокруткой к дате начала.
+ *   • Предупреждение, если в базе мало рецептов под ограничения.
+ *
  * v6.4.0:
  *   • Интеграция UserPreferences: сохранение и загрузка глобальных ограничений.
  *
@@ -386,6 +391,7 @@ const DEFAULT_THEME = THEMES.LIGHT;
   const generateStartDate = document.getElementById('generateStartDate');
   const generateFridgeMode = document.getElementById('generateFridgeMode');
   const fridgeIngredientsWrap = document.getElementById('fridgeIngredientsWrap');
+  const successModalOverlay = document.getElementById('successModalOverlay');
 
   // v6.4.0: Инициализация и сохранение настроек ограничений
   function loadUserPreferencesUI() {
@@ -476,7 +482,7 @@ const DEFAULT_THEME = THEMES.LIGHT;
     generateFormContent.hidden = false;
     generateConflictBlock.hidden = true;
     generateStartDate.value = Utils.formatDateLocal(new Date());
-    loadUserPreferencesUI(); // v6.4.0: Обновляем UI перед открытием
+    loadUserPreferencesUI();
     generateMenuOverlay.classList.add('active');
     trapFocus(generateMenuOverlay, closeGenerateModal);
   }
@@ -489,6 +495,46 @@ const DEFAULT_THEME = THEMES.LIGHT;
     if (generateMenuOverlay._trapFocusCleanup) {
       generateMenuOverlay._trapFocusCleanup();
       delete generateMenuOverlay._trapFocusCleanup;
+    }
+  }
+
+  function showSuccessModal(options) {
+    if (!successModalOverlay) return;
+    
+    const textEl = document.getElementById('successModalText');
+    const warningEl = document.getElementById('successModalWarning');
+    
+    if (options.isLowRecipes) {
+      warningEl.style.display = 'block';
+      textEl.textContent = `Собрано меню на ${options.days} дней.`;
+    } else {
+      warningEl.style.display = 'none';
+      textEl.textContent = `Собрано отличное меню на ${options.days} дней!`;
+    }
+
+    successModalOverlay.style.display = 'flex';
+    // Используем trapFocus, если он применим к этому типу модалки (опционально)
+    // trapFocus(successModalOverlay, closeSuccessModal);
+
+    document.getElementById('goToMenuBtn').onclick = () => {
+      successModalOverlay.style.display = 'none';
+      window.location.hash = 'menu';
+      setTimeout(() => {
+        const firstDayEl = document.querySelector(`.day-cell[data-date="${options.startDate}"]`);
+        if (firstDayEl) {
+          firstDayEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 300);
+    };
+
+    document.getElementById('closeSuccessModalBtn').onclick = () => {
+      successModalOverlay.style.display = 'none';
+    };
+  }
+
+  function closeSuccessModal() {
+    if (successModalOverlay) {
+      successModalOverlay.style.display = 'none';
     }
   }
 
@@ -599,12 +645,13 @@ const DEFAULT_THEME = THEMES.LIGHT;
     Renderer.renderCalendar(Renderer.getCurrentView(), Renderer.getCurrentDate());
     pendingGenerationData = null;
 
-    const scoreValue = (result.score !== undefined && result.score !== null) ? Math.round(result.score) : null;
-    const scoreText = scoreValue !== null ? ` (Оценка: ${scoreValue}/100)` : '';
-
-    setTimeout(() => {
-      showMessage(`✨ Меню на ${days} дней собрано!${scoreText}`);
-    }, 150);
+    // v6.4.2: Показываем модалку успеха
+    const allRecipesCount = RecipeStore.getAll().filter(r => !r.hidden && !r.disliked).length;
+    showSuccessModal({
+      days: days,
+      startDate: startDate,
+      isLowRecipes: allRecipesCount < 30 // Порог: если после фильтрации осталось мало
+    });
   }
 
   document.getElementById('generateMenuSave').addEventListener('click', function() {
@@ -761,7 +808,8 @@ const DEFAULT_THEME = THEMES.LIGHT;
     { overlay: document.getElementById(CONSTANTS.SELECTORS.welcomeOverlay), close: hideWelcome },
     { overlay: document.getElementById(CONSTANTS.SELECTORS.recipeFormOverlay), close: closeRecipeForm },
     { overlay: themeOverlay, close: closeThemeModal },
-    { overlay: generateMenuOverlay, close: closeGenerateModal }
+    { overlay: generateMenuOverlay, close: closeGenerateModal },
+    { overlay: successModalOverlay, close: closeSuccessModal }
   ];
 
   modals.forEach(({ overlay, close }) => {
@@ -781,7 +829,7 @@ const DEFAULT_THEME = THEMES.LIGHT;
 
   function hasActiveModal() {
     return !!document.querySelector(
-      '.modal-overlay.active, .choice-overlay.active, .welcome-overlay.active, .onboarding-overlay.active'
+      '.modal-overlay.active, .choice-overlay.active, .welcome-overlay.active, .onboarding-overlay.active, #successModalOverlay[style*="display: flex"]'
     );
   }
 
@@ -800,7 +848,7 @@ const DEFAULT_THEME = THEMES.LIGHT;
   modalObserver.observe(document.body, {
     subtree: true,
     attributes: true,
-    attributeFilter: ['class']
+    attributeFilter: ['class', 'style']
   });
 
   window.addEventListener('popstate', function() {
@@ -823,7 +871,7 @@ const DEFAULT_THEME = THEMES.LIGHT;
 
   function closeTopActiveModal() {
     const overlays = document.querySelectorAll(
-      '.modal-overlay.active, .choice-overlay.active, .welcome-overlay.active, .onboarding-overlay.active'
+      '.modal-overlay.active, .choice-overlay.active, .welcome-overlay.active, .onboarding-overlay.active, #successModalOverlay[style*="display: flex"]'
     );
     if (overlays.length === 0) return;
 
@@ -860,7 +908,7 @@ const DEFAULT_THEME = THEMES.LIGHT;
   document.addEventListener('keydown', function(e) {
     if (e.key !== 'Escape') return;
     const activeModal = document.querySelector(
-      '.modal-overlay.active, .choice-overlay.active, .welcome-overlay.active, .onboarding-overlay.active'
+      '.modal-overlay.active, .choice-overlay.active, .welcome-overlay.active, .onboarding-overlay.active, #successModalOverlay[style*="display: flex"]'
     );
     if (!activeModal) return;
     if (activeModal.id === CONSTANTS.SELECTORS.onboardingOverlay) {
