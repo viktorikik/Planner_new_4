@@ -1,32 +1,24 @@
 /**
  * main.js — точка входа приложения.
  *
+ * v6.4.0:
+ *   • Интеграция UserPreferences: сохранение и загрузка глобальных ограничений.
+ *
+ * v6.3.5:
+ *   • Исправлен вывод сообщения с оценкой (показывается после закрытия модалки).
+ *
  * v6.3.4:
  *   • executeGeneration: передача истории 10 дней (recentRecipeIds) в оптимизатор.
- *   • executeGeneration: исправлен вывод оценки (показывается после закрытия модалки).
- *
- * v6.3.3:
- *   • executeGeneration: атомарное сохранение через DishStore.replaceRangeAtomically.
- *   • Проверка результата сохранения (saveOk) — при ошибке меню не применяется.
- *   • Сохранение заметок и DONE-записей при «Заменить».
- *
- * v6.3.2:
- *   • Адаптация executeGeneration под новый формат { items: [] }.
- *   • replaceDishHandler передает mealRole.
- *
- * v6.1.0:
- *   • Защита от отсутствия #generateMenuBtn.
- *
- * v6.0.0:
- *   • Переход на две темы: light и dark.
+ *   • Исправлен баг с дублированием рецептов (защита от двойного клика).
  */
-import { STATUSES, CONSTANTS } from './utils/Constants.js';
+import { STATUSES, CONSTANTS, ALLERGENS } from './utils/Constants.js';
 import { Utils } from './utils/Utils.js';
 import { EventBus } from './utils/EventBus.js';
 import { showMessage } from './utils/notifications.js';
 import { trapFocus } from './utils/focusTrap.js';
 import { DishStore } from './stores/DishStore.js';
 import { RecipeStore } from './stores/RecipeStore.js';
+import { UserPreferences } from './stores/UserPreferences.js';
 import {
   Renderer,
   openChoiceScreen,
@@ -395,6 +387,62 @@ const DEFAULT_THEME = THEMES.LIGHT;
   const generateFridgeMode = document.getElementById('generateFridgeMode');
   const fridgeIngredientsWrap = document.getElementById('fridgeIngredientsWrap');
 
+  // v6.4.0: Инициализация и сохранение настроек ограничений
+  function loadUserPreferencesUI() {
+    const prefs = UserPreferences.get();
+    
+    const dietEl = document.getElementById('generateDietType');
+    const diffEl = document.getElementById('generateMaxDifficulty');
+    const spiceEl = document.getElementById('generateSpiciness');
+    const stopEl = document.getElementById('generateStopIngredients');
+
+    if (dietEl) dietEl.value = prefs.diet;
+    if (diffEl) diffEl.value = prefs.maxDifficulty;
+    if (spiceEl) spiceEl.value = prefs.maxSpiciness;
+    if (stopEl) stopEl.value = prefs.stopIngredients.join(', ');
+    
+    const allergensGroup = document.getElementById('generateAllergensGroup');
+    if (allergensGroup) {
+      allergensGroup.querySelectorAll('input[type=checkbox]').forEach(cb => {
+        cb.checked = prefs.allergens.includes(cb.dataset.allergen);
+      });
+    }
+  }
+
+  function saveUserPreferencesFromUI() {
+    const dietEl = document.getElementById('generateDietType');
+    const diffEl = document.getElementById('generateMaxDifficulty');
+    const spiceEl = document.getElementById('generateSpiciness');
+    const stopEl = document.getElementById('generateStopIngredients');
+
+    const diet = dietEl ? dietEl.value : 'all';
+    const maxDifficulty = diffEl ? parseInt(diffEl.value, 10) : 5;
+    const maxSpiciness = spiceEl ? parseInt(spiceEl.value, 10) : 5;
+    const stopStr = stopEl ? stopEl.value : '';
+    
+    const stopIngredients = stopStr.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+    
+    const allergens = [];
+    const allergensGroup = document.getElementById('generateAllergensGroup');
+    if (allergensGroup) {
+      allergensGroup.querySelectorAll('input[type=checkbox]:checked').forEach(cb => {
+        allergens.push(cb.dataset.allergen);
+      });
+    }
+
+    UserPreferences.update({ diet, maxDifficulty, maxSpiciness, allergens, stopIngredients });
+  }
+
+  ['generateDietType', 'generateMaxDifficulty', 'generateSpiciness', 'generateStopIngredients'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', saveUserPreferencesFromUI);
+  });
+  
+  const genAllergensGroup = document.getElementById('generateAllergensGroup');
+  if (genAllergensGroup) {
+    genAllergensGroup.addEventListener('change', saveUserPreferencesFromUI);
+  }
+
   if (generateFridgeMode) {
     generateFridgeMode.addEventListener('change', function() {
       fridgeIngredientsWrap.hidden = !this.checked;
@@ -428,6 +476,7 @@ const DEFAULT_THEME = THEMES.LIGHT;
     generateFormContent.hidden = false;
     generateConflictBlock.hidden = true;
     generateStartDate.value = Utils.formatDateLocal(new Date());
+    loadUserPreferencesUI(); // v6.4.0: Обновляем UI перед открытием
     generateMenuOverlay.classList.add('active');
     trapFocus(generateMenuOverlay, closeGenerateModal);
   }
@@ -468,12 +517,11 @@ const DEFAULT_THEME = THEMES.LIGHT;
     const historyStart = new Date(startObj);
     historyStart.setDate(historyStart.getDate() - 10);
     const historyStartString = Utils.formatDateLocal(historyStart);
-    const historyEndString = Utils.formatDateLocal(new Date(startObj.getTime() - 86400000)); // день до старта
+    const historyEndString = Utils.formatDateLocal(new Date(startObj.getTime() - 86400000));
 
     const recentDishes = DishStore.getAll().filter(d => 
       d.date >= historyStartString && d.date <= historyEndString && d.recipeId
     );
-    // Передаем Set строковых ID недавних блюд
     const recentRecipeIds = new Set(recentDishes.map(d => String(d.recipeId)));
 
     const result = MenuGenerator.generateMenu({
@@ -482,7 +530,7 @@ const DEFAULT_THEME = THEMES.LIGHT;
       mealTypes,
       fridgeIngredients,
       maxWeekdayTime: maxTime,
-      recentRecipeIds // <--- ПЕРЕДАЕМ ИСТОРИЮ В ОПТИМИЗАТОР
+      recentRecipeIds
     });
 
     if (!result.success) {
@@ -551,11 +599,9 @@ const DEFAULT_THEME = THEMES.LIGHT;
     Renderer.renderCalendar(Renderer.getCurrentView(), Renderer.getCurrentDate());
     pendingGenerationData = null;
 
-    // Проверяем, есть ли оценка (score = 0 - валидное значение)
     const scoreValue = (result.score !== undefined && result.score !== null) ? Math.round(result.score) : null;
     const scoreText = scoreValue !== null ? ` (Оценка: ${scoreValue}/100)` : '';
 
-    // Небольшая задержка, чтобы DOM успел перестроиться после закрытия модалки
     setTimeout(() => {
       showMessage(`✨ Меню на ${days} дней собрано!${scoreText}`);
     }, 150);
