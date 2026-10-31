@@ -5626,3 +5626,34 @@ body:has(.onboarding-overlay.active) {
   0% { transform: scale(0.5); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
 }
+
+/* Убираем системный черный треугольник у <details> */
+summary::-webkit-details-marker {
+  display: none;
+}
+summary {
+  list-style: none;
+}
+
+/* Принудительно задаем стили для кнопок в модалке успеха */
+.success-modal .modal-actions button.btn-primary {
+  background-color: var(--accent-color, #D5E84A);
+  color: var(--text-primary, #292B25);
+  border: none;
+  font-weight: 700;
+  padding: 14px;
+  border-radius: var(--radius-md, 16px);
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.success-modal .modal-actions button.btn-secondary {
+  background-color: var(--bg-primary, #F6F4ED);
+  color: var(--text-primary, #292B25);
+  border: 1px solid var(--cell-border, #E5DDD1);
+  font-weight: 700;
+  padding: 14px;
+  border-radius: var(--radius-md, 16px);
+  font-size: 16px;
+  cursor: pointer;
+}
