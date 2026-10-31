@@ -1,6 +1,9 @@
 /**
  * MenuScoring — система оценки сгенерированного меню.
  * 
+ * v1.4 (v6.4.3):
+ *   • Огромный штраф (-1000) за два основных блюда (main) в одном приеме пищи.
+ * 
  * v1.3 (v6.4.2):
  *   • Жесткий запрет на дублирование блюд в один день (штраф -1000).
  *   • Гигантский штраф за повтор ID в разные дни (300 баллов).
@@ -58,7 +61,7 @@ export const MenuScoring = (function() {
 
     let diversityPenalty = 0;
     
-    // v6.4.2: Огромный штраф за повторы в разные дни
+    // Огромный штраф за повторы в разные дни
     Object.values(recipeCounts).forEach(count => {
       if (count > 1) diversityPenalty += (count - 1) * 300; 
     });
@@ -87,13 +90,25 @@ export const MenuScoring = (function() {
       });
     }
 
-    // v6.4.2: Проверка на дубли в ОДИН ДЕНЬ
+    // Проверка на дубли в ОДИН ДЕНЬ
     days.forEach(date => {
       const dayItems = Object.values(menu[date]).flatMap(m => m.items || []);
       const daySet = new Set(dayItems.map(i => String(i.id)));
       if (daySet.size !== dayItems.length) {
         diversityPenalty += 1000; // Оптимизатор никогда не выберет этот вариант
       }
+    });
+
+    // v6.4.3: Проверка композиций (нельзя два main в одном приеме)
+    days.forEach(date => {
+      Object.values(menu[date]).forEach(meal => {
+        if (!meal.items) return;
+        const roles = meal.items.map(i => i.mealRole);
+        const mainsCount = roles.filter(r => r === 'main').length;
+        if (mainsCount > 1) {
+          diversityPenalty += 1000; // Жесткий запрет на два вторых
+        }
+      });
     });
 
     const diversityScore = Math.max(0, 100 - diversityPenalty);
@@ -146,6 +161,7 @@ export const MenuScoring = (function() {
         const soupsCount = roles.filter(r => r === 'first_course').length;
         const heavies = meal.items.filter(i => i.isHeavy).length;
         
+        // Категорически нельзя два вторых в один прием
         if (mainsCount > 1) mealHarmony -= 100; 
         if (soupsCount > 1) mealHarmony -= 50;
         
