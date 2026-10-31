@@ -1,6 +1,10 @@
 /**
  * main.js — точка входа приложения.
  *
+ * v6.4.3:
+ *   • Исправлен переход к меню из модалки успеха (закрытие модалки перед сменой хэша).
+ *   • Исправлен скролл к первому дню (селектор .week-row вместо .day-cell).
+ *
  * v6.4.2:
  *   • Добавлена модалка успешной сборки меню ("Меню готово!").
  *   • Кнопка "Перейти к меню" с прокруткой к дате начала.
@@ -500,7 +504,7 @@ const DEFAULT_THEME = THEMES.LIGHT;
     }
   }
 
-  // v6.4.2: Функция показа модалки успеха
+  // v6.4.3: Функция показа модалки успеха (ИСПРАВЛЕН ПЕРЕХОД)
   function showSuccessModal(options) {
     if (!successModalOverlay) return;
     
@@ -516,25 +520,30 @@ const DEFAULT_THEME = THEMES.LIGHT;
     }
 
     successModalOverlay.style.display = 'flex';
-    
-    // Добавляем класс для корректной работы History API
     successModalOverlay.classList.add('active');
 
     document.getElementById('goToMenuBtn').onclick = () => {
-      successModalOverlay.style.display = 'none';
-      successModalOverlay.classList.remove('active');
-      window.location.hash = 'menu';
+      // 1. Закрываем модалку, чтобы History API корректно отработал
+      closeSuccessModal();
+      
+      // 2. Ждем тик, чтобы History API понял, что модалка закрыта
       setTimeout(() => {
-        const firstDayEl = document.querySelector(`.day-cell[data-date="${options.startDate}"]`);
-        if (firstDayEl) {
-          firstDayEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }, 300);
+        // 3. Переключаем таб на "Меню"
+        window.location.hash = 'menu';
+        
+        // 4. Ждем отрисовки календаря и скроллим
+        setTimeout(() => {
+          // v6.4.3: Ищем строку недели (в вашем HTML это .week-row)
+          const firstDayEl = document.querySelector(`.week-row[data-date="${options.startDate}"]`);
+          if (firstDayEl) {
+            firstDayEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 300);
+      }, 50);
     };
 
     document.getElementById('closeSuccessModalBtn').onclick = () => {
-      successModalOverlay.style.display = 'none';
-      successModalOverlay.classList.remove('active');
+      closeSuccessModal();
     };
   }
 
@@ -820,7 +829,7 @@ const DEFAULT_THEME = THEMES.LIGHT;
     { overlay: document.getElementById(CONSTANTS.SELECTORS.recipeFormOverlay), close: closeRecipeForm },
     { overlay: themeOverlay, close: closeThemeModal },
     { overlay: generateMenuOverlay, close: closeGenerateModal },
-    { overlay: successModalOverlay, close: closeSuccessModal } // v6.4.2
+    { overlay: successModalOverlay, close: closeSuccessModal }
   ];
 
   modals.forEach(({ overlay, close }) => {
@@ -840,7 +849,7 @@ const DEFAULT_THEME = THEMES.LIGHT;
 
   function hasActiveModal() {
     return !!document.querySelector(
-      '.modal-overlay.active, .choice-overlay.active, .welcome-overlay.active, .onboarding-overlay.active'
+      '.modal-overlay.active, .choice-overlay.active, .welcome-overlay.active, .onboarding-overlay.active, #successModalOverlay[style*="display: flex"]'
     );
   }
 
@@ -882,7 +891,7 @@ const DEFAULT_THEME = THEMES.LIGHT;
 
   function closeTopActiveModal() {
     const overlays = document.querySelectorAll(
-      '.modal-overlay.active, .choice-overlay.active, .welcome-overlay.active, .onboarding-overlay.active'
+      '.modal-overlay.active, .choice-overlay.active, .welcome-overlay.active, .onboarding-overlay.active, #successModalOverlay[style*="display: flex"]'
     );
     if (overlays.length === 0) return;
 
@@ -919,7 +928,7 @@ const DEFAULT_THEME = THEMES.LIGHT;
   document.addEventListener('keydown', function(e) {
     if (e.key !== 'Escape') return;
     const activeModal = document.querySelector(
-      '.modal-overlay.active, .choice-overlay.active, .welcome-overlay.active, .onboarding-overlay.active'
+      '.modal-overlay.active, .choice-overlay.active, .welcome-overlay.active, .onboarding-overlay.active, #successModalOverlay[style*="display: flex"]'
     );
     if (!activeModal) return;
     if (activeModal.id === CONSTANTS.SELECTORS.onboardingOverlay) {
