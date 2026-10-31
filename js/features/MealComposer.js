@@ -1,6 +1,9 @@
 /**
  * MealComposer — сборщик композиций для одного приема пищи.
  * 
+ * v1.7 (v6.4.5):
+ *   • Запрет на добавление второго супа в один прием пищи.
+ * 
  * v1.6 (v6.4.3):
  *   • Если main требует гарнира (requiresSide), он забирает салат, если гарнира нет.
  *   • Запрет на два main в одном приеме.
@@ -129,11 +132,9 @@ export const MealComposer = (function() {
           // v6.4.3: Если блюдо требует гарнира
           if (main.requiresSide === true) {
             if (sides.length > 0) {
-              // 1. Ищем гарнир
               const side = pickRandom(sides.filter(s => s.id !== main.id));
               if (side) items.push(side);
             } else if (salads.length > 0) {
-              // 2. Если гарниров нет, берем салат (чтобы не было "голого" мяса)
               const salad = pickRandom(salads.filter(s => s.id !== main.id));
               if (salad) items.push(salad);
             }
@@ -154,7 +155,11 @@ export const MealComposer = (function() {
       }
 
       if (soups.length > 0 && salads.length > 0) {
-        compositions.push({ items: [pickRandom(soups), pickRandom(salads)], type: 'soup_and_salad' });
+        const soup = pickRandom(soups);
+        const salad = pickRandom(salads.filter(s => s.id !== soup.id));
+        if (soup && salad) {
+          compositions.push({ items: [soup, salad], type: 'soup_and_salad' });
+        }
       }
       if (soups.length > 0) {
         compositions.push({ items: [pickRandom(soups)], type: 'soup_only' });
