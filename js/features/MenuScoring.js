@@ -1,14 +1,13 @@
 /**
  * MenuScoring — система оценки сгенерированного меню.
  * 
+ * v1.3 (v6.4.2):
+ *   • Жесткий запрет на дублирование блюд в один день (штраф -1000).
+ *   • Гигантский штраф за повтор ID в разные дни (300 баллов).
+ * 
  * v1.2 (v6.4.1):
  *   • Усиленный штраф за повторы: точное совпадение ID, совпадение базового названия, 
  *     а также переизбыток супов в меню.
- * 
- * v1.1 (v6.3.4):
- *   • Сильный штраф за два "main" в одном приеме.
- *   • Штраф за мясо/рыбу без гарнира.
- *   • Штраф за блюда из недавней истории.
  */
 export const MenuScoring = (function() {
 
@@ -44,15 +43,10 @@ export const MenuScoring = (function() {
     const baseNameCounts = {};
 
     allItems.forEach(item => {
-      // 1. Точное совпадение ID
       recipeCounts[item.id] = (recipeCounts[item.id] || 0) + 1;
-      
-      // 2. Категории (например, супы)
       const cat = item.category || 'other';
       categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
 
-      // 3. Базовые названия (для отлова "Борщ" и "Борщ на курином бульоне")
-      // Берем первое слово названия
       const baseName = item.name.split(' ')[0].toLowerCase();
       baseNameCounts[baseName] = (baseNameCounts[baseName] || 0) + 1;
 
@@ -64,32 +58,27 @@ export const MenuScoring = (function() {
 
     let diversityPenalty = 0;
     
-    // Жесткий штраф за абсолютно одинаковые блюда
+    // v6.4.2: Огромный штраф за повторы в разные дни
     Object.values(recipeCounts).forEach(count => {
-      if (count > 1) diversityPenalty += (count - 1) * 30; 
+      if (count > 1) diversityPenalty += (count - 1) * 300; 
     });
 
-    // Штраф за похожие названия (Борщ, Борщ, Борщ...)
     Object.values(baseNameCounts).forEach(count => {
-      if (count > 1) diversityPenalty += (count - 1) * 20;
+      if (count > 1) diversityPenalty += (count - 1) * 50;
     });
 
-    // Штраф за переизбыток супов (если меню на 3 дня, 4 супа — это перебор)
-    // Норма: 1 суп в день (или 0.5 от количества дней)
     const maxSoupsAllowed = Math.ceil(days.length * 0.6); 
     if (categoryCounts['soup'] > maxSoupsAllowed) {
-      diversityPenalty += (categoryCounts['soup'] - maxSoupsAllowed) * 25;
+      diversityPenalty += (categoryCounts['soup'] - maxSoupsAllowed) * 100;
     }
 
-    // Штраф за повтор белков и методов
     Object.values(proteinCounts).forEach(count => {
-      if (count > 2) diversityPenalty += (count - 2) * 8;
+      if (count > 2) diversityPenalty += (count - 2) * 20;
     });
     Object.values(methodCounts).forEach(count => {
-      if (count > 2) diversityPenalty += (count - 2) * 5;
+      if (count > 2) diversityPenalty += (count - 2) * 10;
     });
 
-    // Штраф за использование недавних блюд (история 10 дней)
     if (context.recentRecipeIds) {
       allItems.forEach(item => {
         if (context.recentRecipeIds.has(String(item.id))) {
@@ -97,6 +86,15 @@ export const MenuScoring = (function() {
         }
       });
     }
+
+    // v6.4.2: Проверка на дубли в ОДИН ДЕНЬ
+    days.forEach(date => {
+      const dayItems = Object.values(menu[date]).flatMap(m => m.items || []);
+      const daySet = new Set(dayItems.map(i => String(i.id)));
+      if (daySet.size !== dayItems.length) {
+        diversityPenalty += 1000; // Оптимизатор никогда не выберет этот вариант
+      }
+    });
 
     const diversityScore = Math.max(0, 100 - diversityPenalty);
 
@@ -148,25 +146,18 @@ export const MenuScoring = (function() {
         const soupsCount = roles.filter(r => r === 'first_course').length;
         const heavies = meal.items.filter(i => i.isHeavy).length;
         
-        // Категорически нельзя два вторых в один прием
         if (mainsCount > 1) mealHarmony -= 100; 
-        // Два супа в один прием - тоже плохо
         if (soupsCount > 1) mealHarmony -= 50;
         
-        // Штраф за мясо/рыбу без гарнира
+        // Штраф за мясо/рыбу без гарнира (только если requiresSide = true)
         if (mainsCount > 0 && sidesCount === 0) {
-          const hasMeatOrFish = meal.items.some(i => 
-            i.mealRole === 'main' && 
-            i.tags && 
-            ['meat', 'fish', 'poultry'].includes(i.tags.proteinSource)
-          );
-          if (hasMeatOrFish) mealHarmony -= 40; 
+          const needsSide = meal.items.some(i => i.requiresSide === true);
+          if (needsSide) mealHarmony -= 40; 
         }
 
         if (roles.filter(r => r === 'salad').length > 1) mealHarmony -= 20;
         if (heavies > 1) mealHarmony -= 25;
         
-        // Бонусы
         if (roles.includes('first_course') && mainsCount > 0) mealHarmony += 10;
         if (mainsCount > 0 && sidesCount > 0) mealHarmony += 15;
         
