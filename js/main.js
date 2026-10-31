@@ -391,6 +391,8 @@ const DEFAULT_THEME = THEMES.LIGHT;
   const generateStartDate = document.getElementById('generateStartDate');
   const generateFridgeMode = document.getElementById('generateFridgeMode');
   const fridgeIngredientsWrap = document.getElementById('fridgeIngredientsWrap');
+  
+  // v6.4.2: Модалка успешной сборки
   const successModalOverlay = document.getElementById('successModalOverlay');
 
   // v6.4.0: Инициализация и сохранение настроек ограничений
@@ -482,7 +484,7 @@ const DEFAULT_THEME = THEMES.LIGHT;
     generateFormContent.hidden = false;
     generateConflictBlock.hidden = true;
     generateStartDate.value = Utils.formatDateLocal(new Date());
-    loadUserPreferencesUI();
+    loadUserPreferencesUI(); // v6.4.0: Обновляем UI перед открытием
     generateMenuOverlay.classList.add('active');
     trapFocus(generateMenuOverlay, closeGenerateModal);
   }
@@ -498,6 +500,7 @@ const DEFAULT_THEME = THEMES.LIGHT;
     }
   }
 
+  // v6.4.2: Функция показа модалки успеха
   function showSuccessModal(options) {
     if (!successModalOverlay) return;
     
@@ -513,11 +516,13 @@ const DEFAULT_THEME = THEMES.LIGHT;
     }
 
     successModalOverlay.style.display = 'flex';
-    // Используем trapFocus, если он применим к этому типу модалки (опционально)
-    // trapFocus(successModalOverlay, closeSuccessModal);
+    
+    // Добавляем класс для корректной работы History API
+    successModalOverlay.classList.add('active');
 
     document.getElementById('goToMenuBtn').onclick = () => {
       successModalOverlay.style.display = 'none';
+      successModalOverlay.classList.remove('active');
       window.location.hash = 'menu';
       setTimeout(() => {
         const firstDayEl = document.querySelector(`.day-cell[data-date="${options.startDate}"]`);
@@ -529,12 +534,14 @@ const DEFAULT_THEME = THEMES.LIGHT;
 
     document.getElementById('closeSuccessModalBtn').onclick = () => {
       successModalOverlay.style.display = 'none';
+      successModalOverlay.classList.remove('active');
     };
   }
 
   function closeSuccessModal() {
     if (successModalOverlay) {
       successModalOverlay.style.display = 'none';
+      successModalOverlay.classList.remove('active');
     }
   }
 
@@ -645,12 +652,16 @@ const DEFAULT_THEME = THEMES.LIGHT;
     Renderer.renderCalendar(Renderer.getCurrentView(), Renderer.getCurrentDate());
     pendingGenerationData = null;
 
-    // v6.4.2: Показываем модалку успеха
-    const allRecipesCount = RecipeStore.getAll().filter(r => !r.hidden && !r.disliked).length;
+    // v6.4.2: Показываем модалку успеха с проверкой нехватки рецептов
+    const prefs = UserPreferences.get();
+    const availableRecipesCount = RecipeStore.getAll()
+      .filter(r => !r.hidden && !r.disliked)
+      .filter(r => MenuGenerator.isRecipeAllowed(r, prefs)).length;
+
     showSuccessModal({
       days: days,
       startDate: startDate,
-      isLowRecipes: allRecipesCount < 30 // Порог: если после фильтрации осталось мало
+      isLowRecipes: availableRecipesCount < 20 // Если доступных рецептов меньше 20, будут повторы
     });
   }
 
@@ -809,7 +820,7 @@ const DEFAULT_THEME = THEMES.LIGHT;
     { overlay: document.getElementById(CONSTANTS.SELECTORS.recipeFormOverlay), close: closeRecipeForm },
     { overlay: themeOverlay, close: closeThemeModal },
     { overlay: generateMenuOverlay, close: closeGenerateModal },
-    { overlay: successModalOverlay, close: closeSuccessModal }
+    { overlay: successModalOverlay, close: closeSuccessModal } // v6.4.2
   ];
 
   modals.forEach(({ overlay, close }) => {
@@ -829,7 +840,7 @@ const DEFAULT_THEME = THEMES.LIGHT;
 
   function hasActiveModal() {
     return !!document.querySelector(
-      '.modal-overlay.active, .choice-overlay.active, .welcome-overlay.active, .onboarding-overlay.active, #successModalOverlay[style*="display: flex"]'
+      '.modal-overlay.active, .choice-overlay.active, .welcome-overlay.active, .onboarding-overlay.active'
     );
   }
 
@@ -871,7 +882,7 @@ const DEFAULT_THEME = THEMES.LIGHT;
 
   function closeTopActiveModal() {
     const overlays = document.querySelectorAll(
-      '.modal-overlay.active, .choice-overlay.active, .welcome-overlay.active, .onboarding-overlay.active, #successModalOverlay[style*="display: flex"]'
+      '.modal-overlay.active, .choice-overlay.active, .welcome-overlay.active, .onboarding-overlay.active'
     );
     if (overlays.length === 0) return;
 
@@ -908,7 +919,7 @@ const DEFAULT_THEME = THEMES.LIGHT;
   document.addEventListener('keydown', function(e) {
     if (e.key !== 'Escape') return;
     const activeModal = document.querySelector(
-      '.modal-overlay.active, .choice-overlay.active, .welcome-overlay.active, .onboarding-overlay.active, #successModalOverlay[style*="display: flex"]'
+      '.modal-overlay.active, .choice-overlay.active, .welcome-overlay.active, .onboarding-overlay.active'
     );
     if (!activeModal) return;
     if (activeModal.id === CONSTANTS.SELECTORS.onboardingOverlay) {
