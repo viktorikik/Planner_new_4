@@ -1,24 +1,12 @@
 /**
  * Recipes — таб «Рецепты»: список, форма v2, парсер ингредиентов,
  * экспорт/импорт рецептов.
- * Зависит от: Constants, Utils, RecipeStore, DishStore, Renderer,
- *             notifications, focusTrap, ExportImport.
- *
- * v5.46:
- *   • handleDeleteOrHide: для своих рецептов убран confirm().
- *     Удаление мгновенное, с возможностью вернуть через undo-плашку.
- *
- * v5.47:
- *   • Ленивый рендер списка рецептов (buildRecipeListUl, ulCreated).
- *
+ * 
+ * v6.3.5:
+ *   • Защита от двойного нажатия "Сохранить" (isSavingRecipe).
+ * 
  * v6.1.0:
- *   • Drill-down категорий. Аккордеон заменён на два экрана:
- *     – сетка карточек категорий (по умолчанию);
- *     – список рецептов выбранной категории с кнопкой «← Все категории».
- *     Состояние хранится в recipesCategoryFilter ('all' | id категории).
- *   • Поиск показывает плоский список по всем категориям с бейджем категории.
- *   • buildRecipeListUl(item, showCategoryBadge) — бейдж категории
- *     опционально выводится в плоском списке.
+ *   • Drill-down категорий. Аккордеон заменён на два экрана.
  */
 import { CATEGORIES, CATEGORY_LABELS, RECIPE_SOURCES, CONSTANTS, UNIT_LABELS } from '../utils/Constants.js';
 import { Utils } from '../utils/Utils.js';
@@ -44,9 +32,10 @@ const SWIPE_REVEAL_WIDTH = 92;
 const SWIPE_THRESHOLD = 40;
 
 let recipesSearchQuery = '';
-let recipesCategoryFilter = 'all'; // 'all' → сетка категорий; иначе — id категории
+let recipesCategoryFilter = 'all';
 let recipesSourceFilter = loadSourceFilter();
 let showHiddenBase = loadShowHidden();
+let isSavingRecipe = false; // Защита от двойного нажатия
 
 let openedFromChoice = false;
 
@@ -189,8 +178,6 @@ function attachSwipeHandlers(wrap, content) {
 
 // ============================================================
 // v6.1.0: построение одного <li> с рецептом.
-// showCategoryBadge → рядом с названием выводится бейдж категории
-// (используется в плоском списке поиска).
 // ============================================================
 
 function buildRecipeListItem(recipe, showCategoryBadge) {
@@ -727,80 +714,87 @@ export function closeRecipeForm() {
 }
 
 function saveRecipeForm() {
-  const id = document.getElementById(CONSTANTS.SELECTORS.recipeFormId).value;
-  const name = document.getElementById(CONSTANTS.SELECTORS.recipeName).value.trim();
+  if (isSavingRecipe) return;
+  isSavingRecipe = true;
 
-  if (!name) { showMessage('Введите название рецепта', 'error'); return; }
+  try {
+    const id = document.getElementById(CONSTANTS.SELECTORS.recipeFormId).value;
+    const name = document.getElementById(CONSTANTS.SELECTORS.recipeName).value.trim();
 
-  const ingredients = collectIngredientRows();
-  if (ingredients.length === 0) { showMessage('Добавьте хотя бы один ингредиент', 'error'); return; }
+    if (!name) { showMessage('Введите название рецепта', 'error'); return; }
 
-  let category = document.getElementById(CONSTANTS.SELECTORS.recipeCategory).value;
-  if (!category || category === CATEGORIES.OTHER) {
-    const guessed = Utils.guessCategory(name);
-    if (guessed && guessed !== CATEGORIES.OTHER) {
-      category = guessed;
+    const ingredients = collectIngredientRows();
+    if (ingredients.length === 0) { showMessage('Добавьте хотя бы один ингредиент', 'error'); return; }
+
+    let category = document.getElementById(CONSTANTS.SELECTORS.recipeCategory).value;
+    if (!category || category === CATEGORIES.OTHER) {
+      const guessed = Utils.guessCategory(name);
+      if (guessed && guessed !== CATEGORIES.OTHER) {
+        category = guessed;
+      }
     }
+
+    const cuisine = document.getElementById(CONSTANTS.SELECTORS.recipeCuisine).value || null;
+
+    const servingsRaw = document.getElementById(CONSTANTS.SELECTORS.recipeServings).value;
+    const servingsParsed = parseInt(servingsRaw, 10);
+    const servings = (isFinite(servingsParsed) && servingsParsed > 0) ? servingsParsed : 1;
+
+    const cookTime = parseNumField(document.getElementById(CONSTANTS.SELECTORS.recipeCookTime).value);
+    const activeTime = parseNumField(document.getElementById(CONSTANTS.SELECTORS.recipeActiveTime).value);
+
+    const diffRaw = document.getElementById(CONSTANTS.SELECTORS.recipeDifficulty).value;
+    const difficulty = diffRaw ? parseInt(diffRaw, 10) : null;
+
+    const spiceRaw = document.getElementById(CONSTANTS.SELECTORS.recipeSpiciness).value;
+    const spiciness = spiceRaw ? parseInt(spiceRaw, 10) : null;
+
+    const instructions = document.getElementById(CONSTANTS.SELECTORS.recipeInstructions).value.trim();
+
+    const nutrition = {
+      kcal: parseNumField(document.getElementById(CONSTANTS.SELECTORS.recipeNutritionKcal).value),
+      protein: parseNumField(document.getElementById(CONSTANTS.SELECTORS.recipeNutritionProtein).value),
+      fat: parseNumField(document.getElementById(CONSTANTS.SELECTORS.recipeNutritionFat).value),
+      carbs: parseNumField(document.getElementById(CONSTANTS.SELECTORS.recipeNutritionCarbs).value)
+    };
+
+    const mealTypes = [];
+    document.querySelectorAll('#recipeMealTypesGroup input[type=checkbox]:checked').forEach(cb => {
+      mealTypes.push(cb.dataset.mealType);
+    });
+
+    const allergens = [];
+    document.querySelectorAll('#recipeAllergensGroup input[type=checkbox]:checked').forEach(cb => {
+      allergens.push(cb.dataset.allergen);
+    });
+
+    const commentsInput = document.getElementById(CONSTANTS.SELECTORS.recipeComments);
+    const comments = commentsInput ? commentsInput.value.trim() : '';
+
+    const extra = {
+      servings,
+      cookTime,
+      activeTime,
+      difficulty,
+      spiciness,
+      cuisine,
+      allergens,
+      mealTypes,
+      nutrition,
+      comments
+    };
+
+    if (id) {
+      RecipeStore.update(id, name, ingredients, instructions, category, extra);
+    } else {
+      RecipeStore.add(name, ingredients, instructions, category, extra);
+    }
+
+    closeRecipeForm();
+    renderRecipesList();
+  } finally {
+    isSavingRecipe = false;
   }
-
-  const cuisine = document.getElementById(CONSTANTS.SELECTORS.recipeCuisine).value || null;
-
-  const servingsRaw = document.getElementById(CONSTANTS.SELECTORS.recipeServings).value;
-  const servingsParsed = parseInt(servingsRaw, 10);
-  const servings = (isFinite(servingsParsed) && servingsParsed > 0) ? servingsParsed : 1;
-
-  const cookTime = parseNumField(document.getElementById(CONSTANTS.SELECTORS.recipeCookTime).value);
-  const activeTime = parseNumField(document.getElementById(CONSTANTS.SELECTORS.recipeActiveTime).value);
-
-  const diffRaw = document.getElementById(CONSTANTS.SELECTORS.recipeDifficulty).value;
-  const difficulty = diffRaw ? parseInt(diffRaw, 10) : null;
-
-  const spiceRaw = document.getElementById(CONSTANTS.SELECTORS.recipeSpiciness).value;
-  const spiciness = spiceRaw ? parseInt(spiceRaw, 10) : null;
-
-  const instructions = document.getElementById(CONSTANTS.SELECTORS.recipeInstructions).value.trim();
-
-  const nutrition = {
-    kcal: parseNumField(document.getElementById(CONSTANTS.SELECTORS.recipeNutritionKcal).value),
-    protein: parseNumField(document.getElementById(CONSTANTS.SELECTORS.recipeNutritionProtein).value),
-    fat: parseNumField(document.getElementById(CONSTANTS.SELECTORS.recipeNutritionFat).value),
-    carbs: parseNumField(document.getElementById(CONSTANTS.SELECTORS.recipeNutritionCarbs).value)
-  };
-
-  const mealTypes = [];
-  document.querySelectorAll('#recipeMealTypesGroup input[type=checkbox]:checked').forEach(cb => {
-    mealTypes.push(cb.dataset.mealType);
-  });
-
-  const allergens = [];
-  document.querySelectorAll('#recipeAllergensGroup input[type=checkbox]:checked').forEach(cb => {
-    allergens.push(cb.dataset.allergen);
-  });
-
-  const commentsInput = document.getElementById(CONSTANTS.SELECTORS.recipeComments);
-  const comments = commentsInput ? commentsInput.value.trim() : '';
-
-  const extra = {
-    servings,
-    cookTime,
-    activeTime,
-    difficulty,
-    spiciness,
-    cuisine,
-    allergens,
-    mealTypes,
-    nutrition,
-    comments
-  };
-
-  if (id) {
-    RecipeStore.update(id, name, ingredients, instructions, category, extra);
-  } else {
-    RecipeStore.add(name, ingredients, instructions, category, extra);
-  }
-
-  closeRecipeForm();
-  renderRecipesList();
 }
 
 function openRecipeParser() {
