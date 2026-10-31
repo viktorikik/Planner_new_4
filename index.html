@@ -953,5 +953,22 @@
 </nav>
 
 <script type="module" src="js/main.js"></script>
+  <!-- Модалка успешной сборки меню (v6.4.2) -->
+<div class="modal-overlay" id="successModalOverlay" style="display: none;">
+  <div class="modal success-modal">
+    <div class="success-icon">✨</div>
+    <h2>Меню готово!</h2>
+    <p id="successModalText">Ваше меню успешно собрано и добавлено в календарь.</p>
+    
+    <div class="success-warning" id="successModalWarning" style="display: none;">
+      <strong>⚠️ Внимание:</strong> <span id="successWarningText">В базе мало блюд, подходящих под ваши ограничения. Некоторые блюда могут повторяться.</span>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-primary" id="goToMenuBtn">Перейти к меню</button>
+      <button class="btn-secondary" id="closeSuccessModalBtn">Закрыть</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
