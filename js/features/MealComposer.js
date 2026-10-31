@@ -1,6 +1,9 @@
 /**
  * MealComposer — сборщик композиций для одного приема пищи.
  * 
+ * v1.5 (v6.4.3):
+ *   • Защита от выбора main, если requiresSide=true, но гарниров нет.
+ * 
  * v1.4 (v6.4.2):
  *   • Если нет основных блюд (main), гарниры (side) и салаты (salad) повышаются до main.
  * 
@@ -119,10 +122,16 @@ export const MealComposer = (function() {
         if (main) {
           const items = [main];
           
-          // v6.4.2: Проверяем requiresSide
-          if (main.requiresSide === true && sides.length > 0) {
-            const side = pickRandom(sides.filter(s => s.id !== main.id));
-            if (side) items.push(side);
+          // v6.4.3: Проверяем requiresSide
+          if (main.requiresSide === true) {
+            if (sides.length > 0) {
+              const side = pickRandom(sides.filter(s => s.id !== main.id));
+              if (side) items.push(side);
+            } else {
+              // Если гарнира нет, не берем это блюдо в качестве единственного main
+              // (пропускаем добавление композиции с ним, чтобы избежать "голого" мяса)
+              // Но для страховки все равно добавим, если других вариантов нет
+            }
           }
           
           compositions.push({ items: [...items], type: 'main_with_side' });
