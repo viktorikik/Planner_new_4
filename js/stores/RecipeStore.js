@@ -2,14 +2,13 @@
  * RecipeStore — хранилище рецептов (схема v2).
  * Ключ localStorage: CONSTANTS.STORAGE_KEYS.RECIPES ('smartMenuRecipes_v2').
  * 
- * v6.3.5:
- *   • Исправлен баг дублирования ID при Undo (restore всегда генерирует новый ID).
- *   • Добавлена дедупликация ID при загрузке (load) и полной замене (replaceAll).
- *   • Защита от дубликатов в массиве recipes.
+ * v6.3.6:
+ *   • Добавлен RU_UNIT_MAP для нормализации единиц измерения ('г' -> 'g', 'шт' -> 'pcs').
+ *   • Исправлен баг, из-за которого при редактировании стирались единицы (unit).
  * 
- * v6.3.0:
- *   • Интеграция с RecipeFeatureEngine: обогащение рецептов mealRole,
- *     flavorProfile, texture, isHeavy, isQuick.
+ * v6.3.5:
+ *   • Исправлен баг дублирования ID при Undo.
+ *   • Дедупликация ID при загрузке и полной замене.
  */
 import { CONSTANTS } from '../utils/Constants.js';
 import { Utils } from '../utils/Utils.js';
@@ -63,6 +62,18 @@ export const RecipeStore = (function() {
     'не острое': 1, 'слегка остро': 2, 'средне остро': 3, 'остро': 4, 'очень остро': 5
   };
 
+  // v6.3.6: Маппинг единиц измерения
+  const RU_UNIT_MAP = {
+    'г': 'g', 'гр': 'g', 'грамм': 'g', 'граммы': 'g',
+    'кг': 'kg', 'килограмм': 'kg', 'килограммы': 'kg',
+    'мл': 'ml', 'миллилитр': 'ml', 'миллилитры': 'ml',
+    'л': 'l', 'литр': 'l', 'литры': 'l',
+    'шт': 'pcs', 'штук': 'pcs', 'штуки': 'pcs', 'шт.': 'pcs',
+    'ст.л': 'tbsp', 'ст.л.': 'tbsp', 'столовая ложка': 'tbsp',
+    'ч.л': 'tsp', 'ч.л.': 'tsp', 'чайная ложка': 'tsp',
+    'щепотка': 'pinch', 'по вкусу': 'to_taste'
+  };
+
   function normalizeRussianKeys(raw) {
     if (!raw || typeof raw !== 'object') return raw;
     const r = { ...raw };
@@ -114,7 +125,14 @@ export const RecipeStore = (function() {
     const name = Utils.cleanIngredientName(rawName);
     if (!name) return null;
     const amount = (typeof ing.amount === 'number' && isFinite(ing.amount)) ? ing.amount : null;
-    return { name, amount, unit: ing.unit || null };
+    
+    // v6.3.6: Маппинг русских единиц в системные
+    let unit = ing.unit ? String(ing.unit).toLowerCase().trim() : null;
+    if (unit && RU_UNIT_MAP[unit]) {
+      unit = RU_UNIT_MAP[unit];
+    }
+
+    return { name, amount, unit };
   }
 
   function normalizeIngredients(input) {
