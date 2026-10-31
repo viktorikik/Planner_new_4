@@ -1,9 +1,10 @@
 /**
  * MealComposer — сборщик композиций для одного приема пищи.
  * 
- * v1.1 (v6.3.1):
- *   • Добавлена фильтрация по context.usedRecipeIds.
- *   • Улучшен выбор кандидатов.
+ * v1.2 (v6.3.4):
+ *   • Учет recentRecipeIds (история 10 дней).
+ *   • Гарнир (side) теперь обязателен, если есть второе (main).
+ *   • Приоритетная фильтрация кандидатов (не из истории, не использованные).
  */
 
 export const MealComposer = (function() {
@@ -60,12 +61,22 @@ export const MealComposer = (function() {
     let validCandidates = candidates.filter(c => isCompatible(c, mealType, context));
     if (validCandidates.length === 0) validCandidates = candidates; // fallback
 
-    // 2. Исключаем уже использованные (если есть альтернативы)
+    // 2. Исключаем недавние (история) и уже использованные
     const usedIds = context.usedRecipeIds || new Set();
-    const unusedCandidates = validCandidates.filter(c => !usedIds.has(c.id));
+    const recentIds = context.recentRecipeIds || new Set();
     
-    // Если неиспользованных достаточно (больше 3), берем только их. Иначе берем всех.
-    const pool = unusedCandidates.length >= 3 ? unusedCandidates : validCandidates;
+    // Приоритет 1: Не из истории и не использованные
+    let pool = validCandidates.filter(c => !usedIds.has(c.id) && !recentIds.has(String(c.id)));
+    
+    // Приоритет 2: Просто не использованные
+    if (pool.length < 3) {
+      pool = validCandidates.filter(c => !usedIds.has(c.id));
+    }
+    
+    // Приоритет 3: Все
+    if (pool.length === 0) {
+      pool = validCandidates;
+    }
 
     const grouped = groupByRole(pool);
     const compositions = [];
@@ -89,20 +100,28 @@ export const MealComposer = (function() {
       const sides = grouped.side;
       const salads = grouped.salad;
 
-      if (soups.length > 0 && mains.length > 0) {
-        compositions.push({ items: [pickRandom(soups), pickRandom(mains)], type: 'full_lunch' });
-        if (salads.length > 0) {
-          compositions.push({ items: [pickRandom(soups), pickRandom(mains), pickRandom(salads)], type: 'gourmet' });
+      if (mains.length > 0) {
+        if (sides.length > 0) {
+          // ПРАВИЛО: Если есть гарнир, второе ВСЕГДА идет с ним
+          const main = pickRandom(mains);
+          const side = pickRandom(sides);
+          
+          compositions.push({ items: [main, side], type: 'main_with_side' });
+          
+          if (salads.length > 0) {
+            compositions.push({ items: [main, side, pickRandom(salads)], type: 'full' });
+          }
+          if (soups.length > 0) {
+            compositions.push({ items: [pickRandom(soups), main, side], type: 'full_lunch' });
+          }
+        } else {
+          // Только если гарниров вообще нет в базе, даем просто второе
+          compositions.push({ items: [pickRandom(mains)], type: 'simple_main' });
         }
       }
-      if (mains.length > 0 && sides.length > 0) {
-        compositions.push({ items: [pickRandom(mains), pickRandom(sides)], type: 'main_with_side' });
-      }
-      if (mains.length > 0) {
-        compositions.push({ items: [pickRandom(mains)], type: 'simple_main' });
-      }
-      if (salads.length > 0 && sides.length > 0) {
-        compositions.push({ items: [pickRandom(salads), pickRandom(sides)], type: 'light' });
+
+      if (soups.length > 0 && salads.length > 0) {
+        compositions.push({ items: [pickRandom(soups), pickRandom(salads)], type: 'soup_and_salad' });
       }
       if (soups.length > 0) {
         compositions.push({ items: [pickRandom(soups)], type: 'soup_only' });
