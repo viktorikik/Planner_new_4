@@ -1,6 +1,11 @@
 /**
  * main.js — точка входа приложения.
  *
+ * v6.4.6:
+ *   • Интеграция MenuValidator: финальная проверка меню перед сохранением.
+ *   • При нарушении жестких ограничений (аллергены, диета) сохранение блокируется.
+ *   • При мягких нарушениях (нет гарнира, два супа) выводится предупреждение в модалке.
+ *
  * v6.4.4:
  *   • Исправлен переход к меню из модалки успеха (использование pendingTabAfterModalClose).
  *   • Добавлено правильное склонение количества дней (день/дня/дней).
@@ -58,6 +63,7 @@ import {
 import { Onboarding } from './features/Onboarding.js';
 import { printWeeklyMenu } from './features/Print.js';
 import { MenuGenerator } from './features/MenuGenerator.js';
+import { MenuValidator } from './features/MenuValidator.js'; // v6.4.6: Финальная проверка
 
 const THEMES = { LIGHT: 'light', DARK: 'dark' };
 const DEFAULT_THEME = THEMES.LIGHT;
@@ -532,7 +538,7 @@ const DEFAULT_THEME = THEMES.LIGHT;
     return `${n} дней`;
   }
 
-  // v6.4.4: Функция показа модалки успеха (ИСПРАВЛЕН ПЕРЕХОД)
+  // v6.4.6: Функция показа модалки успеха (с учетом предупреждений валидатора)
   function showSuccessModal(options) {
     if (!successModalOverlay) return;
     
@@ -541,12 +547,21 @@ const DEFAULT_THEME = THEMES.LIGHT;
     
     const daysStr = pluralDays(options.days);
 
-    if (options.isLowRecipes) {
+    // Формируем базовый текст
+    textEl.textContent = `Собрано меню на ${daysStr}!`;
+
+    // Проверяем предупреждения
+    if (options.isLowRecipes || (options.warnings && options.warnings.length > 0)) {
       warningEl.style.display = 'block';
-      textEl.textContent = `Собрано меню на ${daysStr}.`;
+      
+      if (options.warnings && options.warnings.length > 0) {
+        // Берем первое предупреждение (например, про отсутствие гарнира)
+        warningEl.textContent = `Внимание: ${options.warnings[0]}`;
+      } else if (options.isLowRecipes) {
+        warningEl.textContent = `Мало доступных рецептов. Блюда могут повторяться.`;
+      }
     } else {
       warningEl.style.display = 'none';
-      textEl.textContent = `Собрано отличное меню на ${daysStr}!`;
     }
 
     successModalOverlay.style.display = 'flex';
@@ -626,6 +641,22 @@ const DEFAULT_THEME = THEMES.LIGHT;
       return;
     }
 
+    // --- v6.4.6: ВАЛИДАЦИЯ МЕНЮ ПЕРЕД СОХРАНЕНИЕМ ---
+    const validation = MenuValidator.validate(result.menu, RecipeStore.getAll(), UserPreferences.get());
+
+    if (!validation.valid) {
+      console.error('Ошибки валидации (Hard Constraints):', validation.errors);
+      showMessage('Меню не может быть сохранено: ' + validation.errors[0], 'error');
+      closeGenerateModal();
+      pendingGenerationData = null;
+      return;
+    }
+
+    if (validation.status === 'suboptimal') {
+      console.warn('Предупреждения валидатора (Soft Constraints):', validation.warnings);
+    }
+    // -----------------------------------------------
+
     // 2. Разворачиваем items в плоский массив
     const dishesToSave = [];
     Object.keys(result.menu).forEach(dateStr => {
@@ -694,7 +725,8 @@ const DEFAULT_THEME = THEMES.LIGHT;
     showSuccessModal({
       days: days,
       startDate: startDate,
-      isLowRecipes: availableRecipesCount < 20 // Если доступных рецептов меньше 20, будут повторы
+      isLowRecipes: availableRecipesCount < 20,
+      warnings: validation.warnings // Передаем предупреждения
     });
   }
 
