@@ -3,6 +3,9 @@
  * Зависит от: Constants, Utils, EventBus, DishStore, RecipeStore,
  *             RecommendationEngine, notifications, focusTrap, Recipes.
  *
+ * v6.4.7:
+ *   • Добавлен вывод калорийности (если есть в рецепте) под названием блюда в модалке дня.
+ *
  * v6.1.0:
  *   • shiftTodayViewDate теперь локальная функция внутри IIFE.
  *     Раньше она была только методом возвращаемого объекта,
@@ -333,6 +336,10 @@ export const Renderer = (function() {
     });
     dishDiv.appendChild(statusToggle);
 
+    // v6.4.7: Обертка для названия и калорийности
+    const nameWrap = document.createElement('div');
+    nameWrap.className = 'dish-name-wrap';
+
     const nameSpan = document.createElement('span');
     nameSpan.className = 'dish-name';
     nameSpan.textContent = dish.name;
@@ -348,7 +355,20 @@ export const Renderer = (function() {
         openEditDishModal(dish.id);
       }
     });
-    dishDiv.appendChild(nameSpan);
+    nameWrap.appendChild(nameSpan);
+
+    // v6.4.7: Добавляем калорийность, если есть рецепт и данные
+    if (dish.recipeId) {
+      const recipe = RecipeStore.getById(dish.recipeId);
+      if (recipe && recipe.nutrition && recipe.nutrition.kcal != null) {
+        const kcalSpan = document.createElement('span');
+        kcalSpan.className = 'dish-kcal';
+        kcalSpan.textContent = `~ ${recipe.nutrition.kcal} ккал`;
+        nameWrap.appendChild(kcalSpan);
+      }
+    }
+
+    dishDiv.appendChild(nameWrap);
 
     const recipeCol = document.createElement('div');
     recipeCol.className = 'dish-recipe';
