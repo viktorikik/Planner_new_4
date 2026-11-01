@@ -1093,6 +1093,19 @@ button,
   line-height: 1.35;
   cursor: pointer;
 }
+.dish-name-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.dish-kcal {
+  font-size: 12px;
+  color: var(--text-muted);
+  opacity: 0.8;
+  line-height: 1.2;
+}
 .modal-dish .dish-name:hover .dish-name-text {
   color: var(--accent-color);
 }
