@@ -2,11 +2,14 @@
  * ExportImport — экспорт/импорт данных приложения.
  * Зависит от: Constants, Utils, DishStore, RecipeStore, notifications.
  *
- * v5.44.1 (фикс валидации импорта):
+ * v6.4.8:
+ *   • Исправлен баг с импортом числовых ID (добавлен normalizeDishForImport).
+ *   • Все ID и recipeId принудительно приводятся к строкам перед сохранением.
+ *   • Добавлен try/catch вокруг replaceAll для отлова скрытых ошибок хранилища.
+ *
+ * v5.44.1:
  *   • validateDish больше не требует recipeId строго числом.
- *     С v5.36 ID рецептов — строки. Экспорт писал строки,
- *     импорт падал с ошибкой «recipeId должно быть числом».
- *     Теперь принимается string | number | null.
+ *     С v5.36 ID рецептов — строки.
  */
 import {
   STATUSES, CATEGORIES, CATEGORY_LABELS, CONSTANTS,
@@ -19,9 +22,6 @@ import { showMessage } from '../utils/notifications.js';
 
 // ============================================================
 // НОРМАЛИЗАЦИЯ РУССКИХ ДАННЫХ ПРИ ИМПОРТЕ (v5.25, Блок 6)
-// Импортируемые JSON-файлы могут содержать значения полей
-// в русском написании (Закуска, Перекус, Молоко, ...). Здесь
-// приводим их к внутренним ключам приложения.
 // ============================================================
 const CATEGORY_MAP_FROM_RU = {
   'закуска': 'appetizer',
@@ -126,9 +126,26 @@ function mapEnum(map, value, allowedValues) {
   return null;
 }
 
+/**
+ * v6.4.8: Нормализация блюда перед импортом.
+ * Принудительно приводит ID и recipeId к строкам.
+ */
+function normalizeDishForImport(dish) {
+  if (!dish || typeof dish !== 'object') return dish;
+  const out = { ...dish };
+  
+  if (out.id != null) out.id = String(out.id);
+  if (out.recipeId != null) out.recipeId = String(out.recipeId);
+  
+  return out;
+}
+
 function normalizeRecipeForImport(recipe) {
   if (!recipe || typeof recipe !== 'object') return recipe;
   const out = { ...recipe };
+
+  // v6.4.8: Принудительно приводим ID к строке
+  if (out.id != null) out.id = String(out.id);
 
   // category
   if (out.category != null) {
@@ -193,11 +210,10 @@ function validateDish(dish, index) {
   if (!validCategories.includes(dish.category)) return `Блюдо №${index + 1}: недопустимая категория`;
   if (dish.liked !== undefined && typeof dish.liked !== 'boolean') return `Блюдо №${index + 1}: поле liked должно быть boolean`;
   if (dish.note !== undefined && typeof dish.note !== 'string') return `Блюдо №${index + 1}: поле note должно быть строкой`;
-  // v5.44.1: recipeId — строка (основной формат), но принимаем и число
-  // для обратной совместимости со старыми бэкапами.
-  if (dish.recipeId !== undefined && dish.recipeId !== null &&
-      typeof dish.recipeId !== 'string' && typeof dish.recipeId !== 'number') {
-    return `Блюдо №${index + 1}: recipeId должно быть строкой, числом или null`;
+  
+  // v6.4.8: Теперь проверка мягче, так как перед валидацией всё приводится к строке
+  if (dish.recipeId !== undefined && dish.recipeId !== null && typeof dish.recipeId !== 'string') {
+    return `Блюдо №${index + 1}: recipeId должно быть строкой или null`;
   }
   return null;
 }
@@ -329,8 +345,10 @@ export function importData(file) {
         showMessage('Некорректный файл: ожидается объект.', 'error');
         return;
       }
-      const dishes = parsed.dishes;
+      
+      let dishes = parsed.dishes;
       let recipes = parsed.recipes;
+      
       if (dishes && !Array.isArray(dishes)) {
         showMessage('Поле dishes должно быть массивом.', 'error');
         return;
@@ -338,6 +356,14 @@ export function importData(file) {
       if (recipes && !Array.isArray(recipes)) {
         showMessage('Поле recipes должно быть массивом.', 'error');
         return;
+      }
+
+      // v6.4.8: Нормализуем данные ДО валидации
+      if (dishes) {
+        dishes = dishes.map(normalizeDishForImport);
+      }
+      if (recipes) {
+        recipes = recipes.map(normalizeRecipeForImport);
       }
 
       let validationError = null;
@@ -360,12 +386,20 @@ export function importData(file) {
 
       const recipesCount = recipes ? recipes.length : 0;
       if (confirm(`Будет импортировано ${dishes ? dishes.length : 0} блюд и ${recipesCount} рецептов. Текущие данные будут заменены. Продолжить?`)) {
-        if (recipes) {
-          const normalizedRecipes = recipes.map(normalizeRecipeForImport);
-          RecipeStore.replaceAll(normalizedRecipes);
+        
+        // v6.4.8: Оборачиваем сохранение в try/catch, чтобы поймать ошибки хранилища
+        try {
+          if (recipes) {
+            RecipeStore.replaceAll(recipes);
+          }
+          if (dishes) {
+            DishStore.replaceAll(dishes);
+          }
+          showMessage('✅ Данные успешно импортированы!');
+        } catch (storeError) {
+          console.error('Ошибка записи в хранилище:', storeError);
+          showMessage('Ошибка записи в хранилище: ' + storeError.message, 'error');
         }
-        DishStore.replaceAll(dishes);
-        showMessage('✅ Данные успешно импортированы!');
       }
     } catch (err) {
       showMessage('Ошибка при чтении файла: ' + err.message, 'error');
@@ -474,7 +508,6 @@ export function importRecipesOnly(file, onDone) {
 
       let recipesRaw = parsed.recipes;
       if (!Array.isArray(recipesRaw) && Array.isArray(parsed)) {
-        // Поддержка «голого» массива — удобно для recipes.json
         recipesRaw = parsed;
       }
       if (!Array.isArray(recipesRaw)) {
@@ -486,6 +519,9 @@ export function importRecipesOnly(file, onDone) {
         return;
       }
 
+      // v6.4.8: Нормализуем перед валидацией
+      recipesRaw = recipesRaw.map(normalizeRecipeForImport);
+
       for (let i = 0; i < recipesRaw.length; i++) {
         const err = validateRecipe(recipesRaw[i], i);
         if (err) {
@@ -496,8 +532,7 @@ export function importRecipesOnly(file, onDone) {
 
       let added = 0, replaced = 0, skipped = 0;
 
-      recipesRaw.forEach(raw => {
-        const incoming = normalizeRecipeForImport(raw);
+      recipesRaw.forEach(incoming => {
         const currentRecipes = RecipeStore.getAll();
         const existing = currentRecipes.find(
           r => r.name.toLowerCase() === incoming.name.toLowerCase()
